@@ -896,7 +896,9 @@ $("btnMasterImport").onclick=async()=>{
     step="スプレッドシートへの送信"; info.textContent="送信中…"; await Sync.putMaster(rows,$("mPin").value);
     MASTER={rows,at:Date.now()}; LS.set(APP+":master",MASTER); buildIdx(); renderMasterStat();
     info.textContent=`品番マスターを更新しました（${rows.length}件）`; toast("品番マスターを更新しました"); $("mPin").value="";
-  }catch(e){ info.textContent=`読み込めませんでした（${step}）: `+Sync.errHint(e); }
+  }catch(e){ let msg=`読み込めませんでした（${step}）: `+Sync.errHint(e);
+    if(step!=="Excelの読み取り"&&/Failed to fetch|NetworkError|Load failed/.test(String(e&&e.message||e))){ const ping=await Sync.test(); msg+=`\n【接続テスト】${ping}`+(/接続OK/.test(ping)?"\n→ 接続はできています。Apps Script を新しい Code に貼り替えて「新しいバージョン」でデプロイし直してください。":""); }
+    info.textContent=msg; info.style.whiteSpace="pre-line"; }
 };
 // ---- PWA ----
 (function(){
