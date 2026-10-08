@@ -532,7 +532,7 @@ function showSugg(i,q){ const box=document.querySelector(`.item[data-it="${i}"] 
 function hideSugg(){ document.querySelectorAll(".sugg").forEach(b=>{ b.hidden=true; b.innerHTML=""; }); sugg={i:-1,list:[],act:0}; }
 function pickMaster(i,m){ const r=state.rows[sel];
   if(i===0){ const g=mGroup(m); r.items=g.map(itemFrom); r.mold=m.mold||"";
-    const c=condOf(m); CONDK.forEach(k=>{ r[k]=c[k]||""; }); if(c.sq) r.sq=c.sq;
+    const c=condOf(m); CONDK.forEach(k=>{ r[k]=c[k]||""; }); r.sq=c.sq||"高";
     if(g.length>1) toast(`同じ金型の品番も入れました：${g.slice(1).map(x=>x.hin).join("・")}`); }
   else { r.items[i]=itemFrom(m); }
   hideSugg(); touchRow(sel); renderEntry(); refreshLight();
@@ -815,9 +815,9 @@ const Sync=(function(){
     if(!on()) return "スプレッドシートが未設定のため、マスターを読み込めません";
     if(navigator.onLine===false) return "オフラインです（前回読み込んだマスターを使います）";
     if(!force && MASTER.at && Date.now()-MASTER.at<10*60*1000) return "";
-    try{ const j=await call({action:"master",token:cfg.token}); MASTER={rows:j.rows||[],at:Date.now()}; LS.set(APP+":master",MASTER); buildIdx(); renderMasterStat();
+    try{ const j=await call({action:"master",token:cfg.token}); if(!(j.rows||[]).length&&MIDX.length) return "スプレッドシートの品番マスターが空です（この端末のマスターを使います）"; MASTER={rows:j.rows||[],at:Date.now()}; LS.set(APP+":master",MASTER); buildIdx(); renderMasterStat();
       return `品番マスターを読み込みました（${MIDX.length}件）`; }
-    catch(e){ return "マスターを読み込めませんでした: "+(e.message||e); }
+    catch(e){ return "マスターを読み込めませんでした: "+errHint(e); }
   }
   function status(){ const b=$("syncStat"); if(!b) return; if(!on()){ b.hidden=true; return; } b.hidden=false; const n=q.length;
     if(navigator.onLine===false){ b.className="sync off"; b.textContent=n?`オフライン (未送信 ${n}件)`:"オフライン"; }
@@ -829,8 +829,14 @@ const Sync=(function(){
   window.addEventListener("online",()=>{ flush().then(pull); }); window.addEventListener("offline",status);
   document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") flush().then(pull).then(()=>loadMaster(false)); });
   setInterval(()=>{ if(document.visibilityState==="visible") flush().then(pull); },45000);
+  function errHint(e){ const m=String(e&&e.message||e);
+    if(/unknown action|bad json/.test(m)) return m+"（Apps Script が古い版です。新しい Code を貼って「新しいバージョン」でデプロイしてください）";
+    if(/合言葉/.test(m)) return m+"（config.js の token と Code の TOKEN を同じにしてください）";
+    if(/Failed to fetch|NetworkError|Load failed/.test(m)) return m+"（送信先URLに接続できません。config.js の syncUrl と、デプロイのアクセス「全員」を確認してください）";
+    if(/Unexpected token|JSON/.test(m)) return m+"（Apps Script でエラーが出ています。デプロイと許可を確認してください）";
+    return m; }
   async function putMaster(rows,pin){ if(!on()) throw new Error("スプレッドシートが未設定です"); return call(null,{token:cfg.token,action:"setMaster",pin,rows}); }
-  return {queue,flush,pull,status,test,setCfg,getCfg:()=>cfg,list,loadMaster,putMaster,pendingCount:()=>q.length};
+  return {queue,flush,pull,status,test,setCfg,getCfg:()=>cfg,list,loadMaster,putMaster,errHint,on,pendingCount:()=>q.length};
 })();
 $("syncStat").onclick=async()=>{ await Sync.flush(); await Sync.pull(); toast(Sync.pendingCount()?"未送信のデータがあります":"最新の状態です"); };
 $("btnCfgSave").onclick=()=>{ Sync.setCfg($("cfgUrl").value.trim(),$("cfgToken").value.trim()); $("cfgInfo").textContent="保存しました"; Sync.pull(); Sync.loadMaster(true).then(renderMasterStat); };
@@ -872,6 +878,7 @@ function toMasterRows(grid){
   grid.slice(hr+1).forEach(r=>{ if(!r) return; const o={}; MCOLS.forEach(([k])=>o[k]=map[k]!=null?(r[map[k]]||""):"");
     if(!o.hin) return; const n=normHin(o.hin); if(seen.has(n)) return; seen.add(n);
     if(/^\d+\.\d{6,}$/.test(o.unit)) o.unit=String(Math.round(+o.unit*1000)/1000);
+    if(o.koma!==""&&isNaN(+o.koma)) o.koma="";
     out.push(o); });
   return out;
 }
@@ -879,13 +886,17 @@ $("btnMasterImport").onclick=async()=>{
   const info=$("mImpInfo"), f=$("mFile").files[0];
   if($("mPin").value!==String(CFG.adminPin||"0000")){ info.textContent="管理者パスワードが違います"; return; }
   if(!f){ info.textContent="Excelファイルを選んでください"; return; }
+  if(typeof DecompressionStream==="undefined"){ info.textContent="このブラウザでは読み込めません。パソコンの Chrome か Edge（最新版）で開いてください"; return; }
+  let step="Excelの読み取り";
   try{ info.textContent="読み込み中…"; const sh=await readFirstSheet(f); const rows=toMasterRows(sh.rows);
     if(!rows.length) throw new Error("品番が1件もありません");
     if(!await askConfirm(`「${sh.name}」から ${rows.length}件の品番を読み込みました。\n品番マスターを置き換えて全端末に反映しますか？`)){ info.textContent="中止しました"; return; }
-    info.textContent="送信中…"; await Sync.putMaster(rows,$("mPin").value);
+    MASTER={rows,at:Date.now()}; LS.set(APP+":master",MASTER); buildIdx(); renderMasterStat();
+    if(!Sync.on()){ info.textContent=`この端末に ${rows.length}件 読み込みました。※スプレッドシート連携(config.js の syncUrl)が未設定のため、他の端末には反映されていません`; return; }
+    step="スプレッドシートへの送信"; info.textContent="送信中…"; await Sync.putMaster(rows,$("mPin").value);
     MASTER={rows,at:Date.now()}; LS.set(APP+":master",MASTER); buildIdx(); renderMasterStat();
     info.textContent=`品番マスターを更新しました（${rows.length}件）`; toast("品番マスターを更新しました"); $("mPin").value="";
-  }catch(e){ info.textContent="読み込めませんでした: "+(e.message||e); }
+  }catch(e){ info.textContent=`読み込めませんでした（${step}）: `+Sync.errHint(e); }
 };
 // ---- PWA ----
 (function(){
