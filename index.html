@@ -148,7 +148,7 @@ tr.sub td{border-top:1px dashed var(--line)}
 td.chg,input.chg{color:#d50000!important;font-weight:bold;background:#fff1f1}
 /* 品番 */
 .items{display:grid;gap:10px}
-.item{display:grid;grid-template-columns:minmax(220px,2fr) 90px minmax(80px,1fr) 120px auto;gap:8px;align-items:end;border:1px solid var(--line);border-radius:10px;padding:8px;background:#fafcfd}
+.item{display:grid;grid-template-columns:minmax(220px,2fr) repeat(auto-fill,minmax(110px,1fr));gap:8px;align-items:end;border:1px solid var(--line);border-radius:10px;padding:8px;background:#fafcfd}
 .item .hin input{font-size:20px;font-weight:bold;letter-spacing:.5px;text-transform:uppercase}
 .item .del{min-height:46px}
 .hinwrap{position:relative}
@@ -192,6 +192,9 @@ input::placeholder{color:#a8b0bd}
 .iinfo b{color:#1d4e5c}
 .ichk{grid-column:1/-1;background:#ffebee;border:2px solid #e53935;color:#b00020;font-weight:bold;border-radius:8px;padding:6px 10px;font-size:15px}
 .chg{color:#d50000;font-weight:bold}
+.miss{background:#d50000;color:#fff;font-weight:bold;border-radius:10px;padding:10px 14px;margin-top:8px;line-height:1.5}
+.f.need input{border:2px solid #d50000;background:#fff1f1}
+#cfMsg{white-space:pre-line}
 </style>
 <body>
 <header class="top">
@@ -247,6 +250,7 @@ input::placeholder{color:#a8b0bd}
       <div class="t">生産情報 <span class="id">Info produksi</span> — <span class="small" style="color:var(--pri)">品番を数文字打つと候補が出ます。タップで確定 / Ketik beberapa huruf, lalu pilih</span></div>
       <div class="items" id="items"></div>
       <div id="moldNote"></div>
+      <div id="missWarn"></div>
       <button id="btnAddItem" style="margin-top:8px">＋ 同じ金型の品番を追加 <span class="id">Tambah nomor produk (cetakan sama)</span></button>
     </div>
 
@@ -301,14 +305,15 @@ input::placeholder{color:#a8b0bd}
     <div class="tbl-wrap">
       <table style="min-width:1400px">
         <thead>
-          <tr><th rowspan="2">No</th><th colspan="5">生産情報</th><th colspan="3">金型確認</th><th colspan="2">造型時間</th><th colspan="6">製造条件</th><th colspan="3">生産実績</th><th rowspan="2">作業者</th></tr>
-          <tr><th>品番</th><th>駒数</th><th>品名</th><th>材質</th><th>添加材</th><th>駒部</th><th>方案部</th><th>定盤部</th><th>開始</th><th>完了</th><th>注湯温度<br>(規格)</th><th>スクイズ<br>圧力</th><th>スクイズ<br>時間</th><th>吹上<br>圧力</th><th>吹上<br>時間</th><th>モールド厚</th><th>造型総数</th><th>生産個数</th><th>未注湯</th></tr>
+          <tr><th rowspan="2">No</th><th colspan="5">生産情報</th><th colspan="3">金型確認</th><th colspan="2">造型時間</th><th colspan="6">製造条件</th><th colspan="4">生産実績</th><th rowspan="2">作業者</th></tr>
+          <tr><th>品番</th><th>駒数</th><th>品名</th><th>材質</th><th>添加材</th><th>駒部</th><th>方案部</th><th>定盤部</th><th>開始</th><th>完了</th><th>注湯温度<br>(規格)</th><th>スクイズ<br>圧力</th><th>スクイズ<br>時間</th><th>吹上<br>圧力</th><th>吹上<br>時間</th><th>モールド厚</th><th>造型総数</th><th>生産個数</th><th>生産重量<br>(kg)</th><th>未注湯</th></tr>
         </thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
     <div class="tot" style="margin-top:12px">
       <div><div class="small">日計造型数 (自動) <span class="id">Total cetakan harian</span></div><div class="big"><span id="dayTotal">0</span> 枠</div></div>
+      <div><div class="small">日計 生産トン数 (自動) <span class="id">Total produksi (ton)</span></div><div class="big"><span id="dayTon">0.00</span> t <span class="small" id="dayKg"></span></div><div class="small" id="tonNote" style="color:#c62828;font-weight:bold"></div></div>
       <label class="f">カウンター造型数 <span class="id">Jumlah counter</span><input id="counter" inputmode="numeric" style="font-size:22px;font-weight:bold"><span class="small" id="counterDiff"></span></label>
     </div>
   </section>
@@ -450,6 +455,11 @@ function rowQty(r){ return liveItems(r).reduce((a,it)=>a+(qtyOf(r,it)||0),0); }
 function rowHas(r){ return liveItems(r).length>0 || ["st","en","total","unp","worker",...CHKK].some(k=>(r[k]||"")!==""); }
 function ngList(r){ return CHKK.filter(k=>r[k]==="NG").map(k=>CHKL[k]); }
 function weightOf(r,it){ const q=qtyOf(r,it), w=num(it.unit); return (q!=null&&w!=null)?Math.round(q*w*100)/100:null; }
+function dayKg(){ return state.rows.reduce((a,r)=>a+liveItems(r).reduce((b,it)=>b+(weightOf(r,it)||0),0),0); }
+function fmtT(kg){ return (Math.round(kg/10)/100).toFixed(2); }
+// 単重・駒数が入っていない品番（生産トン数が計算できない）
+function missOf(r){ return liveItems(r).filter(it=>it.hin).map(it=>({hin:it.hin,f:[num(it.koma)==null?"駒数":"",num(it.unit)==null?"単重":""].filter(Boolean)})).filter(x=>x.f.length); }
+function missText(r){ return missOf(r).map(x=>`${x.hin}：${x.f.join("・")}`).join("\n"); }
 function dayTotal(){ return state.rows.reduce((a,r)=>a+(num(r.total)||0),0); }
 
 // ---- 描画 ----
@@ -459,14 +469,17 @@ function renderHeader(){ $("date").value=state.date; $("equip").value=state.equi
 function renderMasterStat(){ const n=MIDX.length, at=MASTER.at?new Date(MASTER.at):null;
   const t=n?`品番マスター：${n}件` + (at?`（${at.getMonth()+1}/${at.getDate()} ${at.getHours()}:${String(at.getMinutes()).padStart(2,"0")} 読込）`:"") : "品番マスターが未登録です（スプレッドシートの「品番マスター」に入力してください）";
   $("masterStat").textContent=t; $("masterStat").className="mstat"+(n?"":" warn"); if($("masterInfo")) $("masterInfo").textContent=t; }
-function renderTotals(){ const t=dayTotal(); $("dayTotal").textContent=fmtNum(t); const c=num(state.counter);
+function renderTotals(){ const t=dayTotal(); $("dayTotal").textContent=fmtNum(t);
+  const kg=dayKg(), miss=state.rows.filter(r=>missOf(r).length).length; $("dayTon").textContent=fmtT(kg); $("dayKg").textContent=kg?`（${fmtNum(Math.round(kg*10)/10)} kg）`:"";
+  $("tonNote").textContent=miss?`⚠ 単重・駒数が未入力の行が ${miss} 行あります（トン数に入っていません）`:""; const c=num(state.counter);
   $("counterDiff").textContent = c!=null&&t? (c===t?"日計と一致 ✓":`日計との差 ${fmtNum(c-t)} 枠`) : ""; $("counterDiff").style.color=c!=null&&c!==t?"#c62828":"#2e7d32"; }
-function itemStatus(it){ if(!it.hin) return ["",""]; if(it.ok) return ["ok","✓ マスター登録あり / Terdaftar"]; return ["ng","マスターにない品番です（駒数・品名を手入力） / Tidak ada di master"]; }
+function itemStatus(it){ if(!it.hin) return ["",""]; if(it.ok) return ["ok","✓ マスター登録あり / Terdaftar"]; return ["ng","マスターにない品番です（駒数・品名・単重を手入力） / Tidak ada di master"]; }
 function renderItems(){ const r=state.rows[sel];
   $("items").innerHTML=r.items.map((it,i)=>{ const [c,t]=itemStatus(it); return `<div class="item" data-it="${i}">
     <div class="f hin"><span class="small">品番 ${i?i+1:""} <span class="id">Nomor produk</span></span><div class="hinwrap"><input data-ik="hin" value="${esc(it.hin)}" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="例 RD2364A"><div class="sugg" hidden></div></div><div class="hinst ${c}">${t}</div></div>
     <label class="f">駒数 <span class="id">Jumlah</span><input data-ik="koma" inputmode="numeric" value="${esc(it.koma)}"></label>
     <label class="f">品名 <span class="id">Nama</span><input data-ik="name" value="${esc(it.name)}"></label>
+    ${(!it.ok||num(it.unit)==null)?`<label class="f ${it.hin&&num(it.unit)==null?"need":""}">単重 (kg) <span class="id">Berat satuan</span><input data-ik="unit" inputmode="decimal" value="${esc(it.unit)}" placeholder="必ず入力"></label>`:""}
     ${i?`<label class="f">造型総数 <span class="id">Total cetakan</span><input data-ik="tot" inputmode="numeric" value="${esc(it.tot)}" placeholder="同じ: ${esc(r.total||"－")}"></label><button class="del" data-idel="${i}">削除</button>`:"<span></span><span></span>"}
     ${it.ok?`<div class="iinfo"><span>材質 ${cspan(it.mat,matColor(it.mat))}</span><span>添加材 ${cspan(it.add,addColor(it.add))}</span><span>単重 <b>${esc(it.unit||"－")}</b> kg</span>${it.tana?`<span>棚 <b>${esc(it.tana)}</b></span>`:""}</div>`:""}
     ${it.check?`<div class="ichk">⚠ 確認ポイント：${esc(it.check)}</div>`:""}</div>`; }).join("");
@@ -484,7 +497,8 @@ function updateMarks(){ const r=state.rows[sel], fixed=!!(r.items[0]&&r.items[0]
   CONDK.forEach(k=>{ const inp=document.querySelector(`#entryCard input[data-k="${k}"]`); inp.readOnly=fixed||VIEW; });
   const li=liveItems(r), diff=li.length>1 && li.some(it=>it.ok&&li[0].ok&&false);
   $("condNote").textContent = fixed ? "マスターの値です（変更できません） / Nilai dari master" : (li.length?"マスターにない品番のため、手入力してください / Isi manual":"");
-  $("qtyView").innerHTML = li.length ? li.map(it=>{ const q=qtyOf(r,it); return `<div class="qtyline">${esc(it.hin||"(品番なし)")}：${esc(it.koma||"?")} × ${esc(totOf(r,it)||"?")} = <span class="big">${q==null?"－":fmtNum(q)}</span> 個</div>`; }).join("") : '<div class="small">品番を入れてください</div>';
+  $("qtyView").innerHTML = li.length ? li.map(it=>{ const q=qtyOf(r,it), w=weightOf(r,it); return `<div class="qtyline">${esc(it.hin||"(品番なし)")}：${esc(it.koma||"?")} × ${esc(totOf(r,it)||"?")} = <span class="big">${q==null?"－":fmtNum(q)}</span> 個${w!=null?`　<span class="small">${fmtNum(w)} kg</span>`:""}</div>`; }).join("") : '<div class="small">品番を入れてください</div>';
+  const ms=missOf(r); $("missWarn").innerHTML = ms.length ? `<div class="miss">⚠ 入力が足りません：${ms.map(x=>`<b>${esc(x.hin)}</b> の ${x.f.join("・")}`).join("、")}<br><span style="font-weight:normal">生産トン数が計算できません / Isi jumlah & berat satuan</span></div>` : "";
 }
 function renderTable(){
   const out=[];
@@ -496,12 +510,12 @@ function renderTable(){
       h+=`<td style="white-space:nowrap">${esc(it.hin)}${it.hin&&!it.ok?' <span style="color:#c62828">*</span>':""}${it.check?' <span title="確認ポイント" style="color:#c62828">⚠</span>':""}</td><td>${esc(it.koma)}</td><td>${esc(it.name)}</td><td style="white-space:nowrap;color:${matColor(it.mat)}">${esc(it.mat)}</td><td style="white-space:nowrap;font-size:12px;color:${addColor(it.add)}">${esc(it.add)}</td>`;
       if(!x) h+=CHKK.map(k=>`<td ${rs} class="${r[k]==="NG"?"jNG":""}">${r[k]}</td>`).join("")+`<td ${rs}>${esc(r.st)}</td><td ${rs}>${esc(r.en)}</td><td ${rs} style="white-space:nowrap">${esc(r.temp)}</td>`+
         ["sq","sqt","fup","fut","mt"].map(k=>`<td ${rs}>${esc(r[k])}</td>`).join("");
-      h+=`<td>${x?(totOf(r,it)!==r.total?`<b style="color:#e65100">${esc(totOf(r,it))}</b>`:esc(totOf(r,it))):`<b>${esc(r.total)}</b>`}</td><td>${q==null?"":fmtNum(q)}</td>`;
+      h+=`<td>${x?(totOf(r,it)!==r.total?`<b style="color:#e65100">${esc(totOf(r,it))}</b>`:esc(totOf(r,it))):`<b>${esc(r.total)}</b>`}</td><td>${q==null?"":fmtNum(q)}</td><td class="${it.hin&&weightOf(r,it)==null?"jNG":""}">${weightOf(r,it)==null?(it.hin?"未入力":""):fmtNum(weightOf(r,it))}</td>`;
       if(!x) h+=`<td ${rs}>${esc(r.unp)}</td><td ${rs}>${esc(r.worker)}</td>`;
       out.push(h+"</tr>"); }); });
   const tq=state.rows.reduce((a,r)=>a+rowQty(r),0), tu=state.rows.reduce((a,r)=>a+(num(r.unp)||0),0);
-  $("tbody").innerHTML=(out.length?out.join(""):'<tr><td colspan="22" class="small" style="padding:12px">まだ入力がありません</td></tr>')+
-    `<tr class="sum"><td colspan="18">合計 <span class="id">Total</span></td><td>${fmtNum(dayTotal())}</td><td>${tq?fmtNum(tq):""}</td><td>${tu?fmtNum(tu):""}</td><td></td></tr>`;
+  $("tbody").innerHTML=(out.length?out.join(""):'<tr><td colspan="23" class="small" style="padding:12px">まだ入力がありません</td></tr>')+
+    `<tr class="sum"><td colspan="18">合計 <span class="id">Total</span></td><td>${fmtNum(dayTotal())}</td><td>${tq?fmtNum(tq):""}</td><td>${dayKg()?fmtNum(Math.round(dayKg()*10)/10):""}</td><td>${tu?fmtNum(tu):""}</td><td></td></tr>`;
   renderTotals();
 }
 function renderEvents(){
@@ -519,12 +533,16 @@ function renderWorkers(){ $("workerList").innerHTML=workers.map(w=>`<option valu
 function renderAll(){ renderHeader(); renderChips(); renderEntry(); renderTable(); renderEvents(); renderWorkers(); }
 function refreshLight(){ renderChips(); renderTable(); updateMarks(); }
 function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2600); }
-function askConfirm(msg){ return new Promise(res=>{ const d=$("dlgConfirm"); $("cfMsg").textContent=msg;
+function askConfirm(msg,yes,no){ return new Promise(res=>{ const d=$("dlgConfirm"); $("cfMsg").textContent=msg; $("cfYes").textContent=yes||"OK"; $("cfNo").textContent=no||"キャンセル";
   const done=v=>{ $("cfYes").onclick=$("cfNo").onclick=null; d.onclose=null; if(d.open) d.close(); res(v); };
   $("cfYes").onclick=()=>done(true); $("cfNo").onclick=()=>done(false); d.onclose=()=>done(false); d.showModal(); }); }
 function nowHM(){ const d=new Date(); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
 function rememberWorker(w){ if(w&&!workers.includes(w)){ workers.unshift(w); workers=workers.slice(0,40); LS.set(APP+":workers",workers); renderWorkers(); } }
 function selectRow(i){ sel=(i+N)%N; renderChips(); renderEntry(); renderTable(); }
+// 行を移るときに、単重・駒数の入れ忘れを警告する
+async function leaveOk(){ if(VIEW) return true; const r=state.rows[sel]; if(!missOf(r).length) return true;
+  return !(await askConfirm(`⚠ No.${sel+1} に入力されていない項目があります。\n\n${missText(r)}\n\n単重・駒数がないと生産トン数が計算できません。`,"入力に戻る","このまま進む")); }
+async function goRow(i){ if(i===sel) return; if(await leaveOk()) selectRow(i); else document.querySelector('#items input[data-ik="unit"],#items input[data-ik="koma"]')?.focus(); }
 function touchRow(i){ if(VIEW) return; state.rows[i].u=Date.now(); save(); Sync.queue("row",i); }
 function touchHeader(){ if(VIEW) return; state.hu=Date.now(); save(); Sync.queue("header",""); }
 
@@ -547,6 +565,7 @@ function pickMaster(i,m){ const r=state.rows[sel];
 function tryAutoConfirm(i){ const r=state.rows[sel], it=r.items[i]; if(!it||it.ok||!it.hin) return; const m=mFind(it.hin); if(m) pickMaster(i,m); }
 $("items").addEventListener("input",e=>{ if(VIEW) return; const box=e.target.closest(".item"), k=e.target.dataset.ik; if(!box||!k) return; const i=+box.dataset.it, r=state.rows[sel], it=r.items[i];
   it[k]=k==="hin"?e.target.value.toUpperCase():e.target.value.trim();
+  if(k==="unit"||k==="koma") e.target.closest(".f").classList.toggle("need",num(e.target.value)==null&&k==="unit");
   if(k==="hin"){ if(it.ok){ ["mat","add","unit","check","tana"].forEach(x=>it[x]=""); } it.ok=false; const st=box.querySelector(".hinst"); const [c,t]=itemStatus(it); st.className="hinst "+c; st.textContent=t; showSugg(i,it.hin); }
   touchRow(sel); renderChips(); renderTable(); updateMarks(); });
 $("items").addEventListener("keydown",e=>{ if(e.target.dataset.ik!=="hin") return; const i=+e.target.closest(".item").dataset.it;
@@ -561,8 +580,8 @@ $("items").addEventListener("click",async e=>{ const d=e.target.closest("[data-i
 $("btnAddItem").onclick=()=>{ if(VIEW) return; const r=state.rows[sel]; if(r.items.length>=MAXIT) return; r.items.push(blankItem()); touchRow(sel); renderItems(); const ins=document.querySelectorAll('#items input[data-ik="hin"]'); ins[ins.length-1].focus(); };
 
 // ---- 入力イベント ----
-$("chips").addEventListener("click",e=>{ const b=e.target.closest(".chip"); if(b) selectRow(+b.dataset.i); });
-$("tbody").addEventListener("click",e=>{ const tr=e.target.closest("tr[data-i]"); if(tr){ selectRow(+tr.dataset.i); $("entryCard").scrollIntoView({behavior:"smooth",block:"start"}); } });
+$("chips").addEventListener("click",e=>{ const b=e.target.closest(".chip"); if(b) goRow(+b.dataset.i); });
+$("tbody").addEventListener("click",e=>{ const tr=e.target.closest("tr[data-i]"); if(tr){ goRow(+tr.dataset.i); $("entryCard").scrollIntoView({behavior:"smooth",block:"start"}); } });
 document.querySelectorAll("#entryCard input[data-k]").forEach(inp=>{
   inp.addEventListener("input",()=>{ if(VIEW||inp.readOnly) return; const r=state.rows[sel], k=inp.dataset.k; r[k]=inp.value.trim(); touchRow(sel); refreshLight();
     if(k==="total") document.querySelectorAll('#items input[data-ik="tot"]').forEach(x=>x.placeholder="同じ: "+(r.total||"－")); });
@@ -574,8 +593,8 @@ document.querySelectorAll("[data-chk]").forEach(g=>g.addEventListener("click",e=
 $("btnAllOk").onclick=()=>{ if(VIEW) return; const r=state.rows[sel]; CHKK.forEach(k=>r[k]="OK"); touchRow(sel); refreshLight(); };
 document.querySelector('[data-sel="sq"]').addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||VIEW) return; const r=state.rows[sel]; r.sq= r.sq===b.dataset.v ? "" : b.dataset.v; touchRow(sel); refreshLight(); });
 $("btnClearRow").onclick=async()=>{ if(VIEW) return; if(await askConfirm(`No.${sel+1} の入力内容をクリアしますか?`)){ const u=Date.now(); state.rows[sel]=blankRow(); state.rows[sel].u=u; save(); Sync.queue("row",sel); renderAll(); } };
-$("btnNext").onclick=()=>{ selectRow(sel+1); window.scrollTo({top:$("entryCard").offsetTop-70,behavior:"smooth"}); };
-$("btnPrev").onclick=()=>selectRow(sel-1);
+$("btnNext").onclick=async()=>{ if(!await leaveOk()) return; selectRow(sel+1); window.scrollTo({top:$("entryCard").offsetTop-70,behavior:"smooth"}); };
+$("btnPrev").onclick=()=>goRow((sel-1+N)%N);
 $("confirmBy").addEventListener("input",e=>{ if(VIEW) return; state.confirmBy=e.target.value.trim(); touchHeader(); });
 $("tensile").addEventListener("input",e=>{ if(VIEW) return; state.tensile=e.target.value; touchHeader(); });
 $("counter").addEventListener("input",e=>{ if(VIEW) return; state.counter=e.target.value.trim(); touchHeader(); renderTotals(); });
@@ -744,6 +763,7 @@ function buildNippoSheet(){
   const HS=st({font:1,border:1,h:"center",fill:"head"});
   S.merge(0,y,13,y,"合計",HS); S.set(14,y,dayTotal()||"",HS); S.set(15,y,tq||"",HS); S.set(16,y,tu||"",HS); S.set(17,y,"",HS); y+=1;
   S.merge(12,y,14,y,"日計造型数",H); S.merge(15,y,L,y,dayTotal()+" 枠",st({font:1,border:1,h:"center"})); y++;
+  S.merge(12,y,14,y,"日計 生産トン数",H); S.merge(15,y,L,y,fmtT(dayKg())+" t",st({font:1,border:1,h:"center"})); y++;
   S.merge(12,y,14,y,"カウンター造型数",H); S.merge(15,y,L,y,state.counter?state.counter+" 枠":"",st({font:1,border:1,h:"center"})); y+=2;
   S.merge(0,y,L,y,"異常/変化点履歴",st({font:1,fill:"head",border:1})); y++;
   S.set(0,y,"発生時刻",H); S.merge(1,y,8,y,"異常/変化点内容",H); S.merge(9,y,15,y,"処置内容",H); S.merge(16,y,L,y,"担当",H); y++;
@@ -756,6 +776,8 @@ function tableSheet(name,rows,widths){ const S=new Sheet(name); S.freeze=1; S.co
 function buildXlsx(){ return workbook([buildNippoSheet(), tableSheet("データ",dataRows(),[11,12,5,16,6,8,8,8,16,8,6,6,6,7,7,11,8,8,8,8,8,9,9,10,7,10,24,9,10]), tableSheet("異常変化点",eventRows(),[11,12,5,9,9,10,50,50])]); }
 $("btnCsv").onclick=async()=>{
   if(!state.rows.some(rowHas)&&!liveEvents().length){ toast("入力データがありません"); return; }
+  const bad=state.rows.map((r,i)=>missOf(r).length?`No.${i+1}  ${missText(r).replace(/\n/g,"  ")}`:"").filter(Boolean);
+  if(bad.length&&!await askConfirm(`⚠ 単重・駒数が入力されていない品番があります。\n生産トン数に入っていません。\n\n${bad.join("\n")}`,"このまま保存","入力に戻る")) return;
   await Sync.flush();
   const where=await writeFile("造型日報_"+state.equip.replace(/[\\/:*?"<>|（）() ]/g,"")+"_"+state.date.replace(/-/g,"")+".xlsx",buildXlsx());
   if(where) toast("保存しました: "+where);
