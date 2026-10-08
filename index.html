@@ -515,7 +515,7 @@ function renderTable(){
       out.push(h+"</tr>"); }); });
   const tq=state.rows.reduce((a,r)=>a+rowQty(r),0), tu=state.rows.reduce((a,r)=>a+(num(r.unp)||0),0);
   $("tbody").innerHTML=(out.length?out.join(""):'<tr><td colspan="23" class="small" style="padding:12px">まだ入力がありません</td></tr>')+
-    `<tr class="sum"><td colspan="18">合計 <span class="id">Total</span></td><td>${fmtNum(dayTotal())}</td><td>${tq?fmtNum(tq):""}</td><td>${dayKg()?fmtNum(Math.round(dayKg()*10)/10):""}</td><td>${tu?fmtNum(tu):""}</td><td></td></tr>`;
+    `<tr class="sum"><td colspan="18">合計 <span class="id">Total</span></td><td>${fmtNum(dayTotal())}</td><td>${tq?fmtNum(tq):""}</td><td>${dayKg()?fmtNum(Math.round(dayKg()*10)/10):""}</td><td></td><td></td></tr>`;
   renderTotals();
 }
 function renderEvents(){
@@ -761,7 +761,7 @@ function buildNippoSheet(){
     ["sq","sqt","fup","fut","mt"].forEach((k,x)=>sh(9+x,r[k])); sh(16,r.unp); sh(17,r.worker); tu+=num(r.unp)||0;
     y=y2+1; });
   const HS=st({font:1,border:1,h:"center",fill:"head"});
-  S.merge(0,y,13,y,"合計",HS); S.set(14,y,dayTotal()||"",HS); S.set(15,y,tq||"",HS); S.set(16,y,tu||"",HS); S.set(17,y,"",HS); y+=1;
+  S.merge(0,y,13,y,"合計",HS); S.set(14,y,dayTotal()||"",HS); S.set(15,y,tq||"",HS); S.set(16,y,"",HS); S.set(17,y,"",HS); y+=1;
   S.merge(12,y,14,y,"日計造型数",H); S.merge(15,y,L,y,dayTotal()+" 枠",st({font:1,border:1,h:"center"})); y++;
   S.merge(12,y,14,y,"日計 生産トン数",H); S.merge(15,y,L,y,fmtT(dayKg())+" t",st({font:1,border:1,h:"center"})); y++;
   S.merge(12,y,14,y,"カウンター造型数",H); S.merge(15,y,L,y,state.counter?state.counter+" 枠":"",st({font:1,border:1,h:"center"})); y+=2;
