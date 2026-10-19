@@ -912,7 +912,7 @@ const Sync=(function(){
   async function list(month){ return call({action:"list",token:cfg.token,month}); }
   window.addEventListener("online",()=>{ flush().then(pull); }); window.addEventListener("offline",status);
   document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") flush().then(pull).then(()=>loadMaster(false)); });
-  setInterval(()=>{ if(document.visibilityState==="visible") flush().then(pull); },45000);
+  setInterval(()=>{ if(document.visibilityState==="visible") flush().then(pull).then(()=>loadMaster(false)); },45000);  // マスターは10分ごとに読み直す
   function errHint(e){ const m=String(e&&e.message||e);
     if(/unknown action|bad json/.test(m)) return m+"（Apps Script が古い版です。新しい Code を貼って「新しいバージョン」でデプロイしてください）";
     if(/合言葉/.test(m)) return m+"（config.js の token と Code の TOKEN を同じにしてください）";
@@ -1012,7 +1012,7 @@ sel=Math.max(0,state.rows.findIndex(r=>!rowHas(r))); if(sel<0) sel=0;
 renderAll();
 if(VIEW){ $("viewBadge").hidden=false; document.title="造型日報（閲覧用）"; document.querySelectorAll("#entryCard input,.card input").forEach(el=>el.readOnly=true); }
 Sync.status(); Sync.flush().then(()=>Sync.pull()); Sync.loadMaster(false);
-const EXP={master:()=>Sync.loadMaster(true), load:(d,q)=>load(d,q), empty:()=>!state.rows.some(rowHas)&&!liveEvents().length, name:()=>"造型日報_"+state.equip.replace(/[\\/:*?"<>|（）() ]/g,"")+"_"+state.date.replace(/-/g,"")+".xlsx"};
+const EXP={csv:()=>dataRows(), master:()=>Sync.loadMaster(true), load:(d,q)=>load(d,q), empty:()=>!state.rows.some(rowHas)&&!liveEvents().length, name:()=>"造型日報_"+state.equip.replace(/[\\/:*?"<>|（）() ]/g,"")+"_"+state.date.replace(/-/g,"")+".xlsx"};
 // ---- 自動Excel出力（URL末尾に ?export=開始日..終了日 を付けて開くと、その期間の日報Excelを作って画面に埋め込む）----
 (async function(){
   const m=/[?&]export=([^&#]*)/.exec(location.search); if(!m) return;
@@ -1033,7 +1033,10 @@ const EXP={master:()=>Sync.loadMaster(true), load:(d,q)=>load(d,q), empty:()=>!s
       try{ EXP.load(x.date,x.equip); await Sync.pull();
         const sb=document.getElementById("syncStat"); if(sb&&/\berr\b/.test(sb.className)) throw new Error("スプレッドシートから読み込めませんでした");
         if(EXP.empty&&EXP.empty()) continue;
-        res.files.push({date:x.date,name:EXP.name(),b64:await b64(buildXlsx())}); }
+        res.files.push({date:x.date,name:EXP.name(),b64:await b64(buildXlsx())});
+        if(EXP.csv){ const q=v=>{ v=v==null?"":String(v); return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
+          const txt="\ufeff"+EXP.csv().map(r=>r.map(q).join(",")).join("\r\n")+"\r\n";
+          res.files.push({date:x.date,name:EXP.name().replace(/\.xlsx$/,".csv"),b64:await b64(new Blob([txt]))}); } }
       catch(e){ res.errors.push(x.date+" "+(x.equip||"")+": "+(e.message||e)); } }
   }catch(e){ res.ok=false; res.errors.push(String(e.message||e)); }
   const u8=s=>btoa(unescape(encodeURIComponent(s))), box=document.createElement("div"); box.hidden=true;

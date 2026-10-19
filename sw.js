@@ -1,6 +1,6 @@
 // 造型日報 Service Worker
 // アプリを更新したら VERSION を変えてください(自動で新しい版に切り替わります)
-const VERSION = "zokei-nippo-v10";
+const VERSION = "zokei-nippo-v12";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./config.js", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
