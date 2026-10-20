@@ -6,5 +6,7 @@ window.SUNA_CONFIG = {
   syncUrl: "https://script.google.com/macros/s/AKfycbwp-kFrZ8nxZ2EnCa7benxNNPrammKxK3lGQ6g6vYmsJZcwtODXVrOG6ojquwcObB3ndA/exec",
   adminPin: "0726",   // 品番マスターをExcelから更新するときのパスワード
   token: "3eAv6FdoiaIlRAW6",
+   yokaiUrl: "https://script.google.com/macros/s/AKfycbwY_XoO4pl8zVCDETy-DlQlGxAyQbxOH18sIIZoSQxRMD5Zbrjy7Tx5gy4ZjFKCfGML2w/exec",
+  yokaiToken: "OWHKxlWeao3gjTQS",
   defaultCond: { sqt: "1.2", fup: "0.3", fut: "1.3" }
 };
