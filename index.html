@@ -207,6 +207,17 @@ input.dbl{background:#f3f5f8;cursor:pointer}
 input.unlock{background:#fff3e0;border-color:#e65100;color:#e65100;font-weight:bold}
 .lg-ip::before{background:#fff8e1!important;border-color:#f0c36d!important}
 .legend .id::before,.legend .lg-txt::before{display:none}
+.swbtn{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;background:#ffd54f;color:#3a2a00;border:2px solid #fff;font-weight:bold;font-size:18px;min-height:46px;padding:4px 16px;border-radius:999px;text-decoration:none;line-height:1.15;white-space:nowrap}
+.swbtn small{font-size:12px;font-weight:normal}
+.meltbar{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;background:#fff;color:#1d2330;border-radius:10px;padding:6px 12px;font-size:15px;border:2px solid #fff}
+.meltbar small{font-size:12px;color:#5d6778}
+.meltbar .mi{white-space:nowrap}
+.meltbar.bad{background:#ffebee;border-color:#d50000;animation:mblink 1.2s ease-in-out infinite alternate}
+@keyframes mblink{from{box-shadow:0 0 0 0 rgba(213,0,0,.0)}to{box-shadow:0 0 0 4px rgba(213,0,0,.45)}}
+.mwarn{flex-basis:100%;color:#b00020;font-weight:bold;font-size:17px}
+.mchip{display:inline-block;padding:1px 10px;border-radius:6px;border:2px solid #9aa4b3;background:#f3f5f8;font-size:16px}
+.mchip.m-FC200{background:#d6e6ff;border-color:#2f6fdb;color:#123f8c}.mchip.m-FC250{background:#d3f2dc;border-color:#21945a;color:#0c5a32}
+.mchip.m-otherH{background:#fff0b3;border-color:#c99a00;color:#6b5000}.mchip.m-otherL{background:#ffd9ea;border-color:#d0457f;color:#8a1f4f}
 </style>
 <body>
 <header class="top">
@@ -218,10 +229,12 @@ input.unlock{background:#fff3e0;border-color:#e65100;color:#e65100;font-weight:b
     </select></label>
   <button class="sync" id="syncStat" hidden>同期</button>
   <span class="sp"></span>
+  <a class="swbtn" id="btnSwitch" data-to="../chuto2-nippo/" href="../chuto2-nippo/">注湯日報へ ▶<small id="swEq"></small></a>
   <button class="ghost" id="btnInstall" hidden>ホーム画面に追加</button>
   <button class="ghost" id="btnList">日報一覧</button>
   <button class="ghost" id="btnSettings">設定</button>
   <button class="pri" id="btnCsv">Excel保存</button>
+  <div class="meltbar" id="meltBar" hidden></div>
 </header>
 
 <main>
@@ -554,7 +567,7 @@ function renderEvents(){
      <label class="f">担当 <span class="id">yang bertanggung</span><input data-ek="person" list="workerList" value="${esc(e.person)}" ${VIEW?"readonly":""}></label>
      <button data-del="${i}" style="align-self:end">削除</button>
    </div>`).join(""); }
-function workerNames(){ return [...WORKERS0,...workers.filter(w=>!WORKERS0.includes(w))]; }
+function workerNames(){ const base=(typeof Crew!=="undefined"&&Crew.list())||WORKERS0; return [...base,...workers.filter(w=>!base.includes(w))]; }
 function renderWorkers(){ $("workerList").innerHTML=workerNames().map(w=>`<option value="${esc(w)}">`).join(""); }
 // ---- 作業者（2名・プルダウン）----
 function splitW(r){ if(!r.w1&&!r.w2&&r.worker){ const p=String(r.worker).split(/[・,、\s]+/).filter(Boolean); r.w1=p[0]||""; r.w2=p[1]||""; } }
@@ -578,7 +591,7 @@ function askConfirm(msg,yes,no){ return new Promise(res=>{ const d=$("dlgConfirm
   const done=v=>{ $("cfYes").onclick=$("cfNo").onclick=null; d.onclose=null; if(d.open) d.close(); res(v); };
   $("cfYes").onclick=()=>done(true); $("cfNo").onclick=()=>done(false); d.onclose=()=>done(false); d.showModal(); }); }
 function nowHM(){ const d=new Date(); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
-function rememberWorker(w){ if(w&&!workers.includes(w)){ workers.unshift(w); workers=workers.slice(0,40); LS.set(APP+":workers",workers); renderWorkers(); } }
+function rememberWorker(w){ if(w&&typeof Crew!=="undefined") Crew.add(w); if(w&&!workers.includes(w)){ workers.unshift(w); workers=workers.slice(0,40); LS.set(APP+":workers",workers); renderWorkers(); } }
 function selectRow(i){ sel=(i+NR())%NR(); renderChips(); renderEntry(); renderTable(); }
 // 行を移るときに、単重・駒数の入れ忘れを警告する
 async function leaveOk(){ if(VIEW) return true; const r=state.rows[sel]; if(!missOf(r).length) return true;
@@ -984,6 +997,72 @@ $("btnMasterImport").onclick=async()=>{
     if(step!=="Excelの読み取り"&&/Failed to fetch|NetworkError|Load failed/.test(String(e&&e.message||e))){ const ping=await Sync.test(); msg+=`\n【接続テスト】${ping}`+(/接続OK/.test(ping)?"\n→ 接続はできています。Apps Script を新しい Code に貼り替えて「新しいバージョン」でデプロイし直してください。":""); }
     info.textContent=msg; info.style.whiteSpace="pre-line"; }
 };
+
+// ---- 作業者の名前（全端末共通：造型日報のスプレッドシートに保存）----
+// 使う側で CREW_URL() CREW_TOKEN() CREW_CHANGED() を用意する
+const Crew=(function(){
+  let S=LS.get("crew:shared",null);   // 造型日報と注湯日報で同じ名前を使う
+  function list(){ return (S&&S.list&&S.list.length)?S.list:null; }
+  async function pull(){ const u=CREW_URL(); if(!u) return;
+    try{ const r=await fetch(u+(u.includes("?")?"&":"?")+new URLSearchParams({action:"workers",token:CREW_TOKEN()}),{redirect:"follow"}); const j=await r.json();
+      if(j.ok&&j.list&&j.list.length&&JSON.stringify(j.list)!==JSON.stringify(list())){ S={list:j.list,u:j.u||Date.now()}; LS.set("crew:shared",S); CREW_CHANGED(); } }catch(e){} }
+  async function add(name){ name=String(name||"").trim(); if(!name) return; const base=list()||WORKERS0.slice(); if(base.includes(name)) return;
+    S={list:[...base,name],u:Date.now()}; LS.set("crew:shared",S); CREW_CHANGED(); const u=CREW_URL(); if(!u) return;
+    try{ await fetch(u,{method:"POST",body:JSON.stringify({token:CREW_TOKEN(),action:"setWorkers",list:S.list,u:S.u}),redirect:"follow"}); await pull(); }catch(e){} }
+  setInterval(()=>{ if(document.visibilityState==="visible") pull(); },60000);
+  return {list,pull,add};
+})();
+
+// ---- 溶解工程でいま溶かしている材質（溶解日報から読む）材質まちがい防止 ----
+// 使う側で MELT_ROLE（"mold"=造型 / "pour"=注湯）と meltMine()（この画面の材質）を用意する
+const Melt=(function(){
+  const url=()=>CFG.yokaiUrl||"", token=()=>CFG.yokaiToken||"OWHKxlWeao3gjTQS";
+  const ML={FC200:"FC200",FC250:"FC250",otherH:"その他H",otherL:"その他L",other:"その他"};
+  const MC={"FC200":"m-FC200","FC250":"m-FC250","その他H":"m-otherH","その他L":"m-otherL"};
+  let info=null, at=0, err="", busy=false;
+  const ymd=d=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+  function yd(){ const d=new Date(); if(d.getHours()<8) d.setDate(d.getDate()-1); return ymd(d); }   // 溶解日報は朝8時で日付が切りかわる
+  const lab=m=>ML[m]||m||"";
+  function started(r){ return ["mat","sen","kou","dar","drM","kat","sil","addC","addSi","addSc","ce","c","si","ten","temp","tap","worker"].some(k=>(r[k]||"")!=="") || (!!r.st&&!r.stAuto); }
+  async function load(){
+    if(!url()||busy){ render(); return; } busy=true;
+    try{ const u=url()+(url().includes("?")?"&":"?")+new URLSearchParams({action:"load",token:token(),date:yd(),equip:"溶解"});
+      const j=await (await fetch(u,{redirect:"follow"})).json(); if(!j.ok) throw new Error(j.error||"error");
+      const rows=[]; (j.items||[]).forEach(it=>{ if(it.type==="row") rows[+it.ref]=it.raw||{}; });
+      let melt=null, pour=null, last=-1;
+      rows.forEach((r,i)=>{ if(!r) return; if(r.tap){ pour={no:i+1,mat:lab(r.mat||r.plan),t:r.tap}; last=Math.max(last,i); } if(started(r)&&!r.tap){ melt={no:i+1,mat:lab(r.mat||r.plan),t:r.st,plan:!r.mat&&!!r.plan}; last=Math.max(last,i); } });
+      let next=null; for(let i=last+1;i<rows.length;i++){ const r=rows[i]; if(r&&(r.plan||r.mat)&&!(melt&&melt.no===i+1)){ next={no:i+1,mat:lab(r.mat||r.plan)}; break; } }
+      info={melt,pour,next}; at=Date.now(); err=""; }
+    catch(e){ err=String(e.message||e); }
+    busy=false; render(); }
+  const norm=m=>String(m||"").replace(/\s/g,"").replace(/[Ａ-Ｚ０-９]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).toUpperCase();
+  function same(a,b){ a=norm(a); b=norm(b); if(!a||!b) return true; return a===b||a.startsWith(b)||b.startsWith(a); }
+  const chip=m=>`<b class="mchip ${MC[m]||""}">${esc(m||"－")}</b>`;
+  function render(){ const box=$("meltBar"); if(!box) return;
+    if(!url()||!state||state.date!==todayStr()){ box.hidden=true; return; } box.hidden=false;
+    if(!info){ box.className="meltbar"; box.innerHTML=err?`溶解日報を読み込めませんでした（${esc(err)}）`:"溶解日報を読み込み中…"; return; }
+    const {melt,pour,next}=info, P=[];
+    const sMelt=melt?`<span class="mi">🔥 溶解中 <small>Sedang dilebur</small> No.${melt.no} ${chip(melt.mat)}${melt.plan?"<small>(予定)</small>":""}${melt.t?` <small>${esc(melt.t)}〜</small>`:""}</span>`:`<span class="mi">🔥 溶解中：なし</span>`;
+    const sPour=pour?`<span class="mi">🫗 出湯済み（注湯中の湯） <small>Sudah dituang</small> No.${pour.no} ${chip(pour.mat)} <small>出湯 ${esc(pour.t)}</small></span>`:`<span class="mi">🫗 出湯済み：なし</span>`;
+    const sNext=next?`<span class="mi">次 No.${next.no} ${chip(next.mat)}</span>`:"";
+    if(MELT_ROLE==="pour") P.push(sPour,sMelt,sNext); else P.push(sMelt,sPour,sNext);
+    const mine=meltMine(), tgt=MELT_ROLE==="pour"?(pour||melt):(melt||next);
+    const bad=mine&&mine.mat&&tgt&&tgt.mat&&!same(mine.mat,tgt.mat);
+    box.className="meltbar"+(bad?" bad":"");
+    box.innerHTML=P.filter(Boolean).join("")+(bad?`<div class="mwarn">⚠ 材質が違います！ ${esc(mine.label)} ${chip(mine.mat)} ／ ${MELT_ROLE==="pour"?"出湯済みの湯":"溶解中"} ${chip(tgt.mat)}　溶解工程に確認してください / Bahan berbeda! Cek ke peleburan</div>`:"");
+  }
+  setInterval(()=>{ if(document.visibilityState==="visible") load(); },40000);
+  setInterval(render,4000);
+  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") load(); });
+  return {load,render,on:()=>!!url()};
+})();
+
+// ---- 溶解中の材質・作業者名の共有（造型日報）----
+const MELT_ROLE="mold";
+function meltMine(){ for(let i=state.rows.length-1;i>=0;i--){ const it=(state.rows[i].items||[]).find(x=>x.hin&&x.mat); if(it) return {label:"造型中 "+it.hin,mat:it.mat}; } return null; }
+function CREW_URL(){ return Sync.getCfg().syncUrl||""; }
+function CREW_TOKEN(){ return Sync.getCfg().token||""; }
+function CREW_CHANGED(){ renderWorkers(); if(!wAdding) renderWorkerSel(); }
 // ---- PWA ----
 (function(){
   const standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
@@ -1007,11 +1086,18 @@ $("btnMasterImport").onclick=async()=>{
 
 
 // ---- init ----
-{ const last=LS.get(APP+":last",null); const t=todayStr(); load(t,(last&&last.date===t&&last.equip)||defaultEquip()); }
+{ const last=LS.get(APP+":last",null); const t=todayStr(); const qp=new URLSearchParams(location.search), qe=qp.get("equip"), qd=qp.get("date");
+  if(qe&&EQUIPS.includes(qe)){ load((qd&&/^\d{4}-\d{2}-\d{2}$/.test(qd))?qd:t, qe); try{ history.replaceState(null,"",location.pathname+(VIEW?"?view":"")); }catch(e){} }
+  else load(t,(last&&last.date===t&&last.equip)||defaultEquip()); }
+// ---- もう一つの日報へ切りかえ（同じ号機で開く）----
+{ const sw=$("btnSwitch"); const upd=()=>{ $("swEq").textContent=state.equip; };
+  sw.addEventListener("click",async e=>{ e.preventDefault(); try{ await Sync.flush(); }catch(x){} const q=new URLSearchParams({equip:state.equip}); if(state.date!==todayStr()) q.set("date",state.date);
+    const qv=VIEW?"&view":""; location.href=sw.dataset.to+"?"+q.toString()+qv; });
+  upd(); $("equip").addEventListener("change",upd); $("date").addEventListener("change",upd); setInterval(upd,3000); if(/[?&]export=/.test(location.search)) sw.hidden=true; }
 sel=Math.max(0,state.rows.findIndex(r=>!rowHas(r))); if(sel<0) sel=0;
 renderAll();
 if(VIEW){ $("viewBadge").hidden=false; document.title="造型日報（閲覧用）"; document.querySelectorAll("#entryCard input,.card input").forEach(el=>el.readOnly=true); }
-Sync.status(); Sync.flush().then(()=>Sync.pull()); Sync.loadMaster(false);
+Sync.status(); Sync.flush().then(()=>Sync.pull()); Sync.loadMaster(false); Melt.load(); Crew.pull();
 const EXP={csv:()=>dataRows(), master:()=>Sync.loadMaster(true), load:(d,q)=>load(d,q), empty:()=>!state.rows.some(rowHas)&&!liveEvents().length, name:()=>"造型日報_"+state.equip.replace(/[\\/:*?"<>|（）() ]/g,"")+"_"+state.date.replace(/-/g,"")+".xlsx"};
 // ---- 自動Excel出力（URL末尾に ?export=開始日..終了日 を付けて開くと、その期間の日報Excelを作って画面に埋め込む）----
 (async function(){
