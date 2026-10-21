@@ -230,6 +230,13 @@ input.unlock{background:#fff3e0;border-color:#e65100;color:#e65100;font-weight:b
   .mwarn{font-size:15px}
   .mchip{font-size:15px;padding:1px 8px}
 }
+/* 黄色の切りかえボタンと溶解の材質の帯：下にスクロールしても上に残る */
+.sticktop{position:sticky;top:var(--meltTop,0px);z-index:19;background:#1d4e5c;display:flex;gap:10px;align-items:center;padding:8px 16px;box-shadow:0 3px 8px rgba(0,0,0,.25)}
+.sticktop .meltbar{flex:1 1 0;min-width:0}
+.sticktop .swbtn{flex:0 0 auto}
+@media (max-width:700px){ .sticktop{flex-wrap:wrap;padding:6px 8px;gap:6px} .sticktop .meltbar{flex:1 1 100%} .sticktop .swbtn{font-size:16px;min-height:40px;width:100%;flex-direction:row;gap:8px} .sticktop.stuck .mi small{display:none} }
+@media print{ .sticktop{display:none!important} }
+.meltbar[hidden]{display:none!important}
 </style>
 <body>
 <header class="top">
@@ -241,13 +248,15 @@ input.unlock{background:#fff3e0;border-color:#e65100;color:#e65100;font-weight:b
     </select></label>
   <button class="sync" id="syncStat" hidden>同期</button>
   <span class="sp"></span>
-  <a class="swbtn" id="btnSwitch" data-to="../chuto2-nippo/" href="../chuto2-nippo/">注湯日報へ ▶<small id="swEq"></small></a>
   <button class="ghost" id="btnInstall" hidden>ホーム画面に追加</button>
   <button class="ghost" id="btnList">日報一覧</button>
   <button class="ghost" id="btnSettings">設定</button>
   <button class="pri" id="btnCsv">Excel保存</button>
-  <div class="meltbar" id="meltBar" hidden></div>
 </header>
+<div class="sticktop" id="stickTop">
+  <a class="swbtn" id="btnSwitch" data-to="../chuto2-nippo/" href="../chuto2-nippo/">注湯日報へ ▶<small id="swEq"></small></a>
+  <div class="meltbar" id="meltBar" hidden></div>
+</div>
 
 <main>
   <div id="viewNote" style="display:none;background:#e3eeff;border:1px solid #9cc0f5;border-radius:10px;padding:10px 14px;font-size:15px">
@@ -1063,6 +1072,11 @@ const Melt=(function(){
     box.className="meltbar"+(bad?" bad":"");
     box.innerHTML=P.filter(Boolean).join("")+(bad?`<div class="mwarn">⚠ 材質が違います！ ${esc(mine.label)} ${chip(mine.mat)} ／ ${MELT_ROLE==="pour"?"出湯済みの湯":"溶解中"} ${chip(tgt.mat)}　溶解工程に確認してください / Bahan berbeda! Cek ke peleburan</div>`:"");
   }
+  // ヘッダーが上に固定される画面ではその下に、固定されない画面（スマホ）では一番上に残す
+  function place(){ const box=$("stickTop"), h=document.querySelector("header.top"); if(!box||!h) return;
+    const top=getComputedStyle(h).position==="sticky"?h.offsetHeight:0; document.documentElement.style.setProperty("--meltTop",top+"px");
+    box.classList.toggle("stuck",box.getBoundingClientRect().top<=top+1&&window.scrollY>0); }
+  window.addEventListener("scroll",place,{passive:true}); window.addEventListener("resize",place); setTimeout(place,300);
   setInterval(()=>{ if(document.visibilityState==="visible") load(); },40000);
   setInterval(render,4000);
   document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") load(); });
