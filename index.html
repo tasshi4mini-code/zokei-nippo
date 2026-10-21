@@ -822,6 +822,8 @@ function workbook(sheets){
 
 // ---- Excel ----
 const DATA_HEAD=["生産日","号機","No","品番","駒数","品名","マスター登録","材質","添加材","単重(kg)","駒部","方案部","定盤部","開始","完了","注湯温度(規格)","スクイズ圧力","スクイズ時間","吹上圧力","吹上時間","モールド厚","造型総数","生産個数","生産重量(kg)","未注湯","作業者","確認ポイント","引張棒採取","記録確認"];
+// CSV（必要な項目だけ）：生産日・号機・品番・品名・生産個数
+function csvRows(){ return dataRows().map(r=>[r[0],r[1],r[3],r[5],r[22]]); }
 function dataRows(){
   const out=[DATA_HEAD];
   state.rows.forEach((r,i)=>{ if(!rowHas(r)) return; const li=liveItems(r).length?liveItems(r):[blankItem()];
@@ -1124,7 +1126,7 @@ sel=Math.max(0,state.rows.findIndex(r=>!rowHas(r))); if(sel<0) sel=0;
 renderAll();
 if(VIEW){ $("viewBadge").hidden=false; document.title="造型日報（閲覧用）"; document.querySelectorAll("#entryCard input,.card input").forEach(el=>el.readOnly=true); }
 Sync.status(); Sync.flush().then(()=>Sync.pull()); Sync.loadMaster(false); Melt.load(); Crew.pull();
-const EXP={csv:()=>dataRows(), master:()=>Sync.loadMaster(true), load:(d,q)=>load(d,q), empty:()=>!state.rows.some(rowHas)&&!liveEvents().length, name:()=>"造型日報_"+state.equip.replace(/[\\/:*?"<>|（）() ]/g,"")+"_"+state.date.replace(/-/g,"")+".xlsx"};
+const EXP={csv:()=>csvRows(), master:()=>Sync.loadMaster(true), load:(d,q)=>load(d,q), empty:()=>!state.rows.some(rowHas)&&!liveEvents().length, name:()=>"造型日報_"+state.equip.replace(/[\\/:*?"<>|（）() ]/g,"")+"_"+state.date.replace(/-/g,"")+".xlsx"};
 // ---- 自動Excel出力（URL末尾に ?export=開始日..終了日 を付けて開くと、その期間の日報Excelを作って画面に埋め込む）----
 (async function(){
   const m=/[?&]export=([^&#]*)/.exec(location.search); if(!m) return;
