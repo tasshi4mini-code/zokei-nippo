@@ -171,6 +171,10 @@ td.chg,input.chg{color:#d50000!important;font-weight:bold;background:#fff1f1}
 .qtyline{font-size:15px;margin:2px 0}
 .tot{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;align-items:end}
 .tot .big{font-size:30px;font-weight:bold;color:#1d4e5c}
+.yieldbox{border:2px solid #1d4e5c;border-radius:10px;padding:6px 10px;background:#f2f8f9}
+.yieldbox .big{color:#0b6b3a}
+.yieldbox.over{border-color:#d50000;background:#ffebee}.yieldbox.over .big{color:#d50000}
+#yieldNote{line-height:1.5}
 .mstat{font-size:13px;color:var(--sub)}
 .mstat.warn{color:#c62828;font-weight:bold}
 body.view #entryCard input,body.view #events input,body.view #events textarea,body.view .card input,body.view .card select{pointer-events:none;background:#f3f5f8}
@@ -360,6 +364,7 @@ input.unlock{background:#fff3e0;border-color:#e65100;color:#e65100;font-weight:b
     <div class="tot" style="margin-top:12px">
       <div><div class="small">日計造型数 (自動) <span class="id">Total cetakan harian</span></div><div class="big"><span id="dayTotal">0</span> 枠</div></div>
       <div><div class="small">日計 生産トン数 (自動) <span class="id">Total produksi (ton)</span></div><div class="big"><span id="dayTon">0.00</span> t <span class="small" id="dayKg"></span></div><div class="small" id="tonNote" style="color:#c62828;font-weight:bold"></div></div>
+      <div class="yieldbox"><div class="small">製品歩留まり（1・2号機の合計） <span class="id">Rendemen produk</span></div><div class="big"><span id="yieldPct">－</span> %</div><div class="small" id="yieldNote"></div></div>
       <label class="f">カウンター造型数 <span class="id">Jumlah counter</span><input id="counter" inputmode="numeric" style="font-size:22px;font-weight:bold"><span class="small" id="counterDiff"></span></label>
     </div>
   </section>
@@ -531,7 +536,7 @@ function renderTotals(){ const t=dayTotal(); $("dayTotal").textContent=fmtNum(t)
   const kg=dayKg(), miss=state.rows.filter(r=>missOf(r).length).length; $("dayTon").textContent=fmtT(kg); $("dayKg").textContent=kg?`（${fmtNum(Math.round(kg*10)/10)} kg）`:"";
   const tests=state.rows.reduce((a,r)=>a+liveItems(r).filter(it=>it.test).length,0);
   $("tonNote").textContent=[miss?`⚠ 単重・駒数が未入力の行が ${miss} 行あります（トン数に入っていません）`:"", tests?`テスト品番 ${tests}件はトン数に含めていません`:""].filter(Boolean).join(" / "); const c=num(state.counter);
-  $("counterDiff").textContent = c!=null&&t? (c===t?"日計と一致 ✓":`日計との差 ${fmtNum(c-t)} 枠`) : ""; $("counterDiff").style.color=c!=null&&c!==t?"#c62828":"#2e7d32"; }
+  $("counterDiff").textContent = c!=null&&t? (c===t?"日計と一致 ✓":`日計との差 ${fmtNum(c-t)} 枠`) : ""; $("counterDiff").style.color=c!=null&&c!==t?"#c62828":"#2e7d32"; if(Yield) Yield.render(); }
 function itemStatus(it){ if(it.test) return ["ng","テスト品番（単重なし・生産トン数には入りません） / Produk uji"]; if(!it.hin) return ["",""]; if(it.ok) return ["ok","✓ マスター登録あり / Terdaftar"]; return ["ng","マスターにない品番です（駒数・品名・単重を手入力） / Tidak ada di master"]; }
 function renderItems(){ const r=state.rows[sel];
   $("items").innerHTML=r.items.map((it,i)=>{ const [c,t]=itemStatus(it); return `<div class="item" data-it="${i}">
@@ -871,6 +876,7 @@ function buildNippoSheet(){
   S.merge(0,y,13,y,"合計",HS); S.set(14,y,dayTotal()||"",HS); S.set(15,y,tq||"",HS); S.set(16,y,"",HS); S.set(17,y,"",HS); y+=1;
   S.merge(12,y,14,y,"日計造型数",H); S.merge(15,y,L,y,dayTotal()+" 枠",st({font:1,border:1,h:"center"})); y++;
   S.merge(12,y,14,y,"日計 生産トン数",H); S.merge(15,y,L,y,fmtT(dayKg())+" t",st({font:1,border:1,h:"center"})); y++;
+  { const yv=Yield&&Yield.val(); S.merge(12,y,14,y,"製品歩留まり(全号機)",H); S.merge(15,y,L,y,yv&&yv.pct!=null?yv.pct.toFixed(1)+" %":"",st({font:1,border:1,h:"center"})); y++; }
   S.merge(12,y,14,y,"カウンター造型数",H); S.merge(15,y,L,y,state.counter?state.counter+" 枠":"",st({font:1,border:1,h:"center"})); y+=2;
   S.merge(0,y,L,y,"異常/変化点履歴",st({font:1,fill:"head",border:1})); y++;
   S.set(0,y,"発生時刻",H); S.merge(1,y,8,y,"異常/変化点内容",H); S.merge(9,y,15,y,"処置内容",H); S.merge(16,y,L,y,"担当",H); y++;
@@ -1053,6 +1059,44 @@ const Crew=(function(){
   return {list,pull,add};
 })();
 
+// ---- 製品歩留まり（1日・1号機と2号機の合計）----
+// 製品歩留まり(%) = 造型の生産重量（全号機・未注湯を除く） ÷ 溶解の出湯量（出湯時刻が入ったチャージの配合合計） × 100
+// 溶解の配合合計 = 銑鉄＋鋼鉄＋ダライ粉＋戻り材＋加炭材＋シリコン＋スクラップ追加
+var Yield=(function(){
+  const MIXK=["sen","kou","dar","mod","kat","sil","addSc"];
+  let cur={key:""};
+  async function getJ(base,params){ const u=base+(base.includes("?")?"&":"?")+new URLSearchParams(params);
+    const j=await (await fetch(u,{redirect:"follow"})).json(); if(!j.ok) throw new Error(j.error||"error"); return j; }
+  function rowsOf(j){ const rows=[]; (j.items||[]).forEach(it=>{ if(it.type==="row") rows[+it.ref]=it.raw||{}; }); return rows; }
+  async function refresh(){
+    const d=state.date, e=state.equip, key=d+"|"+e, res={key,other:null,melt:null,err:""};
+    if(navigator.onLine===false){ return; }
+    try{
+      const cfg=Sync.getCfg();
+      if(cfg.syncUrl){ let kg=0;
+        for(const o of EQUIPS.filter(x=>x!==e)){ const j=await getJ(cfg.syncUrl,{action:"load",token:cfg.token,date:d,equip:o});
+          rowsOf(j).forEach(r=>{ if(!r) return; const rr=normRow(r); liveItems(rr).forEach(it=>{ kg+=weightOf(rr,it)||0; }); }); }
+        res.other=kg; }
+      if(CFG.yokaiUrl){ const j=await getJ(CFG.yokaiUrl,{action:"load",token:CFG.yokaiToken||"OWHKxlWeao3gjTQS",date:d,equip:"溶解"});
+        let kg=0,n=0; rowsOf(j).forEach(r=>{ if(!r||!r.tap) return; const t=MIXK.reduce((a,k)=>a+(num(r[k])||0),0); if(t>0){ kg+=t; n++; } });
+        res.melt={kg,n}; }
+      else res.err="溶解日報の場所（config.js の yokaiUrl）が未設定です";
+    }catch(x){ res.err="読み込めませんでした（"+String(x.message||x)+"）"; }
+    if(state.date+"|"+state.equip===key) cur=res; render(); }
+  function val(){ if(cur.key!==state.date+"|"+state.equip||!cur.melt) return null;
+    const own=dayKg(), other=cur.other||0, prod=own+other, m=cur.melt.kg;
+    return {own,other,prod,melt:m,n:cur.melt.n,pct:m>0?Math.round(prod/m*1000)/10:null}; }
+  function render(){ const p=$("yieldPct"), nt=$("yieldNote"); if(!p||!nt) return; const box=p.closest(".yieldbox"), v=val();
+    box.classList.remove("over");
+    if(!v){ p.textContent="－"; nt.textContent=cur.key===state.date+"|"+state.equip&&cur.err?cur.err:"溶解日報を読み込み中…"; return; }
+    if(v.pct==null){ p.textContent="－"; nt.textContent="溶解日報にこの日の出湯（出湯時刻の入ったチャージ）がまだありません"; return; }
+    p.textContent=v.pct.toFixed(1);
+    const oe=EQUIPS.filter(x=>x!==state.equip).join("・");
+    nt.innerHTML=`生産 <b>${fmtT(v.prod)} t</b>（${esc(state.equip)} ${fmtT(v.own)} t ＋ ${esc(oe)} ${fmtT(v.other)} t）<br>÷ 溶解（出湯済み ${v.n} チャージ） <b>${fmtT(v.melt)} t</b>`
+      +(v.pct>100?`<br><b style="color:#d50000">⚠ 100%を超えています。溶解日報の配合・出湯時刻の入力漏れを確認してください</b>`:"");
+    if(v.pct>100) box.classList.add("over"); }
+  return {refresh,val,render};
+})();
 // ---- 溶解工程でいま溶かしている材質（溶解日報から読む）材質まちがい防止 ----
 // 使う側で MELT_ROLE（"mold"=造型 / "pour"=注湯）と meltMine()（この画面の材質）を用意する
 const Melt=(function(){
@@ -1143,6 +1187,8 @@ sel=Math.max(0,state.rows.findIndex(r=>!rowHas(r))); if(sel<0) sel=0;
 renderAll();
 if(VIEW){ $("viewBadge").hidden=false; document.title="造型日報（閲覧用）"; document.querySelectorAll("#entryCard input,.card input").forEach(el=>el.readOnly=true); }
 Sync.status(); Sync.flush().then(()=>Sync.pull()); Sync.loadMaster(false); Melt.load(); Crew.pull();
+if(!/[?&]export=/.test(location.search)){ Yield.refresh(); $("date").addEventListener("change",()=>Yield.refresh()); $("equip").addEventListener("change",()=>Yield.refresh());
+  setInterval(()=>{ if(document.visibilityState==="visible") Yield.refresh(); },60000); document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") Yield.refresh(); }); }
 const EXP={csv:()=>csvRows(), master:()=>Sync.loadMaster(true), load:(d,q)=>load(d,q), empty:()=>!state.rows.some(rowHas)&&!liveEvents().length, name:()=>"造型日報_"+state.equip.replace(/[\\/:*?"<>|（）() ]/g,"")+"_"+state.date.replace(/-/g,"")+".xlsx"};
 // ---- 自動Excel出力（URL末尾に ?export=開始日..終了日 を付けて開くと、その期間の日報Excelを作って画面に埋め込む）----
 (async function(){
@@ -1164,6 +1210,7 @@ const EXP={csv:()=>csvRows(), master:()=>Sync.loadMaster(true), load:(d,q)=>load
       try{ EXP.load(x.date,x.equip); await Sync.pull();
         const sb=document.getElementById("syncStat"); if(sb&&/\berr\b/.test(sb.className)) throw new Error("スプレッドシートから読み込めませんでした");
         if(EXP.empty&&EXP.empty()) continue;
+        if(Yield) await Yield.refresh();
         res.files.push({date:x.date,name:EXP.name(),b64:await b64(buildXlsx())});
         if(EXP.csv){ const q=v=>{ v=v==null?"":String(v); return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
           const txt="\ufeff"+EXP.csv().map(r=>r.map(q).join(",")).join("\r\n")+"\r\n";
