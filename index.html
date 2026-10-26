@@ -152,7 +152,7 @@ td.chg,input.chg{color:#d50000!important;font-weight:bold;background:#fff1f1}
 .item .hin input{font-size:20px;font-weight:bold;letter-spacing:.5px;text-transform:uppercase}
 .item .del{min-height:46px}
 .hinwrap{position:relative}
-.sugg{position:absolute;left:0;right:0;top:100%;z-index:20;background:#fff;border:2px solid #1d4e5c;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);max-height:340px;overflow-y:auto;margin-top:2px}
+.sugg{position:absolute;left:0;right:0;top:100%;z-index:20;background:#fff;border:2px solid #1d4e5c;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);max-height:340px;overflow-y:auto;margin-top:2px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;min-width:min(420px,90vw)}
 .sugg .hd{font-size:13px;color:#fff;background:#1d4e5c;padding:6px 10px;font-weight:bold}
 .sugg button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:10px 12px;min-height:52px;background:#fff;font-size:16px}
 .sugg button:hover,.sugg button.act{background:#e3f1f4}
@@ -293,7 +293,7 @@ input.unlock{background:#fff3e0;border-color:#e65100;color:#e65100;font-weight:b
     </div>
 
     <div class="sec">
-      <div class="t">生産情報 <span class="id">Info produksi</span> — <span class="small" style="color:var(--pri)">品番を数文字打つと候補が出ます。タップで確定 / Ketik beberapa huruf, lalu pilih</span></div>
+      <div class="t">生産情報 <span class="id">Info produksi</span> — <span class="small" style="color:var(--pri)">品番を数文字打つと候補が出ます（数字だけでもOK）。タップで確定 / Ketik beberapa huruf, lalu pilih</span></div>
       <div class="items" id="items"></div>
       <div id="moldNote"></div>
       <div id="missWarn"></div>
@@ -468,9 +468,10 @@ function buildIdx(){ MIDX=(MASTER.rows||[]).filter(m=>m.hin).map(m=>Object.assig
 buildIdx();
 function mFind(hin){ const n=normHin(hin); return n?MIDX.find(m=>m.n===n)||null:null; }
 function mGroup(m){ if(!m||!m.mold) return m?[m]:[]; const g=MIDX.filter(x=>x.mold===m.mold); return [m].concat(g.filter(x=>x!==m)).slice(0,MAXIT); }
+// 品番の候補：先頭が一致 → 「RD」などの英字のあとが一致（数字だけ打ってもOK）→ 途中が一致 の順
 function suggest(q){ const n=normHin(q); if(n.length<2) return [];
-  const pre=[], mid=[]; MIDX.forEach(m=>{ const i=m.n.indexOf(n); if(i===0) pre.push(m); else if(i>0) mid.push(m); });
-  const byLen=(a,b)=>a.n.length-b.n.length||a.n.localeCompare(b.n); return pre.sort(byLen).concat(mid.sort(byLen)).slice(0,8); }
+  const pre=[], pre2=[], mid=[]; MIDX.forEach(m=>{ const i=m.n.indexOf(n); if(i===0) pre.push(m); else if(i>0){ (/^[A-Z]+$/.test(m.n.slice(0,i))?pre2:mid).push(m); } });
+  const byLen=(a,b)=>a.n.length-b.n.length||a.n.localeCompare(b.n); return pre.sort(byLen).concat(pre2.sort(byLen),mid.sort(byLen)).slice(0,15); }
 function condOf(m){ const c={}; CONDK.forEach(k=>c[k]=(m[k]!=null&&m[k]!=="")?String(m[k]):(DEF_COND[k]||"")); if(m.sq) c.sq=m.sq; return c; }
 function infoOf(m){ return {mat:m.mat||"",add:m.add||"",unit:m.unit||"",check:m.check||"",tana:m.tana||""}; }
 function itemFrom(m){ return Object.assign({hin:m.hin,koma:m.koma==null?"":String(m.koma),name:m.name||"",ok:true},infoOf(m)); }
@@ -629,8 +630,16 @@ function showSugg(i,q){ const box=document.querySelector(`.item[data-it="${i}"] 
   if(!list.length){ box.hidden=true; box.innerHTML=""; return; }
   const n=normHin(q), hl=s=>{ const ns=normHin(s); const p=ns.indexOf(n); return p<0?esc(s):esc(s)+"" ; };
   box.innerHTML=`<div class="hd">この品番ですか？ <span style="font-weight:normal">Apakah nomor ini?</span></div>`+list.map((m,x)=>{ const g=mGroup(m).slice(1);
-    return `<button data-pick="${x}" class="${x===0?"act":""}"><b>${esc(m.hin)}</b>　${esc(m.name||"")}　<span class="small">駒数 ${esc(m.koma??"")}</span>${g.length?`<span class="grp">同じ金型：${g.map(x=>esc(x.hin)).join("・")}</span>`:""}</button>`; }).join("");
-  box.hidden=false; }
+    return `<button type="button" data-pick="${x}" class="${x===0?"act":""}"><b>${esc(m.hin)}</b>　${esc(m.name||"")}　<span class="small">駒数 ${esc(m.koma??"")}</span>${g.length?`<span class="grp">同じ金型：${g.map(x=>esc(x.hin)).join("・")}</span>`:""}</button>`; }).join("");
+  box.hidden=false; fitSugg(box); }
+// 候補の一覧を、キーボードの上の見えている場所いっぱいに広げる（せまいときは入力欄を上に寄せる）
+function fitSugg(box){ const inp=box.parentElement.querySelector("input"); if(!inp) return; const vv=window.visualViewport;
+  const H=vv?vv.height+vv.offsetTop:window.innerHeight, st=$("stickTop"), hd=document.querySelector("header.top");
+  const topLimit=Math.max(st?st.getBoundingClientRect().bottom:0, hd&&getComputedStyle(hd).position==="sticky"?hd.getBoundingClientRect().bottom:0, vv?vv.offsetTop:0)+8;
+  let r=inp.getBoundingClientRect(), room=H-r.bottom-12;
+  if(room<300&&r.top>topLimit+4){ window.scrollBy(0,r.top-topLimit); r=inp.getBoundingClientRect(); room=H-r.bottom-12; }
+  box.style.maxHeight=Math.max(200,room)+"px"; }
+if(window.visualViewport) window.visualViewport.addEventListener("resize",()=>{ const b=document.querySelector(".sugg:not([hidden])"); if(b) fitSugg(b); });
 function hideSugg(){ document.querySelectorAll(".sugg").forEach(b=>{ b.hidden=true; b.innerHTML=""; }); sugg={i:-1,list:[],act:0}; }
 function pickMaster(i,m){ const r=state.rows[sel];
   if(i===0){ const g=mGroup(m); r.items=g.map(itemFrom); r.mold=m.mold||"";
@@ -650,8 +659,16 @@ $("items").addEventListener("keydown",e=>{ if(e.target.dataset.ik!=="hin") retur
     document.querySelectorAll(`.item[data-it="${i}"] .sugg button`).forEach((b,x)=>b.classList.toggle("act",x===sugg.act)); return; }
   if(e.key==="Enter"){ e.preventDefault(); if(sugg.i===i&&sugg.list.length){ const exact=mFind(e.target.value); pickMaster(i, exact||sugg.list[sugg.act]); } else tryAutoConfirm(i); }
   if(e.key==="Escape") hideSugg(); });
-$("items").addEventListener("pointerdown",e=>{ const b=e.target.closest("[data-pick]"); if(!b) return; e.preventDefault(); const i=+b.closest(".item").dataset.it; pickMaster(i,sugg.list[+b.dataset.pick]); });
-$("items").addEventListener("focusout",e=>{ if(e.target.dataset.ik!=="hin") return; const i=+e.target.closest(".item").dataset.it; setTimeout(()=>{ if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest(".sugg")) return; hideSugg(); tryAutoConfirm(i); },120); });
+// 候補はタップしたときだけ決定（指で上下にスクロールしたときは決定しない）
+let tapP=null;
+$("items").addEventListener("pointerdown",e=>{ const b=e.target.closest("[data-pick]"); if(!b) return;
+  if(e.pointerType==="mouse"){ e.preventDefault(); const i=+b.closest(".item").dataset.it; pickMaster(i,sugg.list[+b.dataset.pick]); return; }
+  tapP={b,x:e.clientX,y:e.clientY,moved:false,st:b.closest(".sugg").scrollTop}; });
+$("items").addEventListener("pointermove",e=>{ if(tapP&&(Math.abs(e.clientX-tapP.x)>8||Math.abs(e.clientY-tapP.y)>8)) tapP.moved=true; });
+$("items").addEventListener("pointercancel",()=>{ tapP=null; });
+$("items").addEventListener("pointerup",e=>{ const t=tapP; tapP=null; if(!t||t.moved) return; const box=t.b.closest(".sugg"); if(!box||box.hidden||Math.abs(box.scrollTop-t.st)>4) return;
+  const b=e.target.closest("[data-pick]"); if(b!==t.b) return; e.preventDefault(); const i=+b.closest(".item").dataset.it; pickMaster(i,sugg.list[+b.dataset.pick]); });
+$("items").addEventListener("focusout",e=>{ if(e.target.dataset.ik!=="hin") return; const i=+e.target.closest(".item").dataset.it; setTimeout(()=>{ if(tapP) return; if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest(".sugg")) return; hideSugg(); tryAutoConfirm(i); },120); });
 $("items").addEventListener("focusin",e=>{ if(e.target.dataset.ik!=="hin"||VIEW) return; const i=+e.target.closest(".item").dataset.it; const it=state.rows[sel].items[i]; if(it&&!it.ok&&it.hin) showSugg(i,it.hin); });
 $("items").addEventListener("click",e=>{ const b=e.target.closest("[data-itest]"); if(!b||VIEW) return; e.preventDefault(); const it=state.rows[sel].items[+b.dataset.itest];
   it.test=!it.test; if(it.test){ it.ok=false; ["mat","add","unit","check","tana"].forEach(x=>it[x]=""); toast("テスト品番にしました（単重なし・トン数に含めません）"); }
