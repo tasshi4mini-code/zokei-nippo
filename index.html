@@ -845,7 +845,39 @@ function workbook(sheets){
 // ---- Excel ----
 const DATA_HEAD=["生産日","号機","No","品番","駒数","品名","マスター登録","材質","添加材","単重(kg)","駒部","方案部","定盤部","開始","完了","注湯温度(規格)","スクイズ圧力","スクイズ時間","吹上圧力","吹上時間","モールド厚","造型総数","生産個数","生産重量(kg)","未注湯","作業者","確認ポイント","引張棒採取","記録確認"];
 // CSV（必要な項目だけ）：生産日・号機・品番・品名・生産個数
-function csvRows(){ return dataRows().map(r=>[r[0],r[1],r[3],r[5],r[22]]); }
+// ---- 生産管理システム用：品番コード・社員番号（パソコンが毎朝「生産管理システム_対応表.xlsx」から送る）----
+var SysM=(function(){ let d=null, idx=null;
+  const norm=h=>String(h||"").normalize("NFKC").toUpperCase().replace(/[\s　]/g,"").replace(/^RD0*(\d)/,"RD$1");
+  const nn=s=>String(s||"").normalize("NFKC").replace(/[\s　]/g,"");
+  function set(x){ d=x; idx={}; Object.entries((d&&d.m)||{}).forEach(([c,v])=>{ const k=norm(v[0]); (idx[k]=idx[k]||[]).push(c); }); }
+  { const c=LS.get(APP+":sysm",null); if(c) set(c); }
+  // 検査日報のスプレッドシートに置いてある（造型日報は検査日報の config.js から場所を知る）
+  async function cfg(){ if(APP==="kensa") return Sync.getCfg(); try{ const t=await (await fetch("/kensa-nippo/config.js",{cache:"no-store"})).text(); const w={}; new Function("window",t)(w); const c=w.SUNA_CONFIG||{}; return c.syncUrl?c:null; }catch(e){ return null; } }
+  async function load(){ try{ const c=await cfg(); if(!c||!c.syncUrl) return; const u=c.syncUrl+(c.syncUrl.includes("?")?"&":"?")+new URLSearchParams({action:"load",token:c.token||"",date:"_global",equip:"sysm"});
+      const j=await (await fetch(u,{redirect:"follow"})).json(); const L=(j.items||[]).filter(x=>x.type==="sysm"&&x.raw), b=L.find(x=>x.ref==="sysm"); if(!b) return;
+      const raw=Object.assign({},b.raw,{m:{}}); L.forEach(x=>{ if(x.ref!=="sysm"&&x.raw.at===b.raw.at) Object.assign(raw.m,x.raw.m||{}); }); set(raw); LS.set(APP+":sysm",raw); }catch(e){} }
+  // 品番 → {code, hin(生産管理の品番), name, cust}。対応表 → 0のちがいを無視した一致（1つだけのとき）
+  function hin(h){ if(!d||!h) return null; const map=d.map||{}, has=x=>Object.prototype.hasOwnProperty.call(map,x); let code;
+    if(has(h)) code=map[h];   // 対応表にある（NG のときは空 → 品番コードなし）
+    else { const k=norm(h); const k2=Object.keys(map).find(x=>norm(x)===k); if(k2) code=map[k2]; else { const c=idx[k]; if(c&&c.length===1) code=c[0]; } }
+    const m=code&&(d.m||{})[code]; return m?{code,hin:m[0],name:m[1],cust:m[2]}:(code?{code,hin:h,name:"",cust:""}:null); }
+  // 名前 → 社員番号（同じ名前 → 空白を除いて同じ → 名前の頭が1人だけ一致）
+  function emp(n){ if(!d||!n) return ""; const E=d.emp||{}; if(E[n]!=null) return String(E[n]); const k=nn(n); let hit=Object.keys(E).filter(x=>nn(x)===k);
+    if(!hit.length) hit=Object.keys(E).filter(x=>nn(x).startsWith(k)||k.startsWith(nn(x))); return hit.length===1?String(E[hit[0]]):""; }
+  const names=s=>String(s||"").split(/[・,、\/\s　]+/).map(x=>x.trim()).filter(Boolean);
+  return {load,hin,emp,names,ready:()=>!!d,info:()=>d?{at:d.at,file:d.file}:null};
+})();
+const sysDate=d=>String(d||"").replace(/-/g,"/");
+
+// v21：生産管理システムに取り込む CSV（1行＝勤務・品番。7:00〜20:00 が1勤、20:00〜7:00 が2勤。テスト品は入れない）
+function shiftOf(r){ const m=/^(\d{1,2}):(\d{2})/.exec(r.st||r.en||""); if(!m) return 1; const t=(+m[1])*60+(+m[2]); return (t>=420&&t<1200)?1:2; }
+function csvRows(){ const out=[["生産日","勤務","作業者","号機コード","号機","品番コード","品番","品名","客先コード","生産個数","作業者","コメント"]];
+  const G=new Map(), eqNo=(String(state.equip).match(/\d+/)||[""])[0];
+  state.rows.forEach(r=>{ if(!rowHas(r)) return; const sh=shiftOf(r); liveItems(r).forEach(it=>{ if(!it.hin||it.test) return; const q=qtyOf(r,it); const k=sh+"|"+it.hin;
+      const g=G.get(k)||(G.set(k,{sh,hin:it.hin,name:it.name||"",q:0,w:[]}),G.get(k)); g.q+=q||0; SysM.names(r.worker).forEach(n=>{ if(!g.w.includes(n)) g.w.push(n); }); }); });
+  [...G.values()].sort((a,b)=>a.sh-b.sh).forEach(g=>{ const s=SysM.hin(g.hin)||{}; const ws=g.w.map(n=>SysM.emp(n)).filter(Boolean);
+    out.push([sysDate(state.date),g.sh,4,eqNo,state.equip,s.code||"",s.hin||g.hin,g.name,s.cust||"",Math.round(g.q),[...new Set(ws)].join("."),""]); });
+  return out; }
 function dataRows(){
   const out=[DATA_HEAD];
   state.rows.forEach((r,i)=>{ if(!rowHas(r)) return; const li=liveItems(r).length?liveItems(r):[blankItem()];
@@ -1189,7 +1221,7 @@ if(VIEW){ $("viewBadge").hidden=false; document.title="造型日報（閲覧用�
 Sync.status(); Sync.flush().then(()=>Sync.pull()); Sync.loadMaster(false); Melt.load(); Crew.pull();
 if(!/[?&]export=/.test(location.search)){ Yield.refresh(); $("date").addEventListener("change",()=>Yield.refresh()); $("equip").addEventListener("change",()=>Yield.refresh());
   setInterval(()=>{ if(document.visibilityState==="visible") Yield.refresh(); },60000); document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") Yield.refresh(); }); }
-const EXP={csv:()=>csvRows(), master:()=>Sync.loadMaster(true), load:(d,q)=>load(d,q), empty:()=>!state.rows.some(rowHas)&&!liveEvents().length, name:()=>"造型日報_"+state.equip.replace(/[\\/:*?"<>|（）() ]/g,"")+"_"+state.date.replace(/-/g,"")+".xlsx"};
+const EXP={csv:()=>csvRows(), master:async()=>{ await Sync.loadMaster(true); await SysM.load(); }, load:(d,q)=>load(d,q), empty:()=>!state.rows.some(rowHas)&&!liveEvents().length, name:()=>"造型日報_"+state.equip.replace(/[\\/:*?"<>|（）() ]/g,"")+"_"+state.date.replace(/-/g,"")+".xlsx"};
 // ---- 自動Excel出力（URL末尾に ?export=開始日..終了日 を付けて開くと、その期間の日報Excelを作って画面に埋め込む）----
 (async function(){
   const m=/[?&]export=([^&#]*)/.exec(location.search); if(!m) return;
