@@ -1255,5 +1255,111 @@ const EXP={csv:()=>csvRows(), master:async()=>{ await Sync.loadMaster(true); awa
 })();
 })();
 </script>
+<!-- ===== 緊急地震速報（浜松市＝静岡県西部）: P2P地震情報のリアルタイム配信を受けて表示 ===== -->
+<style>
+#eewOv{position:fixed;inset:0;z-index:99999;background:#b00020;color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;font-family:Meiryo,"Hiragino Sans",sans-serif;animation:eewBl 1s steps(2,end) infinite}
+#eewOv.on{display:flex}
+#eewOv.cancel{background:#455a64;animation:none}
+#eewOv.test{background:#e65100}
+@keyframes eewBl{50%{background:#ff1744}}
+#eewOv .t1{font-size:clamp(34px,8vw,72px);font-weight:bold;line-height:1.15}
+#eewOv .t2{font-size:clamp(18px,3.4vw,28px);margin-top:4px;opacity:.95}
+#eewOv .cd{font-size:clamp(56px,16vw,150px);font-weight:bold;margin:10px 0;line-height:1}
+#eewOv .sc{font-size:clamp(24px,5vw,44px);font-weight:bold;background:#fff;color:#b00020;border-radius:12px;padding:4px 18px;margin:8px 0}
+#eewOv .act{font-size:clamp(20px,4vw,34px);font-weight:bold;margin-top:12px;border-top:2px solid rgba(255,255,255,.6);padding-top:12px}
+#eewOv .act small{display:block;font-size:.65em;font-weight:normal}
+#eewOv .info{font-size:clamp(14px,2.4vw,18px);margin-top:12px;opacity:.9}
+#eewOv button{margin-top:18px;font-size:18px;min-height:48px;padding:0 28px;border-radius:10px;border:2px solid #fff;background:transparent;color:#fff;font-weight:bold}
+#eewDot{position:fixed;left:6px;bottom:6px;z-index:9999;font-size:11px;padding:2px 7px;border-radius:999px;background:rgba(0,0,0,.45);color:#fff;pointer-events:none;font-family:Meiryo,sans-serif}
+#eewDot.ok::before{content:"●";color:#69f0ae;margin-right:3px}
+#eewDot.ng::before{content:"●";color:#bdbdbd;margin-right:3px}
+@media print{#eewOv,#eewDot{display:none!important}}
+</style>
+<div id="eewOv" role="alertdialog" aria-live="assertive"></div>
+<div id="eewDot" class="ng" title="緊急地震速報（浜松市）の受信状態">地震速報</div>
+<script>
+(function(){
+"use strict";
+// 浜松市は緊急地震速報の地域「静岡県西部」。設定で変えるときは config.js に window.EEW_AREA="…" を書く
+var AREA = window.EEW_AREA || "静岡県西部";
+var WS_URL = window.EEW_WS || "wss://api.p2pquake.net/v2/ws";
+var ov = document.getElementById("eewOv"), dot = document.getElementById("eewDot");
+var ws = null, retry = 2000, seen = {}, cdTimer = null, closeTimer = null, alarmTimer = null, actx = null;
+var TEST = /[?&]eewtest\b/.test(location.search);
+
+function scaleL(v){ v = +v; return ({10:"1",20:"2",30:"3",40:"4",45:"5弱",46:"5弱以上",50:"5強",55:"6弱",60:"6強",70:"7"})[v] || ""; }
+function scaleText(a){ var f = scaleL(a.scaleFrom), t = +a.scaleTo === 99 ? "以上" : scaleL(a.scaleTo);
+  if(!f) return "強い揺れ"; if(t === "以上") return "震度" + f + " 以上"; if(!t || t === f) return "震度" + f + " 程度"; return "震度" + f + "〜" + t; }
+function parseT(s){ if(!s) return null; var m = /(\d{4})\D(\d{1,2})\D(\d{1,2})\D+(\d{1,2}):(\d{2}):(\d{2})(?:\.(\d+))?/.exec(String(s)); if(!m) return null;
+  return new Date(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +m[6], m[7] ? +("0." + m[7]) * 1000 : 0).getTime(); }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+// ---- 音（iPad は一度画面をさわると鳴らせるようになる）----
+function unlock(){ try{ if(!actx){ var C = window.AudioContext || window.webkitAudioContext; if(C) actx = new C(); } if(actx && actx.state === "suspended") actx.resume(); }catch(e){} }
+["touchstart","pointerdown","keydown"].forEach(function(ev){ document.addEventListener(ev, unlock, {passive:true}); });
+function beep(){ if(!actx) return; try{ var t = actx.currentTime; [0, 0.35].forEach(function(d){ [988, 1319].forEach(function(f, i){
+  var o = actx.createOscillator(), g = actx.createGain(); o.type = "square"; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t+d+i*0.15); g.gain.exponentialRampToValueAtTime(0.35, t+d+i*0.15+0.01); g.gain.exponentialRampToValueAtTime(0.0001, t+d+i*0.15+0.14);
+  o.connect(g); g.connect(actx.destination); o.start(t+d+i*0.15); o.stop(t+d+i*0.15+0.15); }); }); }catch(e){} }
+function alarmOn(){ alarmOff(); beep(); alarmTimer = setInterval(beep, 1200); try{ navigator.vibrate && navigator.vibrate([400,200,400,200,400]); }catch(e){} }
+function alarmOff(){ if(alarmTimer){ clearInterval(alarmTimer); alarmTimer = null; } }
+
+function hide(){ ov.className = ""; ov.innerHTML = ""; alarmOff(); clearInterval(cdTimer); clearTimeout(closeTimer); }
+function show(d, a, test){
+  clearInterval(cdTimer); clearTimeout(closeTimer);
+  var eq = d.earthquake || {}, hy = eq.hypocenter || {}, arr = parseT(a.arrivalTime), kind = String(a.kindCode || "");
+  var mag = hy.magnitude != null && hy.magnitude > 0 ? "M" + hy.magnitude : "";
+  ov.className = "on" + (test ? " test" : "");
+  ov.innerHTML =
+    '<div class="t1">' + (test ? "【テスト】" : "") + '緊急地震速報</div><div class="t2">Peringatan Dini Gempa Bumi</div>' +
+    '<div class="sc">' + esc(AREA) + '（浜松市）　' + esc(scaleText(a)) + '</div>' +
+    '<div class="cd" id="eewCd"></div>' +
+    '<div class="act">炉・溶湯から離れて、頭を守ってください<small>Jauhi tungku &amp; logam cair, lindungi kepala!</small></div>' +
+    '<div class="info">震源 ' + esc(hy.name || "調査中") + (mag ? "　" + mag : "") + (d.issue && d.issue.time ? "　発表 " + esc(String(d.issue.time).slice(11, 19)) : "") + '</div>' +
+    '<button type="button" id="eewClose">閉じる Tutup</button>';
+  document.getElementById("eewClose").onclick = hide;
+  function tick(){ var el = document.getElementById("eewCd"); if(!el) return;
+    if(kind === "11" ){ el.textContent = "揺れが来ます！"; return; }
+    if(arr == null){ el.textContent = "強い揺れに警戒"; return; }
+    var s = Math.ceil((arr - Date.now()) / 1000); el.textContent = s > 0 ? "あと " + s + " 秒" : "揺れが来ます！"; }
+  tick(); cdTimer = setInterval(tick, 250);
+  alarmOn(); setTimeout(alarmOff, 30000);
+  closeTimer = setTimeout(hide, 3 * 60 * 1000);
+}
+function cancelled(){ clearInterval(cdTimer); alarmOff(); ov.className = "on cancel";
+  ov.innerHTML = '<div class="t1">緊急地震速報は取り消されました</div><div class="t2">Peringatan dibatalkan</div><button type="button" id="eewClose">閉じる Tutup</button>';
+  document.getElementById("eewClose").onclick = hide; clearTimeout(closeTimer); closeTimer = setTimeout(hide, 15000); }
+
+function onData(d){
+  if(!d || +d.code !== 556) return;
+  if(d.test && !TEST) return;
+  var id = (d.issue && (d.issue.eventId || d.issue.time)) || d.id || "";
+  if(d.cancelled){ if(seen[id]) cancelled(); return; }
+  var areas = Array.isArray(d.areas) ? d.areas : [];
+  var a = areas.filter(function(x){ return String(x.name || "").indexOf(AREA) >= 0; })[0];
+  if(!a) return;                        // 浜松（静岡県西部）が対象でなければ出さない
+  seen[id] = 1; show(d, a, !!d.test);
+}
+
+function connect(){
+  try{ ws = new WebSocket(WS_URL); }catch(e){ later(); return; }
+  ws.onopen = function(){ retry = 2000; dot.className = "ok"; };
+  ws.onmessage = function(ev){ try{ onData(JSON.parse(ev.data)); }catch(e){} };
+  ws.onclose = function(){ dot.className = "ng"; ws = null; later(); };
+  ws.onerror = function(){ try{ ws && ws.close(); }catch(e){} };
+}
+function later(){ setTimeout(function(){ if(!ws) connect(); }, retry); retry = Math.min(retry * 2, 60000); }
+document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible" && !ws){ retry = 2000; connect(); } });
+window.addEventListener("online", function(){ if(!ws){ retry = 2000; connect(); } });
+connect();
+
+// 動作確認：アドレスの最後に ?eewtest を付けて開くと、5秒後にテスト表示が出る（「閉じる」で消える）
+if(TEST) setTimeout(function(){ var t = new Date(Date.now() + 15000), p = function(n){ return (n < 10 ? "0" : "") + n; };
+  var at = t.getFullYear() + "/" + p(t.getMonth()+1) + "/" + p(t.getDate()) + " " + p(t.getHours()) + ":" + p(t.getMinutes()) + ":" + p(t.getSeconds());
+  onData({code:556, test:true, issue:{eventId:"test", time:at}, earthquake:{hypocenter:{name:"遠州灘（テスト）", magnitude:6.8}},
+    areas:[{pref:"静岡", name:AREA, scaleFrom:50, scaleTo:55, kindCode:"10", arrivalTime:at}]}); }, 5000);
+window.__eew = {onData: onData, hide: hide};
+})();
+</script>
+
 </body>
 </html>
