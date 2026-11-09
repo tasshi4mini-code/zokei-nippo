@@ -1255,7 +1255,7 @@ const EXP={csv:()=>csvRows(), master:async()=>{ await Sync.loadMaster(true); awa
 })();
 })();
 </script>
-<!-- ===== 緊急地震速報（浜松市＝静岡県西部）: P2P地震情報のリアルタイム配信を受けて表示 ===== -->
+<!-- ===== 緊急地震速報（浜松市＝静岡県西部）＋ 災害対応チェックシート（全アプリ共通） ===== -->
 <style>
 #eewOv{position:fixed;inset:0;z-index:99999;background:#b00020;color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;font-family:Meiryo,"Hiragino Sans",sans-serif;animation:eewBl 1s steps(2,end) infinite}
 #eewOv.on{display:flex}
@@ -1269,42 +1269,119 @@ const EXP={csv:()=>csvRows(), master:async()=>{ await Sync.loadMaster(true); awa
 #eewOv .act{font-size:clamp(20px,4vw,34px);font-weight:bold;margin-top:12px;border-top:2px solid rgba(255,255,255,.6);padding-top:12px}
 #eewOv .act small{display:block;font-size:.65em;font-weight:normal}
 #eewOv .info{font-size:clamp(14px,2.4vw,18px);margin-top:12px;opacity:.9}
-#eewOv button{margin-top:18px;font-size:18px;min-height:48px;padding:0 28px;border-radius:10px;border:2px solid #fff;background:transparent;color:#fff;font-weight:bold}
-#eewDot{position:fixed;left:6px;bottom:6px;z-index:9999;font-size:11px;padding:2px 7px;border-radius:999px;background:rgba(0,0,0,.45);color:#fff;pointer-events:none;font-family:Meiryo,sans-serif}
-#eewDot.ok::before{content:"●";color:#69f0ae;margin-right:3px}
-#eewDot.ng::before{content:"●";color:#bdbdbd;margin-right:3px}
-@media print{#eewOv,#eewDot{display:none!important}}
+#eewOv .btns{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+#eewOv button{font-size:18px;min-height:52px;padding:0 24px;border-radius:10px;border:2px solid #fff;background:transparent;color:#fff;font-weight:bold;font-family:inherit}
+#eewOv button.go{background:#fff;color:#b00020}
+#eewDot{position:fixed;left:6px;bottom:6px;z-index:9998;display:flex;align-items:center;gap:6px;font-family:Meiryo,sans-serif}
+#eewDot .st{font-size:11px;padding:2px 7px;border-radius:999px;background:rgba(0,0,0,.45);color:#fff}
+#eewDot .st.ok::before{content:"●";color:#69f0ae;margin-right:3px}
+#eewDot .st.ng::before{content:"●";color:#bdbdbd;margin-right:3px}
+#eewDot button{font-size:12px;font-weight:bold;min-height:28px;padding:0 10px;border-radius:999px;border:1px solid #fff;background:#c62828;color:#fff;box-shadow:0 1px 4px rgba(0,0,0,.3);font-family:inherit}
+#eewDot button.live{animation:eewBl2 1s steps(2,end) infinite}
+@keyframes eewBl2{50%{background:#ff8a80;color:#5d0000}}
+/* 災害対応チェックシート */
+#bsOv{position:fixed;inset:0;z-index:99990;background:#eef1f6;display:none;flex-direction:column;font-family:Meiryo,"Hiragino Sans",sans-serif;color:#1d2330}
+#bsOv.on{display:flex}
+#bsOv .bh{background:#b71c1c;color:#fff;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 14px;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+#bsOv .bh.drill{background:#e65100}
+#bsOv .bh b{font-size:20px}
+#bsOv .bh small{opacity:.9}
+#bsOv .bh .sp{flex:1}
+#bsOv .bh button{min-height:40px;border-radius:8px;border:1px solid #fff;background:transparent;color:#fff;font-weight:bold;padding:0 12px;font-size:14px;font-family:inherit}
+#bsOv .bb{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px 14px 40px}
+#bsOv .card{background:#fff;border-radius:12px;padding:10px 14px;margin:0 auto 12px;max-width:980px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+#bsOv h3{margin:0 0 8px;font-size:17px;border-left:5px solid #b71c1c;padding-left:8px}
+#bsOv h3 small{font-weight:normal;color:#5d6778;font-size:12px;margin-left:6px}
+#bsOv .flow{margin:0;padding-left:0;list-style:none;counter-reset:f}
+#bsOv .flow li{counter-increment:f;display:flex;gap:8px;padding:5px 0;border-bottom:1px dashed #dde2ea;font-size:15px;line-height:1.45}
+#bsOv .flow li::before{content:counter(f);flex:0 0 26px;height:26px;border-radius:50%;background:#b71c1c;color:#fff;font-weight:bold;display:flex;align-items:center;justify-content:center;font-size:14px}
+#bsOv .flow li:last-child{border-bottom:0}
+#bsOv .flow .em{color:#b00020;font-weight:bold}
+#bsOv .flow small{display:block;color:#5d6778;font-size:12px}
+#bsOv .who{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#bsOv .who select,#bsOv .who input{font-size:16px;min-height:42px;border:2px solid #9aa4b3;border-radius:8px;padding:0 8px;font-family:inherit}
+#bsOv .who.need select,#bsOv .who.need input{border-color:#d50000;background:#fff1f1}
+#bsOv .meta{font-size:13px;color:#5d6778}
+#bsOv .prog{height:10px;background:#e3e7ee;border-radius:99px;overflow:hidden;margin-top:6px}
+#bsOv .prog i{display:block;height:100%;background:#2e7d32}
+#bsOv .it{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid #e6e9ef}
+#bsOv .it:last-child{border-bottom:0}
+#bsOv .it.mine{background:#fff8e1;margin:0 -14px;padding:8px 14px}
+#bsOv .it .lb{flex:1 1 280px;min-width:0;font-size:15px}
+#bsOv .it .lb small{display:block;color:#5d6778;font-size:12px}
+#bsOv .it .lb .dl{display:inline-block;margin-top:2px;font-size:13px;font-weight:bold;color:#1565c0}
+#bsOv .it .lb .dl.warn{color:#d50000}
+#bsOv .it .ops{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+#bsOv .it .ops button{min-height:44px;min-width:76px;border-radius:8px;border:2px solid #9aa4b3;background:#fff;font-weight:bold;font-size:14px;padding:0 10px;font-family:inherit;color:#1d2330}
+#bsOv .it .ops button.on.ok{background:#2e7d32;border-color:#2e7d32;color:#fff}
+#bsOv .it .ops button.on.na{background:#607d8b;border-color:#607d8b;color:#fff}
+#bsOv .it .ops button.on.ng{background:#d50000;border-color:#d50000;color:#fff}
+#bsOv .it .ops input{width:80px;min-height:44px;font-size:18px;text-align:center;border:2px solid #9aa4b3;border-radius:8px;font-family:inherit}
+#bsOv .it .by{flex:0 0 100%;font-size:12px;color:#2e7d32;padding-left:2px}
+#bsOv .it .by.ng{color:#d50000;font-weight:bold}
+#bsOv .it .by input{font-size:13px;min-height:30px;border:1px solid #c5ccd6;border-radius:6px;padding:0 6px;width:min(420px,70%);font-family:inherit}
+#bsOv .resp{font-size:13px;background:#f3f6fb;border-radius:8px;padding:6px 10px;margin-bottom:6px;line-height:1.6}
+#bsOv .start{display:flex;gap:12px;flex-wrap:wrap}
+#bsOv .start button{flex:1 1 220px;min-height:70px;border-radius:12px;border:0;font-size:20px;font-weight:bold;color:#fff;background:#b71c1c;font-family:inherit}
+#bsOv .start button.drill{background:#e65100}
+#bsOv .evl{width:100%;border-collapse:collapse;font-size:14px}
+#bsOv .evl td,#bsOv .evl th{border-bottom:1px solid #e6e9ef;padding:6px;text-align:left}
+#bsOv .evl tr.cl{cursor:pointer}
+#bsOv .evl tr.cl:hover{background:#f3f6fb}
+#bsOv .tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;color:#fff;background:#b71c1c}
+#bsOv .tag.drill{background:#e65100}#bsOv .tag.end{background:#607d8b}
+#bsOvIn{font-family:Meiryo,"Hiragino Sans",sans-serif;color:#1d2330;padding:14px}
+#bsOvIn .card{background:#fff;border-radius:12px;padding:10px 14px;margin:0 auto 12px;max-width:1100px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+#bsOvIn h3{margin:0 0 8px;font-size:17px;border-left:5px solid #b71c1c;padding-left:8px}
+#bsOvIn h3 small{font-weight:normal;color:#5d6778;font-size:12px;margin-left:6px}
+#bsOvIn .meta{font-size:13px;color:#5d6778}
+#bsOvIn .evl{width:100%;border-collapse:collapse;font-size:14px}
+#bsOvIn .evl td,#bsOvIn .evl th{border-bottom:1px solid #e6e9ef;padding:6px;text-align:left}
+#bsOvIn .evl tr.cl{cursor:pointer}
+#bsOvIn .evl tr.cl:hover{background:#f3f6fb}
+#bsOvIn .tag{display:inline-block;font-size:12px;padding:1px 8px;border-radius:99px;color:#fff;background:#b71c1c}
+#bsOvIn .tag.drill{background:#e65100}
+#bsToast{position:fixed;left:50%;bottom:60px;transform:translateX(-50%);z-index:99995;background:#263238;color:#fff;padding:10px 18px;border-radius:10px;font-size:15px;display:none;font-family:Meiryo,sans-serif}
+@media print{#eewOv,#eewDot,#bsOv,#bsToast{display:none!important}}
 </style>
 <div id="eewOv" role="alertdialog" aria-live="assertive"></div>
-<div id="eewDot" class="ng" title="緊急地震速報（浜松市）の受信状態">地震速報</div>
+<div id="eewDot"><span class="st ng" id="eewSt" title="緊急地震速報（浜松市）の受信状態">地震速報</span><button type="button" id="bsBtn">🛟 災害対応</button></div>
+<div id="bsOv"></div>
+<div id="bsToast"></div>
 <script>
 (function(){
 "use strict";
-// 浜松市は緊急地震速報の地域「静岡県西部」。設定で変えるときは config.js に window.EEW_AREA="…" を書く
-var AREA = window.EEW_AREA || "静岡県西部";
+// ================= 共通 =================
+var AREA = window.EEW_AREA || "静岡県西部";          // 浜松市は緊急地震速報の地域「静岡県西部」
 var WS_URL = window.EEW_WS || "wss://api.p2pquake.net/v2/ws";
-var ov = document.getElementById("eewOv"), dot = document.getElementById("eewDot");
-var ws = null, retry = 2000, seen = {}, cdTimer = null, closeTimer = null, alarmTimer = null, actx = null;
+var CFG_URL = window.BOUSAI_CFG || "/yokai-nippo/config.js";   // 記録は溶解日報のスプレッドシートに保存
 var TEST = /[?&]eewtest\b/.test(location.search);
+var $ = function(id){ return document.getElementById(id); };
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+function p2(n){ return (n < 10 ? "0" : "") + n; }
+function hm(t){ if(!t) return ""; var d = new Date(+t); return d.getHours() + ":" + p2(d.getMinutes()); }
+function mdhm(t){ if(!t) return ""; var d = new Date(+t); return (d.getMonth()+1) + "/" + d.getDate() + " " + hm(t); }
+var LSG = function(k, d){ try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } };
+var LSS = function(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
+function toast(m){ var t = $("bsToast"); t.textContent = m; t.style.display = "block"; clearTimeout(toast.t); toast.t = setTimeout(function(){ t.style.display = "none"; }, 2600); }
 
+// ================= 緊急地震速報 =================
+var ov = $("eewOv"), stEl = $("eewSt");
+var ws = null, retry = 2000, seen = {}, cdTimer = null, closeTimer = null, alarmTimer = null, actx = null, lastEv = null;
 function scaleL(v){ v = +v; return ({10:"1",20:"2",30:"3",40:"4",45:"5弱",46:"5弱以上",50:"5強",55:"6弱",60:"6強",70:"7"})[v] || ""; }
 function scaleText(a){ var f = scaleL(a.scaleFrom), t = +a.scaleTo === 99 ? "以上" : scaleL(a.scaleTo);
   if(!f) return "強い揺れ"; if(t === "以上") return "震度" + f + " 以上"; if(!t || t === f) return "震度" + f + " 程度"; return "震度" + f + "〜" + t; }
 function parseT(s){ if(!s) return null; var m = /(\d{4})\D(\d{1,2})\D(\d{1,2})\D+(\d{1,2}):(\d{2}):(\d{2})(?:\.(\d+))?/.exec(String(s)); if(!m) return null;
   return new Date(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +m[6], m[7] ? +("0." + m[7]) * 1000 : 0).getTime(); }
-function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
-
-// ---- 音（iPad は一度画面をさわると鳴らせるようになる）----
 function unlock(){ try{ if(!actx){ var C = window.AudioContext || window.webkitAudioContext; if(C) actx = new C(); } if(actx && actx.state === "suspended") actx.resume(); }catch(e){} }
 ["touchstart","pointerdown","keydown"].forEach(function(ev){ document.addEventListener(ev, unlock, {passive:true}); });
 function beep(){ if(!actx) return; try{ var t = actx.currentTime; [0, 0.35].forEach(function(d){ [988, 1319].forEach(function(f, i){
-  var o = actx.createOscillator(), g = actx.createGain(); o.type = "square"; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t+d+i*0.15); g.gain.exponentialRampToValueAtTime(0.35, t+d+i*0.15+0.01); g.gain.exponentialRampToValueAtTime(0.0001, t+d+i*0.15+0.14);
-  o.connect(g); g.connect(actx.destination); o.start(t+d+i*0.15); o.stop(t+d+i*0.15+0.15); }); }); }catch(e){} }
+  var o = actx.createOscillator(), g = actx.createGain(), s = t+d+i*0.15; o.type = "square"; o.frequency.value = f; g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(0.35, s+0.01); g.gain.exponentialRampToValueAtTime(0.0001, s+0.14);
+  o.connect(g); g.connect(actx.destination); o.start(s); o.stop(s+0.15); }); }); }catch(e){} }
 function alarmOn(){ alarmOff(); beep(); alarmTimer = setInterval(beep, 1200); try{ navigator.vibrate && navigator.vibrate([400,200,400,200,400]); }catch(e){} }
 function alarmOff(){ if(alarmTimer){ clearInterval(alarmTimer); alarmTimer = null; } }
-
-function hide(){ ov.className = ""; ov.innerHTML = ""; alarmOff(); clearInterval(cdTimer); clearTimeout(closeTimer); }
-function show(d, a, test){
+function hideEew(){ ov.className = ""; ov.innerHTML = ""; alarmOff(); clearInterval(cdTimer); clearTimeout(closeTimer); }
+function showEew(d, a, test, evId){
   clearInterval(cdTimer); clearTimeout(closeTimer);
   var eq = d.earthquake || {}, hy = eq.hypocenter || {}, arr = parseT(a.arrivalTime), kind = String(a.kindCode || "");
   var mag = hy.magnitude != null && hy.magnitude > 0 ? "M" + hy.magnitude : "";
@@ -1315,49 +1392,222 @@ function show(d, a, test){
     '<div class="cd" id="eewCd"></div>' +
     '<div class="act">炉・溶湯から離れて、頭を守ってください<small>Jauhi tungku &amp; logam cair, lindungi kepala!</small></div>' +
     '<div class="info">震源 ' + esc(hy.name || "調査中") + (mag ? "　" + mag : "") + (d.issue && d.issue.time ? "　発表 " + esc(String(d.issue.time).slice(11, 19)) : "") + '</div>' +
-    '<button type="button" id="eewClose">閉じる Tutup</button>';
-  document.getElementById("eewClose").onclick = hide;
-  function tick(){ var el = document.getElementById("eewCd"); if(!el) return;
-    if(kind === "11" ){ el.textContent = "揺れが来ます！"; return; }
+    '<div class="btns"><button type="button" class="go" id="eewGo">揺れが収まったら → 災害対応へ<br><small>Setelah gempa reda</small></button><button type="button" id="eewClose">閉じる Tutup</button></div>';
+  $("eewClose").onclick = hideEew;
+  $("eewGo").onclick = function(){ hideEew(); openPanel(evId || null); };
+  function tick(){ var el = $("eewCd"); if(!el) return;
+    if(kind === "11"){ el.textContent = "揺れが来ます！"; return; }
     if(arr == null){ el.textContent = "強い揺れに警戒"; return; }
     var s = Math.ceil((arr - Date.now()) / 1000); el.textContent = s > 0 ? "あと " + s + " 秒" : "揺れが来ます！"; }
   tick(); cdTimer = setInterval(tick, 250);
   alarmOn(); setTimeout(alarmOff, 30000);
-  closeTimer = setTimeout(hide, 3 * 60 * 1000);
+  // 3分たったら速報の画面を閉じて、チェックシートを出す
+  closeTimer = setTimeout(function(){ hideEew(); openPanel(evId || null); }, 3 * 60 * 1000);
 }
-function cancelled(){ clearInterval(cdTimer); alarmOff(); ov.className = "on cancel";
-  ov.innerHTML = '<div class="t1">緊急地震速報は取り消されました</div><div class="t2">Peringatan dibatalkan</div><button type="button" id="eewClose">閉じる Tutup</button>';
-  document.getElementById("eewClose").onclick = hide; clearTimeout(closeTimer); closeTimer = setTimeout(hide, 15000); }
-
+function cancelledEew(evId){ clearInterval(cdTimer); alarmOff(); ov.className = "on cancel";
+  ov.innerHTML = '<div class="t1">緊急地震速報は取り消されました</div><div class="t2">Peringatan dibatalkan</div><div class="btns"><button type="button" id="eewClose">閉じる Tutup</button></div>';
+  $("eewClose").onclick = hideEew; clearTimeout(closeTimer); closeTimer = setTimeout(hideEew, 15000);
+  if(evId && B.evs[evId] && !countDone(evId)){ setEv(evId, {cancel:true}); } }
 function onData(d){
   if(!d || +d.code !== 556) return;
   if(d.test && !TEST) return;
-  var id = (d.issue && (d.issue.eventId || d.issue.time)) || d.id || "";
-  if(d.cancelled){ if(seen[id]) cancelled(); return; }
+  var id = String((d.issue && (d.issue.eventId || d.issue.time)) || d.id || "");
+  var evId = id ? "eew-" + id.replace(/[^\w-]/g, "") : null;
+  if(d.cancelled){ if(seen[id]) cancelledEew(d.test ? null : evId); return; }
   var areas = Array.isArray(d.areas) ? d.areas : [];
   var a = areas.filter(function(x){ return String(x.name || "").indexOf(AREA) >= 0; })[0];
-  if(!a) return;                        // 浜松（静岡県西部）が対象でなければ出さない
-  seen[id] = 1; show(d, a, !!d.test);
+  if(!a) return;                                 // 浜松（静岡県西部）が対象でなければ出さない
+  seen[id] = 1;
+  var hy = (d.earthquake || {}).hypocenter || {};
+  if(!d.test && evId){ ensureEv(evId, {kind:"eew", title:"緊急地震速報 " + scaleText(a), quake:{area:AREA, scale:scaleText(a), hypo:hy.name || "", mag:hy.magnitude || ""}}); lastEv = evId; }
+  showEew(d, a, !!d.test, d.test ? null : evId);
 }
-
 function connect(){
   try{ ws = new WebSocket(WS_URL); }catch(e){ later(); return; }
-  ws.onopen = function(){ retry = 2000; dot.className = "ok"; };
+  ws.onopen = function(){ retry = 2000; stEl.className = "st ok"; };
   ws.onmessage = function(ev){ try{ onData(JSON.parse(ev.data)); }catch(e){} };
-  ws.onclose = function(){ dot.className = "ng"; ws = null; later(); };
+  ws.onclose = function(){ stEl.className = "st ng"; ws = null; later(); };
   ws.onerror = function(){ try{ ws && ws.close(); }catch(e){} };
 }
 function later(){ setTimeout(function(){ if(!ws) connect(); }, retry); retry = Math.min(retry * 2, 60000); }
-document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible" && !ws){ retry = 2000; connect(); } });
-window.addEventListener("online", function(){ if(!ws){ retry = 2000; connect(); } });
-connect();
+document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "visible"){ if(!ws){ retry = 2000; connect(); } pull(); } });
+window.addEventListener("online", function(){ if(!ws){ retry = 2000; connect(); } flush(); });
 
-// 動作確認：アドレスの最後に ?eewtest を付けて開くと、5秒後にテスト表示が出る（「閉じる」で消える）
-if(TEST) setTimeout(function(){ var t = new Date(Date.now() + 15000), p = function(n){ return (n < 10 ? "0" : "") + n; };
-  var at = t.getFullYear() + "/" + p(t.getMonth()+1) + "/" + p(t.getDate()) + " " + p(t.getHours()) + ":" + p(t.getMinutes()) + ":" + p(t.getSeconds());
+// ================= 災害対応チェックシート =================
+var LINES = [["suna","砂処理"],["zokei","造型"],["chuto","注湯"],["yokai","溶解"],["shot","ショット"],["seki","セキ（検査）"]];
+var MY = (function(p){ return /suna/.test(p) ? "suna" : /zokei/.test(p) ? "zokei" : /chuto/.test(p) ? "chuto" : /yokai/.test(p) ? "yokai" : /shot/.test(p) ? "shot" : /kensa/.test(p) ? "seki" : ""; })(location.pathname);
+var NAMES = [["有賀","Aグループ 正担当"],["櫻井","Bグループ 正担当"],["井澤","Cグループ 正担当"],["大谷","副担当"],["三宅","副担当"],["今泉","副担当"],["神林","副担当"]];
+var OK3 = [["ok","停止した"],["na","不要"],["ng","異常"]], OKNG = [["ok","OK"],["ng","異常"]], RUN = [["ok","稼働OK"],["ng","止まっている"]];
+var SECS = [
+  {t:"① ライン停止（各工程の担当者）", s:"震度6以上は非常停止ボタンを押す ／ Tekan tombol darurat bila ≥ shindo 6",
+   items: LINES.map(function(l){ return {id:"line_" + l[0], lb:l[1] + "：非常停止ボタンでライン停止", sub:"震度5強以下で停止が不要なときは「不要」", opts:OK3, line:l[0]}; })},
+  {t:"② 避難の前に", s:"Sebelum evakuasi", items:[
+    {id:"ladle", lb:"注湯取鍋・搬送トリベを地面に下ろした", sub:"クレーンで吊ったままにしない（二次被害のおそれ）／ Turunkan ladle ke lantai", opts:[["ok","下ろした"],["na","吊っていない"],["ng","下ろせない"]]},
+    {id:"hold_off", lb:"保持炉関係の通電 OFF", sub:"Matikan listrik holding furnace", opts:[["ok","OFF した"],["ng","できない"]]} ]},
+  {t:"③ 避難・人数確認", s:"避難バックを持って駐車場へ ／ Bawa tas evakuasi ke parkiran", items:[
+    {id:"evac", lb:"避難バックを持って駐車場に避難した", opts:[["ok","避難した"],["ng","問題あり"]]},
+    {id:"count", lb:"避難後の人数確認", sub:"人数を入れて「全員確認」／ Hitung jumlah orang", opts:[["ok","全員確認"],["ng","不明者あり"]], num:true} ]},
+  {t:"④ 設備の確認（監督者：正担当者／不在のときは副担当者）", s:"機械停止後に確認 ／ Cek setelah mesin berhenti", resp:true, items:[
+    {id:"gen_suna", lb:"非常用発電機：砂処理南側（保持炉用）が稼働", sub:"停電時。軽油 8時間で燃料が空", opts:RUN, fuelH:8},
+    {id:"gen_kensa", lb:"非常用発電機：検査室前（消火設備用）が稼働", sub:"停電時。軽油 8時間で燃料が空", opts:RUN, fuelH:8},
+    {id:"gen_shot", lb:"非常用発電機：ショット機の上部2階（溶解炉用）が稼働", sub:"停電時。軽油 2時間で燃料が空", opts:RUN, fuelH:2},
+    {id:"fan1", lb:"保持炉 2t 1号機：冷却ファンが稼働", opts:RUN},
+    {id:"fan2", lb:"保持炉 2t 2号機：冷却ファンが稼働", opts:RUN},
+    {id:"ct", lb:"溶解炉のクーリングタワー（2階）が稼働", sub:"溶解炉の制御盤で確認", opts:RUN} ]},
+  {t:"⑤ 非常用発電機の給油", s:"テントハウス前のシャッターのリフト用の軽油で補給 ／ Isi solar dari lift shutter", items:[
+    {id:"fuel_shot", lb:"給油：溶解炉用（ショット機の上部2階）", sub:"2時間で燃料が無くなる", opts:[["ok","給油した"]], fuel:"gen_shot", fuelH:2},
+    {id:"fuel_suna", lb:"給油：保持炉用（砂処理南側）", sub:"8時間で燃料が空", opts:[["ok","給油した"]], fuel:"gen_suna", fuelH:8},
+    {id:"fuel_kensa", lb:"給油：消火設備用（検査室前）", sub:"8時間で燃料が空", opts:[["ok","給油した"]], fuel:"gen_kensa", fuelH:8} ]}
+];
+var ALL = []; SECS.forEach(function(s){ s.items.forEach(function(i){ ALL.push(i); }); });
+var IT = {}; ALL.forEach(function(i){ IT[i.id] = i; });
+var FLOW = [
+  '<span class="em">揺れが収まるまで待機</span>（炉・溶湯から離れて頭を守る）<small>Tunggu sampai gempa berhenti</small>',
+  '<span class="em">震度6以上</span>：各工程の担当者が<span class="em">非常停止ボタン</span>を押してラインを停止（砂処理・造型・注湯・溶解・ショット・セキ）<small>Shindo ≥ 6: tekan tombol darurat, hentikan line</small>',
+  '<span class="em">注湯取鍋・搬送トリベは必ず地面に下ろしてから避難</span>（クレーンで吊ったままだと二次被害のおそれ）<small>Turunkan ladle ke lantai sebelum evakuasi</small>',
+  '保持炉関係は<span class="em">通電 OFF</span><small>Matikan listrik holding furnace</small>',
+  '<span class="em">避難バック</span>を持って<span class="em">駐車場</span>に避難 → <span class="em">人数確認</span><small>Bawa tas evakuasi, kumpul di parkiran, hitung orang</small>',
+  '監督者（正担当者／不在なら副担当者）が<span class="em">設備の確認</span>：非常用発電機3台・保持炉の冷却ファン2台・溶解炉のクーリングタワー<small>Pengawas cek: generator, kipas holding furnace, cooling tower</small>',
+  '非常用発電機は軽油。<span class="em">溶解炉用は2時間</span>、保持炉用・消火設備用は8時間で燃料が無くなる → テントハウス前のシャッターのリフト用の軽油で給油<small>Generator peleburan habis 2 jam, lainnya 8 jam</small>'
+];
+
+// ---- データ（同じ iPad の全アプリで共有：localStorage）＋ 溶解日報のスプレッドシートと同期 ----
+var B = LSG("bousai:data", null) || {evs:{}, it:{}};   // evs[id]={u,...}  it[id+"|"+item]={u,st,by,at,note,n}
+var Q = LSG("bousai:q", []);
+var cur = null, cfg = null, busy = false, lastErr = "", pullAt = 0;
+function saveB(){ LSS("bousai:data", B); }
+function queue(ref, raw){ var op = {type:"bousai", date:"_global", equip:"bousai", ref:ref, u:raw.u, raw:raw}; Q = Q.filter(function(x){ return x.ref !== ref; }); Q.push(op); LSS("bousai:q", Q); setTimeout(flush, 300); }
+function ensureEv(id, o){ if(B.evs[id]) return; var e = {id:id, u:Date.now(), start:Date.now(), kind:o.kind || "real", title:o.title || "", quake:o.quake || null, app:MY}; B.evs[id] = e; saveB(); queue(id + "|_ev", e); }
+function setEv(id, patch){ var e = Object.assign({}, B.evs[id] || {id:id, start:Date.now()}, patch, {u:Date.now()}); B.evs[id] = e; saveB(); queue(id + "|_ev", e); }
+function setIt(ev, item, patch){ var k = ev + "|" + item, o = Object.assign({}, B.it[k] || {}, patch, {ev:ev, item:item, u:Date.now(), app:MY}); B.it[k] = o; saveB(); queue(k, o); }
+async function getCfg(){ if(cfg) return cfg; try{ var t = await (await fetch(CFG_URL, {cache:"no-store"})).text(); var w = {}; new Function("window", t)(w); var c = w.SUNA_CONFIG || {}; if(c.syncUrl){ cfg = c; } }catch(e){} return cfg; }
+async function flush(){ if(busy || !Q.length) return; var c = await getCfg(); if(!c) return; busy = true;
+  try{ while(Q.length){ var batch = Q.slice(0, 30);
+      var r = await fetch(c.syncUrl, {method:"POST", body:JSON.stringify({token:c.token, ops:batch}), redirect:"follow"}); var j = await r.json(); if(!j.ok) throw new Error(j.error || "error");
+      var sent = {}; batch.forEach(function(x){ sent[x.ref] = x.u; }); Q = LSG("bousai:q", Q).filter(function(x){ return !(sent[x.ref] === x.u); }); LSS("bousai:q", Q); }
+    lastErr = ""; }catch(e){ lastErr = String(e.message || e); }
+  busy = false; if(isOpen()) renderHead(); }
+async function pull(force){ if(!force && Date.now() - pullAt < 8000) return; pullAt = Date.now(); var c = await getCfg(); if(!c) return;
+  try{ var u = c.syncUrl + (c.syncUrl.indexOf("?") >= 0 ? "&" : "?") + new URLSearchParams({action:"load", token:c.token || "", date:"_global", equip:"bousai"});
+    var j = await (await fetch(u, {redirect:"follow"})).json(); if(!j.ok) throw new Error(j.error || "error"); var ch = false;
+    (j.items || []).forEach(function(x){ if(x.type !== "bousai" || !x.raw) return; var ref = String(x.ref), u2 = +x.u || +x.raw.u || 0;
+      if(Q.some(function(q){ return q.ref === ref; })) return;
+      if(/\|_ev$/.test(ref)){ var id = ref.slice(0, -4); if(!B.evs[id] || (B.evs[id].u || 0) < u2){ B.evs[id] = Object.assign({}, x.raw, {u:u2}); ch = true; } }
+      else if(!B.it[ref] || (B.it[ref].u || 0) < u2){ B.it[ref] = Object.assign({}, x.raw, {u:u2}); ch = true; } });
+    lastErr = ""; if(ch){ saveB(); if(isOpen()) render(); } updBtn(); }catch(e){ lastErr = String(e.message || e); }
+  if(isOpen()) renderHead(); }
+// 他のアプリ（同じ iPad）で変わったとき
+window.addEventListener("storage", function(e){ if(e.key === "bousai:data"){ B = LSG("bousai:data", B); if(isOpen()) render(); updBtn(); } if(e.key === "bousai:q") Q = LSG("bousai:q", Q); });
+
+function openEvs(){ var lim = Date.now() - 48 * 3600e3; return Object.keys(B.evs).map(function(k){ return B.evs[k]; }).filter(function(e){ return !e.end && !e.cancel && (e.start || 0) > lim; }).sort(function(a, b){ return (b.start || 0) - (a.start || 0); }); }
+function countDone(ev){ return ALL.filter(function(i){ var o = B.it[ev + "|" + i.id]; return o && o.st; }).length; }
+function updBtn(){ var b = $("bsBtn"); if(!b) return; var o = openEvs()[0]; b.classList.toggle("live", !!o && o.kind !== "drill"); b.textContent = o ? (o.kind === "drill" ? "🛟 災害対応（訓練中）" : "🛟 災害対応中") : "🛟 災害対応"; }
+
+// ---- 画面 ----
+var bs = $("bsOv"), me = LSG("bousai:me", ""), view = "sheet";
+function isOpen(){ return bs.classList.contains("on"); }
+function openPanel(ev){ if(ev && B.evs[ev]) cur = ev; else { var o = openEvs()[0]; cur = o ? o.id : null; } view = "sheet"; bs.className = "on"; render(); pull(true); flush(); }
+function closePanel(){ bs.className = ""; bs.innerHTML = ""; updBtn(); }
+$("bsBtn").onclick = function(){ openPanel(null); };
+function kindL(e){ return e.kind === "drill" ? "訓練" : e.kind === "eew" ? "緊急地震速報" : "災害（実際）"; }
+function renderHead(){ var h = $("bsHead"); if(!h) return; var e = cur && B.evs[cur];
+  h.className = "bh" + (e && e.kind === "drill" ? " drill" : "");
+  var sync = !cfg ? "（記録の保存先を読み込み中）" : Q.length ? "未送信 " + Q.length + " 件" + (lastErr ? "（電波待ち）" : "") : "送信済み ✓";
+  h.innerHTML = '<b>🛟 災害対応</b><small>Penanganan Bencana</small>' + (e ? '<small>' + esc(kindL(e)) + '　' + esc(mdhm(e.start)) + ' 開始' + (e.end ? '　<b>終了</b>' : '') + '</small>' : '') +
+    '<span class="sp"></span><small>' + esc(sync) + '</small>' +
+    (view === "sheet" ? '<button type="button" id="bsRec">記録一覧</button>' : '<button type="button" id="bsBack">チェックシートへ</button>') +
+    '<button type="button" id="bsX">閉じる ✕</button>';
+  $("bsX").onclick = closePanel;
+  if($("bsRec")) $("bsRec").onclick = function(){ view = "rec"; render(); };
+  if($("bsBack")) $("bsBack").onclick = function(){ view = "sheet"; render(); }; }
+function flowCard(){ return '<div class="card"><h3>対応の流れ<small>Langkah penanganan</small></h3><ol class="flow">' + FLOW.map(function(f){ return "<li><div>" + f + "</div></li>"; }).join("") + '</ol></div>'; }
+function fuelInfo(ev, it){ // 給油の目安（発電機が動いているのを確認した時刻 or 前回の給油から）
+  var g = B.it[ev + "|" + it.fuel], f = B.it[ev + "|" + it.id]; if(!g || g.st !== "ok") return "";
+  var base = Math.max(+g.at || 0, f && f.st === "ok" ? +f.at || 0 : 0), dl = base + it.fuelH * 3600e3, left = Math.round((dl - Date.now()) / 60000);
+  return '<span class="dl' + (left <= 30 ? ' warn' : '') + '">⛽ 給油の目安 ' + hm(dl) + ' まで（' + (left > 0 ? "あと " + left + " 分" : "時間を過ぎています！") + '）</span>'; }
+function itemRow(ev, it){ var o = B.it[ev + "|" + it.id] || {}, mine = it.line && it.line === MY;
+  var ops = it.opts.map(function(x){ return '<button type="button" class="' + x[0] + (o.st === x[0] ? " on" : "") + '" data-it="' + it.id + '" data-v="' + x[0] + '">' + esc(x[1]) + '</button>'; }).join("");
+  if(it.num) ops = '<input type="number" inputmode="numeric" min="0" placeholder="人数" data-num="' + it.id + '" value="' + esc(o.n || "") + '">' + ops;
+  var by = o.st ? '<div class="by' + (o.st === "ng" ? " ng" : "") + '">' + (o.st === "ng" ? "⚠ 異常　" : "✓ ") + esc(o.by || "") + "　" + esc(hm(o.at)) + (it.num && o.n ? "　" + esc(o.n) + " 人" : "") +
+    '　<input type="text" placeholder="メモ（状況・処置）" data-note="' + it.id + '" value="' + esc(o.note || "") + '"></div>' : "";
+  return '<div class="it' + (mine ? " mine" : "") + '"><div class="lb">' + esc(it.lb) + (mine ? " ★この工程" : "") + (it.sub ? "<small>" + esc(it.sub) + "</small>" : "") + (it.fuel ? fuelInfo(ev, it) : "") + '</div><div class="ops">' + ops + '</div>' + by + '</div>'; }
+function render(){
+  if(!isOpen()) return;
+  bs.innerHTML = '<div class="bh" id="bsHead"></div><div class="bb" id="bsBody"></div>'; renderHead();
+  var body = $("bsBody"), h = "";
+  if(view === "rec"){ body.innerHTML = recHtml(); bindRec(body); return; }
+  var e = cur && B.evs[cur];
+  if(!e){ h += '<div class="card"><h3>災害対応を始める<small>Mulai penanganan</small></h3><div class="meta" style="margin-bottom:8px">地震などの災害が起きたとき、または訓練のときに押してください。チェックの結果は全部の iPad と管理者画面で見られます。</div>' +
+      '<div class="start"><button type="button" id="bsNewReal">🚨 災害が起きた（実際）<br><small style="font-size:13px">Bencana nyata</small></button><button type="button" class="drill" id="bsNewDrill">🧯 訓練<br><small style="font-size:13px">Latihan</small></button></div></div>' + flowCard();
+    body.innerHTML = h;
+    $("bsNewReal").onclick = function(){ var id = "r-" + Date.now(); ensureEv(id, {kind:"real", title:"災害対応"}); cur = id; render(); updBtn(); };
+    $("bsNewDrill").onclick = function(){ var id = "d-" + Date.now(); ensureEv(id, {kind:"drill", title:"訓練"}); cur = id; render(); updBtn(); };
+    return; }
+  var done = countDone(cur), ng = ALL.filter(function(i){ var o = B.it[cur + "|" + i.id]; return o && o.st === "ng"; }).length;
+  h += '<div class="card"><div class="who' + (me ? "" : " need") + '"><b>確認する人</b><select id="bsWho"><option value="">えらぶ Pilih</option>' +
+    NAMES.map(function(n){ return '<option value="' + n[0] + '"' + (me === n[0] ? " selected" : "") + '>' + n[0] + '（' + n[1] + '）</option>'; }).join("") +
+    '<option value="_o"' + (me && !NAMES.some(function(n){ return n[0] === me; }) ? " selected" : "") + '>その他（名前を入れる）</option></select>' +
+    '<input id="bsWhoO" placeholder="名前" style="width:140px' + (me && !NAMES.some(function(n){ return n[0] === me; }) ? "" : ";display:none") + '" value="' + esc(NAMES.some(function(n){ return n[0] === me; }) ? "" : me) + '"></div>' +
+    '<div class="meta" style="margin-top:6px">' + esc(e.title || kindL(e)) + (e.quake ? "　震源 " + esc(e.quake.hypo || "") + (e.quake.mag ? " M" + esc(e.quake.mag) : "") : "") + '　完了 ' + done + ' / ' + ALL.length + (ng ? '　<b style="color:#d50000">異常 ' + ng + ' 件</b>' : '') + '</div>' +
+    '<div class="prog"><i style="width:' + Math.round(done / ALL.length * 100) + '%"></i></div></div>';
+  h += flowCard();
+  SECS.forEach(function(s){ h += '<div class="card"><h3>' + esc(s.t) + '<small>' + esc(s.s) + '</small></h3>' +
+    (s.resp ? '<div class="resp"><b>正担当者</b>　Aグループ：有賀　Bグループ：櫻井　Cグループ：井澤<br><b>副担当者</b>（正担当者が不在のとき）　大谷・三宅・今泉・神林</div>' : '') +
+    s.items.map(function(i){ return itemRow(cur, i); }).join("") + '</div>'; });
+  h += '<div class="card" style="text-align:center">' + (e.end ? '<div class="meta">この対応は ' + esc(mdhm(e.end)) + ' に ' + esc(e.endBy || "") + ' さんが終了にしました</div><button type="button" id="bsReopen" style="margin-top:8px;min-height:44px;border-radius:8px;padding:0 16px">終了を取り消す</button>' :
+    '<button type="button" id="bsEnd" style="min-height:52px;border-radius:10px;padding:0 24px;font-size:17px;font-weight:bold;background:#37474f;color:#fff;border:0;font-family:inherit">対応を終了する（監督者）</button><div class="meta" style="margin-top:6px">すべての確認が終わったら押してください。記録は管理者画面の「災害対応」に残ります。</div>') + '</div>';
+  body.innerHTML = h; bindSheet(body);
+}
+function who(){ var s = $("bsWho"); if(!s) return me; return s.value === "_o" ? ($("bsWhoO").value || "").trim() : s.value; }
+function bindSheet(body){
+  var s = $("bsWho"); s.onchange = function(){ $("bsWhoO").style.display = s.value === "_o" ? "" : "none"; me = who(); LSS("bousai:me", me); if(s.value === "_o") $("bsWhoO").focus(); body.querySelector(".who").classList.toggle("need", !me); };
+  $("bsWhoO").oninput = function(){ me = who(); LSS("bousai:me", me); body.querySelector(".who").classList.toggle("need", !me); };
+  body.querySelectorAll("button[data-it]").forEach(function(b){ b.onclick = function(){ var nm = who();
+    if(!nm){ toast("先に「確認する人」をえらんでください"); body.querySelector(".who").classList.add("need"); body.scrollTop = 0; return; }
+    var k = cur + "|" + b.dataset.it, o = B.it[k] || {};
+    if(o.st === b.dataset.v && !IT[b.dataset.it].fuel){ setIt(cur, b.dataset.it, {st:"", by:nm, at:Date.now()}); }   // もう一度押すと取り消し
+    else setIt(cur, b.dataset.it, {st:b.dataset.v, by:nm, at:Date.now()});
+    var y = body.scrollTop; render(); $("bsBody").scrollTop = y; updBtn(); }; });
+  body.querySelectorAll("input[data-num]").forEach(function(i){ i.onchange = function(){ setIt(cur, i.dataset.num, {n:i.value}); }; });
+  body.querySelectorAll("input[data-note]").forEach(function(i){ i.onchange = function(){ setIt(cur, i.dataset.note, {note:i.value}); }; });
+  if($("bsEnd")) $("bsEnd").onclick = function(){ var nm = who(); if(!nm){ toast("先に「確認する人」をえらんでください"); return; }
+    var left = ALL.length - countDone(cur); if(left > 0 && !confirm("まだ " + left + " 項目が未確認です。終了にしますか？")) return;
+    setEv(cur, {end:Date.now(), endBy:nm}); toast("対応を終了にしました"); var y = $("bsBody").scrollTop; render(); $("bsBody").scrollTop = y; updBtn(); };
+  if($("bsReopen")) $("bsReopen").onclick = function(){ setEv(cur, {end:0, endBy:""}); render(); updBtn(); };
+}
+// ---- 記録一覧（アプリ・管理者画面で共通）----
+function evList(){ return Object.keys(B.evs).map(function(k){ return B.evs[k]; }).filter(function(e){ return !e.cancel; }).sort(function(a, b){ return (b.start || 0) - (a.start || 0); }); }
+function recHtml(sel){ var L = evList();
+  var h = '<div class="card"><h3>災害対応の記録<small>Riwayat</small></h3>' + (L.length ? '<table class="evl"><tr><th>開始</th><th>種類</th><th>完了</th><th>異常</th><th>終了</th></tr>' +
+    L.map(function(e){ var ng = ALL.filter(function(i){ var o = B.it[e.id + "|" + i.id]; return o && o.st === "ng"; }).length;
+      return '<tr class="cl" data-ev="' + esc(e.id) + '"' + (sel === e.id ? ' style="background:#e3f2fd"' : '') + '><td>' + esc(mdhm(e.start)) + '</td><td><span class="tag' + (e.kind === "drill" ? " drill" : "") + '">' + esc(kindL(e)) + '</span></td><td>' + countDone(e.id) + ' / ' + ALL.length + '</td><td>' + (ng ? '<b style="color:#d50000">' + ng + '</b>' : "0") + '</td><td>' + (e.end ? esc(mdhm(e.end)) + " " + esc(e.endBy || "") : '<span class="tag">対応中</span>') + '</td></tr>'; }).join("") + '</table>' : '<div class="meta">まだ記録はありません</div>') + '</div>';
+  if(sel && B.evs[sel]){ var e = B.evs[sel];
+    h += '<div class="card"><h3>' + esc(mdhm(e.start)) + '　' + esc(kindL(e)) + '<small>' + esc(e.title || "") + (e.quake ? "　震源 " + esc(e.quake.hypo || "") : "") + '</small></h3><table class="evl"><tr><th>項目</th><th>結果</th><th>確認した人</th><th>時刻</th><th>メモ</th></tr>' +
+      ALL.map(function(i){ var o = B.it[sel + "|" + i.id] || {}, lb = (i.opts.filter(function(x){ return x[0] === o.st; })[0] || [])[1] || "";
+        return '<tr><td>' + esc(i.lb) + '</td><td' + (o.st === "ng" ? ' style="color:#d50000;font-weight:bold"' : '') + '>' + (o.st ? esc(lb) + (i.num && o.n ? "（" + esc(o.n) + "人）" : "") : '<span style="color:#9aa4b3">未確認</span>') + '</td><td>' + esc(o.st ? o.by || "" : "") + '</td><td>' + esc(o.st ? hm(o.at) : "") + '</td><td>' + esc(o.note || "") + '</td></tr>'; }).join("") + '</table>' +
+      (window.__bsInKanri ? "" : '<div style="margin-top:8px"><button type="button" id="bsOpenEv" style="min-height:42px;border-radius:8px;padding:0 14px">このチェックシートを開く</button></div>') + '</div>'; }
+  return h; }
+var recSel = null;
+function bindRec(box, rerender){ box.querySelectorAll("tr[data-ev]").forEach(function(tr){ tr.onclick = function(){ recSel = tr.dataset.ev; (rerender || function(){ box.innerHTML = recHtml(recSel); bindRec(box); })(); }; });
+  var b = box.querySelector("#bsOpenEv"); if(b) b.onclick = function(){ cur = recSel; view = "sheet"; render(); }; }
+// 管理者画面から使う：記録一覧をページの中に出す
+window.__bousai = {
+  records: async function(box){ window.__bsInKanri = true; box.innerHTML = '<div class="meta" style="padding:14px">読み込み中…</div>'; await pull(true);
+    var draw = function(){ box.innerHTML = '<div id="bsOvIn">' + recHtml(recSel) + '</div>'; bindRec(box, draw); }; draw(); },
+  open: openPanel, onData: onData, hide: hideEew };
+
+// 給油の目安などを1分ごとに更新
+setInterval(function(){ if(isOpen() && view === "sheet" && cur && !document.activeElement.matches("input")){ var y = $("bsBody") && $("bsBody").scrollTop; render(); if($("bsBody")) $("bsBody").scrollTop = y; } }, 60000);
+setInterval(function(){ flush(); if(isOpen()) pull(); }, 15000);
+updBtn(); connect(); setTimeout(function(){ pull(true); flush(); }, 1500);
+if($("bsPage") && !$("bsPage").hidden) window.__bousai.records($("bsPage"));   // 管理者画面で「災害対応」を開いたまま読み込んだとき
+
+// 動作確認：アドレスの最後に ?eewtest を付けて開くと、5秒後にテスト表示が出る
+if(TEST) setTimeout(function(){ var t = new Date(Date.now() + 15000);
+  var at = t.getFullYear() + "/" + p2(t.getMonth()+1) + "/" + p2(t.getDate()) + " " + p2(t.getHours()) + ":" + p2(t.getMinutes()) + ":" + p2(t.getSeconds());
   onData({code:556, test:true, issue:{eventId:"test", time:at}, earthquake:{hypocenter:{name:"遠州灘（テスト）", magnitude:6.8}},
     areas:[{pref:"静岡", name:AREA, scaleFrom:50, scaleTo:55, kindCode:"10", arrivalTime:at}]}); }, 5000);
-window.__eew = {onData: onData, hide: hide};
+window.__eew = {onData: onData, hide: hideEew};
 })();
 </script>
 
