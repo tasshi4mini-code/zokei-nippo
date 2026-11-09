@@ -1387,7 +1387,7 @@ function showEew(d, a, test, evId){
   var mag = hy.magnitude != null && hy.magnitude > 0 ? "M" + hy.magnitude : "";
   ov.className = "on" + (test ? " test" : "");
   ov.innerHTML =
-    '<div class="t1">' + (test ? "【テスト】" : "") + '緊急地震速報</div><div class="t2">Peringatan Dini Gempa Bumi</div>' +
+    '<div class="t1">' + (test ? "【" + (test === true ? "テスト" : esc(test)) + "】" : "") + '緊急地震速報</div><div class="t2">Peringatan Dini Gempa Bumi</div>' +
     '<div class="sc">' + esc(AREA) + '（浜松市）　' + esc(scaleText(a)) + '</div>' +
     '<div class="cd" id="eewCd"></div>' +
     '<div class="act">炉・溶湯から離れて、頭を守ってください<small>Jauhi tungku &amp; logam cair, lindungi kepala!</small></div>' +
@@ -1477,7 +1477,7 @@ var Q = LSG("bousai:q", []);
 var cur = null, cfg = null, busy = false, lastErr = "", pullAt = 0;
 function saveB(){ LSS("bousai:data", B); }
 function queue(ref, raw){ var op = {type:"bousai", date:"_global", equip:"bousai", ref:ref, u:raw.u, raw:raw}; Q = Q.filter(function(x){ return x.ref !== ref; }); Q.push(op); LSS("bousai:q", Q); setTimeout(flush, 300); }
-function ensureEv(id, o){ if(B.evs[id]) return; var e = {id:id, u:Date.now(), start:Date.now(), kind:o.kind || "real", title:o.title || "", quake:o.quake || null, app:MY}; B.evs[id] = e; saveB(); queue(id + "|_ev", e); }
+function ensureEv(id, o){ if(B.evs[id]) return; var e = {id:id, u:Date.now(), start:Date.now(), kind:o.kind || "real", title:o.title || "", quake:o.quake || null, eew:o.eew || null, app:MY}; B.evs[id] = e; saveB(); queue(id + "|_ev", e); }
 function setEv(id, patch){ var e = Object.assign({}, B.evs[id] || {id:id, start:Date.now()}, patch, {u:Date.now()}); B.evs[id] = e; saveB(); queue(id + "|_ev", e); }
 function setIt(ev, item, patch){ var k = ev + "|" + item, o = Object.assign({}, B.it[k] || {}, patch, {ev:ev, item:item, u:Date.now(), app:MY}); B.it[k] = o; saveB(); queue(k, o); }
 async function getCfg(){ if(cfg) return cfg; try{ var t = await (await fetch(CFG_URL, {cache:"no-store"})).text(); var w = {}; new Function("window", t)(w); var c = w.SUNA_CONFIG || {}; if(c.syncUrl){ cfg = c; } }catch(e){} return cfg; }
@@ -1494,10 +1494,10 @@ async function pull(force){ if(!force && Date.now() - pullAt < 8000) return; pul
       if(Q.some(function(q){ return q.ref === ref; })) return;
       if(/\|_ev$/.test(ref)){ var id = ref.slice(0, -4); if(!B.evs[id] || (B.evs[id].u || 0) < u2){ B.evs[id] = Object.assign({}, x.raw, {u:u2}); ch = true; } }
       else if(!B.it[ref] || (B.it[ref].u || 0) < u2){ B.it[ref] = Object.assign({}, x.raw, {u:u2}); ch = true; } });
-    lastErr = ""; if(ch){ saveB(); if(isOpen()) render(); } updBtn(); }catch(e){ lastErr = String(e.message || e); }
+    lastErr = ""; if(ch){ saveB(); if(isOpen()) render(); } updBtn(); checkDrill(); }catch(e){ lastErr = String(e.message || e); }
   if(isOpen()) renderHead(); }
 // 他のアプリ（同じ iPad）で変わったとき
-window.addEventListener("storage", function(e){ if(e.key === "bousai:data"){ B = LSG("bousai:data", B); if(isOpen()) render(); updBtn(); } if(e.key === "bousai:q") Q = LSG("bousai:q", Q); });
+window.addEventListener("storage", function(e){ if(e.key === "bousai:data"){ B = LSG("bousai:data", B); if(isOpen()) render(); updBtn(); checkDrill(); } if(e.key === "bousai:q") Q = LSG("bousai:q", Q); });
 
 function openEvs(){ var lim = Date.now() - 48 * 3600e3; return Object.keys(B.evs).map(function(k){ return B.evs[k]; }).filter(function(e){ return !e.end && !e.cancel && (e.start || 0) > lim; }).sort(function(a, b){ return (b.start || 0) - (a.start || 0); }); }
 function countDone(ev){ return ALL.filter(function(i){ var o = B.it[ev + "|" + i.id]; return o && o.st; }).length; }
@@ -1590,15 +1590,44 @@ function recHtml(sel){ var L = evList();
 var recSel = null;
 function bindRec(box, rerender){ box.querySelectorAll("tr[data-ev]").forEach(function(tr){ tr.onclick = function(){ recSel = tr.dataset.ev; (rerender || function(){ box.innerHTML = recHtml(recSel); bindRec(box); })(); }; });
   var b = box.querySelector("#bsOpenEv"); if(b) b.onclick = function(){ cur = recSel; view = "sheet"; render(); }; }
-// 管理者画面から使う：記録一覧をページの中に出す
+// ---- 訓練の地震速報（管理者画面から全部の iPad に出す）----
+var DRILL_WIN = 3 * 60 * 1000;   // 出してから3分以内に受け取った iPad だけ表示する
+function fmtAt(t){ var d = new Date(t); return d.getFullYear() + "/" + p2(d.getMonth()+1) + "/" + p2(d.getDate()) + " " + p2(d.getHours()) + ":" + p2(d.getMinutes()) + ":" + p2(d.getSeconds()); }
+function drillShow(e){ var q = e.quake || {}, dr = e.eew || {}, at = fmtAt(Date.now() + (+dr.sec || 20) * 1000);
+  showEew({earthquake:{hypocenter:{name:q.hypo || "遠州灘（訓練）", magnitude:q.mag || ""}}, issue:{time:fmtAt(e.start)}},
+    {name:AREA, scaleFrom:dr.scaleFrom || 55, scaleTo:dr.scaleTo || dr.scaleFrom || 55, kindCode:"10", arrivalTime:at}, "訓練", e.id); }
+function checkDrill(){ var seenD = LSG("bousai:drillSeen", {}), now = Date.now(), hit = null;
+  Object.keys(B.evs).forEach(function(k){ var e = B.evs[k]; if(e.kind === "drill" && e.eew && !e.cancel && !e.end && now - (+e.start || 0) < DRILL_WIN && !seenD[k]) hit = e; });
+  if(!hit) return; seenD[hit.id] = now; Object.keys(seenD).forEach(function(k){ if(now - seenD[k] > 864e5) delete seenD[k]; }); LSS("bousai:drillSeen", seenD);
+  if(isOpen() && cur === hit.id) return; drillShow(hit); }
+function sendDrill(o){ var id = "d-" + Date.now(), sc = +o.scale || 55;
+  var e = {kind:"drill", title:"訓練（地震速報）震度" + scaleL(sc), quake:{area:AREA, scale:"震度" + scaleL(sc), hypo:o.hypo || "遠州灘（訓練）", mag:""}, eew:{scaleFrom:sc, scaleTo:sc, sec:+o.sec || 20}};
+  ensureEv(id, e); var seenD = LSG("bousai:drillSeen", {}); seenD[id] = Date.now(); LSS("bousai:drillSeen", seenD);
+  drillShow(B.evs[id]); updBtn(); return id; }
+function drillCard(){ var SC = [[45,"5弱"],[50,"5強"],[55,"6弱"],[60,"6強"],[70,"7"]], SE = [10,20,30];
+  return '<div class="card"><h3>訓練の地震速報を出す<small>Latihan peringatan gempa</small></h3>' +
+    '<div class="meta" style="margin-bottom:8px">「全部の iPad に出す」を押すと、日報アプリを開いている iPad に10秒ほどで【訓練】の緊急地震速報が出て、警報音が鳴ります（オレンジ色）。そのまま「災害対応へ」で訓練のチェックシートに進めます。記録は下の一覧に「訓練」で残ります。</div>' +
+    '<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;font-size:15px">震度 <select id="drSc" style="font-size:16px;min-height:40px">' + SC.map(function(x){ return '<option value="' + x[0] + '"' + (x[0] === 55 ? " selected" : "") + '>' + x[1] + '</option>'; }).join("") + '</select>' +
+    '揺れまで <select id="drSec" style="font-size:16px;min-height:40px">' + SE.map(function(x){ return '<option value="' + x + '"' + (x === 20 ? " selected" : "") + '>' + x + ' 秒</option>'; }).join("") + '</select>' +
+    '<button type="button" id="drAll" style="min-height:46px;border-radius:8px;border:0;background:#e65100;color:#fff;font-weight:bold;font-size:16px;padding:0 18px;font-family:inherit">📢 全部の iPad に出す</button>' +
+    '<button type="button" id="drMe" style="min-height:46px;border-radius:8px;border:1px solid #e65100;background:#fff;color:#e65100;font-weight:bold;font-size:15px;padding:0 14px;font-family:inherit">この画面だけで試す</button></div>' +
+    '<div class="meta" style="margin-top:6px">※ スリープ中・アプリを閉じている iPad には出ません。3分たってから開いた iPad にも出ません。音は、その iPad で一度画面をさわったあとに鳴ります。</div></div>'; }
+function bindDrill(box, after){ var a = box.querySelector("#drAll"), m = box.querySelector("#drMe"); if(!a) return;
+  a.onclick = function(){ var sc = +box.querySelector("#drSc").value, sec = +box.querySelector("#drSec").value;
+    if(!confirm("訓練の緊急地震速報（震度" + scaleL(sc) + "）を、全部の iPad に出しますか？")) return;
+    recSel = sendDrill({scale:sc, sec:sec}); flush(); toast("訓練の速報を送りました。各 iPad に10秒ほどで出ます"); after && after(); };
+  m.onclick = function(){ var sc = +box.querySelector("#drSc").value, sec = +box.querySelector("#drSec").value;
+    drillShow({id:null, start:Date.now(), quake:{hypo:"遠州灘（訓練）"}, eew:{scaleFrom:sc, sec:sec}}); }; }
+// 管理者画面から使う：訓練の速報と記録一覧をページの中に出す
 window.__bousai = {
   records: async function(box){ window.__bsInKanri = true; box.innerHTML = '<div class="meta" style="padding:14px">読み込み中…</div>'; await pull(true);
-    var draw = function(){ box.innerHTML = '<div id="bsOvIn">' + recHtml(recSel) + '</div>'; bindRec(box, draw); }; draw(); },
+    var draw = function(){ box.innerHTML = '<div id="bsOvIn">' + drillCard() + recHtml(recSel) + '</div>'; bindDrill(box, draw); bindRec(box, draw); }; draw(); },
+  drill: sendDrill,
   open: openPanel, onData: onData, hide: hideEew };
 
 // 給油の目安などを1分ごとに更新
 setInterval(function(){ if(isOpen() && view === "sheet" && cur && !document.activeElement.matches("input")){ var y = $("bsBody") && $("bsBody").scrollTop; render(); if($("bsBody")) $("bsBody").scrollTop = y; } }, 60000);
-setInterval(function(){ flush(); if(isOpen()) pull(); }, 15000);
+setInterval(function(){ flush(); if(document.visibilityState === "visible") pull(); }, 10000);   // 管理者画面からの訓練の速報も、これで受け取る
 updBtn(); connect(); setTimeout(function(){ pull(true); flush(); }, 1500);
 if($("bsPage") && !$("bsPage").hidden) window.__bousai.records($("bsPage"));   // 管理者画面で「災害対応」を開いたまま読み込んだとき
 
