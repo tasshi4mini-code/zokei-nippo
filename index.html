@@ -151,6 +151,9 @@ td.chg,input.chg{color:#d50000!important;font-weight:bold;background:#fff1f1}
 .item{display:grid;grid-template-columns:minmax(220px,2fr) repeat(auto-fill,minmax(110px,1fr));gap:8px;align-items:end;border:1px solid var(--line);border-radius:10px;padding:8px;background:#fafcfd}
 .item .hin input{font-size:20px;font-weight:bold;letter-spacing:.5px;text-transform:uppercase}
 .item .del{min-height:46px}
+.item .kowa input{font-size:20px;font-weight:bold;text-align:center}
+.item .kowa.on input{border:2px solid #d50000;background:#fff1f1;color:#b00020}
+.item .kowa.on{color:#b00020;font-weight:bold}
 .hinwrap{position:relative}
 .sugg{position:absolute;left:0;right:0;top:100%;z-index:20;background:#fff;border:2px solid #1d4e5c;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);max-height:340px;overflow-y:auto;margin-top:2px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;min-width:min(420px,90vw)}
 .sugg .hd{font-size:13px;color:#fff;background:#1d4e5c;padding:6px 10px;font-weight:bold}
@@ -355,8 +358,8 @@ input.unlock{background:#fff3e0;border-color:#e65100;color:#e65100;font-weight:b
     <div class="tbl-wrap">
       <table style="min-width:1400px">
         <thead>
-          <tr><th rowspan="2">No</th><th colspan="5">生産情報</th><th colspan="3">金型確認</th><th colspan="2">造型時間</th><th colspan="6">製造条件</th><th colspan="4">生産実績</th><th rowspan="2">作業者</th></tr>
-          <tr><th>品番</th><th>駒数</th><th>品名</th><th>材質</th><th>添加材</th><th>駒部</th><th>方案部</th><th>定盤部</th><th>開始</th><th>完了</th><th>注湯温度<br>(規格)</th><th>スクイズ<br>圧力</th><th>スクイズ<br>時間</th><th>吹上<br>圧力</th><th>吹上<br>時間</th><th>モールド厚</th><th>造型総数</th><th>生産個数</th><th>生産重量<br>(kg)</th><th>未注湯</th></tr>
+          <tr><th rowspan="2">No</th><th colspan="5">生産情報</th><th colspan="3">金型確認</th><th colspan="2">造型時間</th><th colspan="6">製造条件</th><th colspan="5">生産実績</th><th rowspan="2">作業者</th></tr>
+          <tr><th>品番</th><th>駒数</th><th>品名</th><th>材質</th><th>添加材</th><th>駒部</th><th>方案部</th><th>定盤部</th><th>開始</th><th>完了</th><th>注湯温度<br>(規格)</th><th>スクイズ<br>圧力</th><th>スクイズ<br>時間</th><th>吹上<br>圧力</th><th>吹上<br>時間</th><th>モールド厚</th><th>造型総数</th><th>生産個数</th><th>生産重量<br>(kg)</th><th>中子<br>破損</th><th>未注湯</th></tr>
         </thead>
         <tbody id="tbody"></tbody>
       </table>
@@ -484,7 +487,10 @@ function itemFrom(m){ return Object.assign({hin:m.hin,koma:m.koma==null?"":Strin
 function todayStr(){ const d=new Date(); if(d.getHours()<8) d.setDate(d.getDate()-1); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
 function defaultEquip(){ const e=(LS.get(APP+":last",{}).equip||""); return EQUIPS.includes(e)?e:EQUIP0; }
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
-function blankItem(){ return {hin:"",koma:"",name:"",tot:"",ok:false,test:false,mat:"",add:"",unit:"",check:"",tana:""}; }
+function blankItem(){ return {hin:"",koma:"",name:"",tot:"",ok:false,test:false,mat:"",add:"",unit:"",check:"",tana:"",kowa:""}; }
+// v24：中子の破損の数（品番ごと）
+function kowaOf(it){ return num(it&&it.kowa)||0; }
+function dayKowa(){ return state.rows.reduce((a,r)=>rowHas(r)?a+liveItems(r).reduce((b,it)=>b+kowaOf(it),0):a,0); }
 function blankRow(){ return {items:[blankItem()],mold:"",cKoma:"",cHouan:"",cJouban:"",st:"",en:"",temp:"",sq:"",sqt:"",fup:"",fut:"",mt:"",total:"",unp:"",worker:"",u:0}; }
 function blankState(date,equip){ return {date,equip,confirmBy:"",tensile:"",counter:"",hu:0,rows:Array.from({length:MINR},blankRow),events:[]}; }
 function key(){ return APP+":day:"+state.date+"|"+state.equip; }
@@ -543,6 +549,7 @@ function renderItems(){ const r=state.rows[sel];
     <div class="f hin"><span class="small">品番 ${i?i+1:""} <span class="id">Nomor produk</span></span><div class="hinwrap"><input data-ik="hin" value="${esc(it.hin)}" style="${hinStyle(it)}" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="例 RD2364A"><div class="sugg" hidden></div></div><div class="hinst ${c}">${t}</div><button class="testbtn ${it.test?"on":""}" data-itest="${i}">${it.test?"✓ テスト品番":"テスト品番"} <span class="id">Uji</span></button></div>
     <label class="f">駒数 <span class="id">Jumlah</span><input data-ik="koma" inputmode="numeric" value="${esc(it.koma)}"></label>
     <label class="f">品名 <span class="id">Nama</span><input data-ik="name" value="${esc(it.name)}"></label>
+    <label class="f kowa ${kowaOf(it)?"on":""}">中子破損 (個) <span class="id">Inti rusak</span><input data-ik="kowa" inputmode="numeric" value="${esc(it.kowa||"")}" placeholder="0"></label>
     ${(!it.test&&(!it.ok||num(it.unit)==null))?`<label class="f ${it.hin&&num(it.unit)==null?"need":""}">単重 (kg) <span class="id">Berat satuan</span><input data-ik="unit" inputmode="decimal" value="${esc(it.unit)}" placeholder="必ず入力"></label>`:""}
     ${i?`<label class="f">造型総数 <span class="id">Total cetakan</span><input data-ik="tot" inputmode="numeric" value="${esc(it.tot)}" placeholder="同じ: ${esc(r.total||"－")}"></label><button class="del" data-idel="${i}">削除</button>`:"<span></span><span></span>"}
     ${it.ok?`<div class="iinfo"><span>材質 ${cspan(it.mat,matColor(it.mat))}</span><span>添加材 ${cspan(it.add,addColor(it.add))}</span><span>単重 <b>${esc(it.unit||"－")}</b> kg</span>${it.tana?`<span>棚 <b>${esc(it.tana)}</b></span>`:""}</div>`:""}
@@ -575,12 +582,12 @@ function renderTable(){
       h+=`<td style="white-space:nowrap;${hinStyle(it)}">${esc(it.hin)}${it.test?' <span style="font-size:11px">(テスト)</span>':""}${it.hin&&!it.ok&&!it.test?' <span style="color:#c62828">*</span>':""}${it.check?' <span title="確認ポイント" style="color:#c62828">⚠</span>':""}</td><td>${esc(it.koma)}</td><td>${esc(it.name)}</td><td style="white-space:nowrap;color:${matColor(it.mat)}">${esc(it.mat)}</td><td style="white-space:nowrap;font-size:12px;color:${addColor(it.add)}">${esc(it.add)}</td>`;
       if(!x) h+=CHKK.map(k=>`<td ${rs} class="${r[k]==="NG"?"jNG":""}">${r[k]}</td>`).join("")+`<td ${rs}>${esc(r.st)}</td><td ${rs}>${esc(r.en)}</td><td ${rs} style="white-space:nowrap">${esc(r.temp)}</td>`+
         ["sq","sqt","fup","fut","mt"].map(k=>`<td ${rs}>${esc(r[k])}</td>`).join("");
-      h+=`<td>${x?(totOf(r,it)!==r.total?`<b style="color:#e65100">${esc(totOf(r,it))}</b>`:esc(totOf(r,it))):`<b>${esc(r.total)}</b>`}</td><td>${q==null?"":fmtNum(q)}</td><td class="${it.hin&&weightOf(r,it)==null?"jNG":""}">${weightOf(r,it)==null?(it.hin?"未入力":""):fmtNum(weightOf(r,it))}</td>`;
+      h+=`<td>${x?(totOf(r,it)!==r.total?`<b style="color:#e65100">${esc(totOf(r,it))}</b>`:esc(totOf(r,it))):`<b>${esc(r.total)}</b>`}</td><td>${q==null?"":fmtNum(q)}</td><td class="${it.hin&&weightOf(r,it)==null?"jNG":""}">${weightOf(r,it)==null?(it.hin?"未入力":""):fmtNum(weightOf(r,it))}</td><td class="${kowaOf(it)?"jNG":""}">${kowaOf(it)||""}</td>`;
       if(!x) h+=`<td ${rs}>${esc(r.unp||"0")}</td><td ${rs}>${esc(r.worker)}</td>`;
       out.push(h+"</tr>"); }); });
   const tq=state.rows.reduce((a,r)=>a+rowQty(r),0), tu=state.rows.reduce((a,r)=>a+(num(r.unp)||0),0);
   $("tbody").innerHTML=(out.length?out.join(""):'<tr><td colspan="23" class="small" style="padding:12px">まだ入力がありません</td></tr>')+
-    `<tr class="sum"><td colspan="17">合計 <span class="id">Total</span></td><td>${fmtNum(dayTotal())}</td><td>${tq?fmtNum(tq):""}</td><td>${dayKg()?fmtNum(Math.round(dayKg()*10)/10):""}</td><td></td><td></td></tr>`;
+    `<tr class="sum"><td colspan="17">合計 <span class="id">Total</span></td><td>${fmtNum(dayTotal())}</td><td>${tq?fmtNum(tq):""}</td><td>${dayKg()?fmtNum(Math.round(dayKg()*10)/10):""}</td><td class="${dayKowa()?"jNG":""}">${dayKowa()||""}</td><td></td><td></td></tr>`;
   renderTotals();
 }
 function renderEvents(){
@@ -657,6 +664,7 @@ function tryAutoConfirm(i){ const r=state.rows[sel], it=r.items[i]; if(!it||it.o
 $("items").addEventListener("input",e=>{ if(VIEW) return; const box=e.target.closest(".item"), k=e.target.dataset.ik; if(!box||!k) return; const i=+box.dataset.it, r=state.rows[sel], it=r.items[i];
   it[k]=k==="hin"?e.target.value.toUpperCase():e.target.value.trim();
   if(k==="unit"||k==="koma") e.target.closest(".f").classList.toggle("need",num(e.target.value)==null&&k==="unit");
+  if(k==="kowa"){ it.kowa=e.target.value.replace(/[^\d]/g,""); if(e.target.value!==it.kowa) e.target.value=it.kowa; e.target.closest(".f").classList.toggle("on",!!kowaOf(it)); }
   if(k==="hin"){ if(it.ok){ ["mat","add","unit","check","tana"].forEach(x=>it[x]=""); } it.ok=false; const st=box.querySelector(".hinst"); const [c,t]=itemStatus(it); st.className="hinst "+c; st.textContent=t; showSugg(i,it.hin); }
   touchRow(sel); renderChips(); renderTable(); updateMarks(); });
 $("items").addEventListener("keydown",e=>{ if(e.target.dataset.ik!=="hin") return; const i=+e.target.closest(".item").dataset.it;
@@ -843,7 +851,7 @@ function workbook(sheets){
 
 
 // ---- Excel ----
-const DATA_HEAD=["生産日","号機","No","品番","駒数","品名","マスター登録","材質","添加材","単重(kg)","駒部","方案部","定盤部","開始","完了","注湯温度(規格)","スクイズ圧力","スクイズ時間","吹上圧力","吹上時間","モールド厚","造型総数","生産個数","生産重量(kg)","未注湯","作業者","確認ポイント","引張棒採取","記録確認"];
+const DATA_HEAD=["生産日","号機","No","品番","駒数","品名","マスター登録","材質","添加材","単重(kg)","駒部","方案部","定盤部","開始","完了","注湯温度(規格)","スクイズ圧力","スクイズ時間","吹上圧力","吹上時間","モールド厚","造型総数","生産個数","生産重量(kg)","未注湯","作業者","確認ポイント","引張棒採取","記録確認","中子破損(個)"];
 // CSV（必要な項目だけ）：生産日・号機・品番・品名・生産個数
 // ---- 生産管理システム用：品番コード・社員番号（パソコンが毎朝「生産管理システム_対応表.xlsx」から送る）----
 var SysM=(function(){ let d=null, idx=null;
@@ -882,30 +890,30 @@ function dataRows(){
   const out=[DATA_HEAD];
   state.rows.forEach((r,i)=>{ if(!rowHas(r)) return; const li=liveItems(r).length?liveItems(r):[blankItem()];
     li.forEach(it=>{ const q=qtyOf(r,it), w=weightOf(r,it);
-      out.push([state.date,state.equip,i+1,it.hin,it.koma,it.name,it.test?"テスト":(it.hin?(it.ok?"○":"×"):""),it.mat,it.add,it.unit,r.cKoma,r.cHouan,r.cJouban,r.st,r.en,r.temp,r.sq,r.sqt,r.fup,r.fut,r.mt,totOf(r,it),q==null?"":q,w==null?"":w,r.unp||0,r.worker,it.check,state.tensile,state.confirmBy]); }); });
+      out.push([state.date,state.equip,i+1,it.hin,it.koma,it.name,it.test?"テスト":(it.hin?(it.ok?"○":"×"):""),it.mat,it.add,it.unit,r.cKoma,r.cHouan,r.cJouban,r.st,r.en,r.temp,r.sq,r.sqt,r.fup,r.fut,r.mt,totOf(r,it),q==null?"":q,w==null?"":w,r.unp||0,r.worker,it.check,state.tensile,state.confirmBy,kowaOf(it)||""]); }); });
   return out;
 }
 function eventRows(){ const out=[["生産日","号機","No","発生時刻","終了時刻","担当","異常/変化点内容","処置内容"]]; liveEvents().forEach((e,i)=>out.push([state.date,state.equip,i+1,e.start,e.end,e.person,e.content,e.action])); return out; }
 function buildNippoSheet(){
-  const S=new Sheet("日報"); S.landscape=true; S.showGrid=false; const L=17;
-  S.cols=[16,5,7,5,5,5,7,7,12,6,6,6,6,7,8,9,6,9];
+  const S=new Sheet("日報"); S.landscape=true; S.showGrid=false; const L=18;
+  S.cols=[16,5,7,5,5,5,7,7,12,6,6,6,6,7,8,9,6,6,9];
   const H=st({font:1,fill:"head",border:1,h:"center",wrap:true}), B=st({border:1,h:"center"}), NG=st({font:2,border:1,h:"center",fill:"ng"}), BL=st({border:1,h:"left"});
   S.set(0,0,"造型日報",st({font:3})); S.heights[0]=26;
   S.set(0,1,"生産日",H); S.merge(1,1,3,1,state.date,B); S.merge(4,1,5,1,"号機",H); S.merge(6,1,8,1,state.equip,B);
   S.merge(9,1,10,1,"引張棒採取",H); S.merge(11,1,12,1,state.tensile,B); S.merge(13,1,14,1,"記録確認(監督者)",st({font:2,fill:"ng",border:1,h:"center"})); S.merge(15,1,L,1,state.confirmBy,st({font:2,border:1,h:"center"}));
   S.set(0,2,"試作や対策トライなどの少数生産品番、廃却予定の合い込み品番などもすべて記載すること（在庫管理のため）　* = マスターにない品番",st({font:4}));
   const r0=3;
-  S.merge(0,r0,2,r0,"生産情報",H); S.merge(3,r0,5,r0,"金型確認",H); S.merge(6,r0,7,r0,"造型時間",H); S.merge(8,r0,13,r0,"製造条件",H); S.merge(14,r0,16,r0,"生産実績",H); S.merge(L,r0,L,r0+1,"作業者",H);
-  ["品番","駒数","品名","駒部","方案部","定盤部","開始","完了","注湯温度","スクイズ圧力","スクイズ時間","吹上圧力","吹上時間","モールド厚","造型総数","生産個数","未注湯"].forEach((t,i)=>S.set(i,r0+1,t,H)); S.heights[r0+1]=30;
+  S.merge(0,r0,2,r0,"生産情報",H); S.merge(3,r0,5,r0,"金型確認",H); S.merge(6,r0,7,r0,"造型時間",H); S.merge(8,r0,13,r0,"製造条件",H); S.merge(14,r0,17,r0,"生産実績",H); S.merge(L,r0,L,r0+1,"作業者",H);
+  ["品番","駒数","品名","駒部","方案部","定盤部","開始","完了","注湯温度","スクイズ圧力","スクイズ時間","吹上圧力","吹上時間","モールド厚","造型総数","生産個数","未注湯","中子破損"].forEach((t,i)=>S.set(i,r0+1,t,H)); S.heights[r0+1]=30;
   let y=r0+2, tq=0, tu=0;
   state.rows.forEach(r=>{ if(!rowHas(r)) return; const li=liveItems(r).length?liveItems(r):[blankItem()], y2=y+li.length-1;
     const sh=(c,v,s)=>S.merge(c,y,c,y2,v,s||B);
-    li.forEach((it,x)=>{ const q=qtyOf(r,it); S.set(0,y+x,it.hin+(it.test?" (テスト)":(it.hin&&!it.ok?" *":"")),it.test?st({font:2,border:1,h:"left"}):BL); S.set(1,y+x,it.koma,B); S.set(2,y+x,it.name,B); S.set(14,y+x,totOf(r,it),B); S.set(15,y+x,q==null?"":q,B); tq+=q||0; });
+    li.forEach((it,x)=>{ const q=qtyOf(r,it); S.set(0,y+x,it.hin+(it.test?" (テスト)":(it.hin&&!it.ok?" *":"")),it.test?st({font:2,border:1,h:"left"}):BL); S.set(1,y+x,it.koma,B); S.set(2,y+x,it.name,B); S.set(14,y+x,totOf(r,it),B); S.set(15,y+x,q==null?"":q,B); S.set(17,y+x,kowaOf(it)||"",kowaOf(it)?NG:B); tq+=q||0; });
     CHKK.forEach((k,x)=>sh(3+x,r[k],r[k]==="NG"?NG:B)); sh(6,r.st); sh(7,r.en); sh(8,r.temp);
-    ["sq","sqt","fup","fut","mt"].forEach((k,x)=>sh(9+x,r[k])); sh(16,r.unp||0); sh(17,r.worker); tu+=num(r.unp)||0;
+    ["sq","sqt","fup","fut","mt"].forEach((k,x)=>sh(9+x,r[k])); sh(16,r.unp||0); sh(18,r.worker); tu+=num(r.unp)||0;
     y=y2+1; });
   const HS=st({font:1,border:1,h:"center",fill:"head"});
-  S.merge(0,y,13,y,"合計",HS); S.set(14,y,dayTotal()||"",HS); S.set(15,y,tq||"",HS); S.set(16,y,"",HS); S.set(17,y,"",HS); y+=1;
+  S.merge(0,y,13,y,"合計",HS); S.set(14,y,dayTotal()||"",HS); S.set(15,y,tq||"",HS); S.set(16,y,"",HS); S.set(17,y,dayKowa()||"",HS); S.set(18,y,"",HS); y+=1;
   S.merge(12,y,14,y,"日計造型数",H); S.merge(15,y,L,y,dayTotal()+" 枠",st({font:1,border:1,h:"center"})); y++;
   S.merge(12,y,14,y,"日計 生産トン数",H); S.merge(15,y,L,y,fmtT(dayKg())+" t",st({font:1,border:1,h:"center"})); y++;
   { const yv=Yield&&Yield.val(); S.merge(12,y,14,y,"製品歩留まり(全号機)",H); S.merge(15,y,L,y,yv&&yv.pct!=null?yv.pct.toFixed(1)+" %":"",st({font:1,border:1,h:"center"})); y++; }
@@ -918,7 +926,7 @@ function buildNippoSheet(){
 }
 function tableSheet(name,rows,widths){ const S=new Sheet(name); S.freeze=1; S.cols=widths; const H=st({font:1,fill:"head",border:1,h:"center",wrap:true});
   rows.forEach((row,r)=>row.forEach((v,c)=>S.set(c,r,v,r===0?H:st({border:1})))); S.autoFilter="A1:"+ref(rows[0].length-1,Math.max(rows.length-1,0)); S.heights[0]=32; return S; }
-function buildXlsx(){ return workbook([buildNippoSheet(), tableSheet("データ",dataRows(),[11,12,5,16,6,8,8,8,16,8,6,6,6,7,7,11,8,8,8,8,8,9,9,10,7,10,24,9,10]), tableSheet("異常変化点",eventRows(),[11,12,5,9,9,10,50,50])]); }
+function buildXlsx(){ return workbook([buildNippoSheet(), tableSheet("データ",dataRows(),[11,12,5,16,6,8,8,8,16,8,6,6,6,7,7,11,8,8,8,8,8,9,9,10,7,10,24,9,10,9]), tableSheet("異常変化点",eventRows(),[11,12,5,9,9,10,50,50])]); }
 $("btnCsv").onclick=async()=>{
   if(!state.rows.some(rowHas)&&!liveEvents().length){ toast("入力データがありません"); return; }
   const bad=state.rows.map((r,i)=>missOf(r).length?`No.${i+1}  ${missText(r).replace(/\n/g,"  ")}`:"").filter(Boolean);
