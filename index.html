@@ -151,7 +151,13 @@ td.chg,input.chg{color:#d50000!important;font-weight:bold;background:#fff1f1}
 .item{display:grid;grid-template-columns:minmax(220px,2fr) repeat(auto-fill,minmax(110px,1fr));gap:8px;align-items:end;border:1px solid var(--line);border-radius:10px;padding:8px;background:#fafcfd}
 .item .hin input{font-size:20px;font-weight:bold;letter-spacing:.5px;text-transform:uppercase}
 .item .del{min-height:46px}
-.item .kowa input{font-size:20px;font-weight:bold;text-align:center}
+.item .kowa{grid-column:span 2;min-width:200px}
+.kstep{display:flex;align-items:stretch;gap:6px}
+.kstep button{flex:0 0 52px;min-height:50px;font-size:28px;font-weight:bold;line-height:1;border-radius:10px;padding:0;border:2px solid #9aa4b3;background:#fff;color:#1d2330}
+.kstep button[data-kstep="1"]{background:#fff1f1;border-color:#e57373;color:#b00020}
+.kstep button:active{transform:scale(.95)}
+.kstep input{flex:1 1 auto;min-width:60px;width:70px}
+.item .kowa input{font-size:24px;font-weight:bold;text-align:center}
 .item .kowa.on input{border:2px solid #d50000;background:#fff1f1;color:#b00020}
 .item .kowa.on{color:#b00020;font-weight:bold}
 .hinwrap{position:relative}
@@ -549,7 +555,7 @@ function renderItems(){ const r=state.rows[sel];
     <div class="f hin"><span class="small">品番 ${i?i+1:""} <span class="id">Nomor produk</span></span><div class="hinwrap"><input data-ik="hin" value="${esc(it.hin)}" style="${hinStyle(it)}" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="例 RD2364A"><div class="sugg" hidden></div></div><div class="hinst ${c}">${t}</div><button class="testbtn ${it.test?"on":""}" data-itest="${i}">${it.test?"✓ テスト品番":"テスト品番"} <span class="id">Uji</span></button></div>
     <label class="f">駒数 <span class="id">Jumlah</span><input data-ik="koma" inputmode="numeric" value="${esc(it.koma)}"></label>
     <label class="f">品名 <span class="id">Nama</span><input data-ik="name" value="${esc(it.name)}"></label>
-    <label class="f kowa ${kowaOf(it)?"on":""}">中子破損 (個) <span class="id">Inti rusak</span><input data-ik="kowa" inputmode="numeric" value="${esc(it.kowa||"")}" placeholder="0"></label>
+    <div class="f kowa ${kowaOf(it)?"on":""}"><span>中子破損 (個) <span class="id">Inti rusak</span></span><div class="kstep"><button type="button" data-kstep="-1" data-ki="${i}" ${VIEW?"disabled":""} aria-label="へらす">−</button><input data-ik="kowa" inputmode="numeric" value="${esc(it.kowa||"")}" placeholder="0" ${VIEW?"readonly":""}><button type="button" data-kstep="1" data-ki="${i}" ${VIEW?"disabled":""} aria-label="ふやす">＋</button></div></div>
     ${(!it.test&&(!it.ok||num(it.unit)==null))?`<label class="f ${it.hin&&num(it.unit)==null?"need":""}">単重 (kg) <span class="id">Berat satuan</span><input data-ik="unit" inputmode="decimal" value="${esc(it.unit)}" placeholder="必ず入力"></label>`:""}
     ${i?`<label class="f">造型総数 <span class="id">Total cetakan</span><input data-ik="tot" inputmode="numeric" value="${esc(it.tot)}" placeholder="同じ: ${esc(r.total||"－")}"></label><button class="del" data-idel="${i}">削除</button>`:"<span></span><span></span>"}
     ${it.ok?`<div class="iinfo"><span>材質 ${cspan(it.mat,matColor(it.mat))}</span><span>添加材 ${cspan(it.add,addColor(it.add))}</span><span>単重 <b>${esc(it.unit||"－")}</b> kg</span>${it.tana?`<span>棚 <b>${esc(it.tana)}</b></span>`:""}</div>`:""}
@@ -667,6 +673,12 @@ $("items").addEventListener("input",e=>{ if(VIEW) return; const box=e.target.clo
   if(k==="kowa"){ it.kowa=e.target.value.replace(/[^\d]/g,""); if(e.target.value!==it.kowa) e.target.value=it.kowa; e.target.closest(".f").classList.toggle("on",!!kowaOf(it)); }
   if(k==="hin"){ if(it.ok){ ["mat","add","unit","check","tana"].forEach(x=>it[x]=""); } it.ok=false; const st=box.querySelector(".hinst"); const [c,t]=itemStatus(it); st.className="hinst "+c; st.textContent=t; showSugg(i,it.hin); }
   touchRow(sel); renderChips(); renderTable(); updateMarks(); });
+// v25：中子破損の ＋ − ボタン（数字をタップすると直接入力）
+$("items").addEventListener("click",e=>{ const b=e.target.closest("[data-kstep]"); if(!b||VIEW) return; e.preventDefault();
+  const r=state.rows[sel], it=r.items[+b.dataset.ki]; if(!it) return; const v=Math.max(0,kowaOf(it)+(+b.dataset.kstep));
+  it.kowa=v?String(v):""; const box=b.closest(".kowa"), inp=box.querySelector("input"); inp.value=it.kowa; box.classList.toggle("on",!!v);
+  touchRow(sel); renderChips(); renderTable(); updateMarks(); });
+$("items").addEventListener("focusin",e=>{ if(e.target.dataset.ik==="kowa"&&!VIEW) setTimeout(()=>{ try{ e.target.select(); }catch(x){} },0); });
 $("items").addEventListener("keydown",e=>{ if(e.target.dataset.ik!=="hin") return; const i=+e.target.closest(".item").dataset.it;
   if(sugg.i===i&&sugg.list.length&&(e.key==="ArrowDown"||e.key==="ArrowUp")){ e.preventDefault(); sugg.act=(sugg.act+(e.key==="ArrowDown"?1:-1)+sugg.list.length)%sugg.list.length;
     document.querySelectorAll(`.item[data-it="${i}"] .sugg button`).forEach((b,x)=>b.classList.toggle("act",x===sugg.act)); return; }
