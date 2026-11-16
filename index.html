@@ -1051,7 +1051,7 @@ const Sync=(function(){
     else { const ev=state.events.find(x=>x.id===ref); u=ev.u; raw=Object.assign({},ev); }
     return {k:`${type}|${d}|${e}|${ref}`,op:{type,date:d,equip:e,ref:String(ref),u,raw}};
   }
-  function queue(type,ref){ if(!on()||VIEW) return; const it=build(type,ref); q=q.filter(x=>x.k!==it.k); q.push(it); persist(); status(); clearTimeout(timer); timer=setTimeout(flush,1200); }
+  function queue(type,ref){ if(!on()||VIEW) return; const it=build(type,ref); try{ window.__chg&&window.__chg.mark(it.k,it.op); }catch(e){} q=q.filter(x=>x.k!==it.k); q.push(it); persist(); status(); clearTimeout(timer); timer=setTimeout(flush,1200); }
   async function call(params,body){ const url=cfg.syncUrl+(params?(cfg.syncUrl.includes("?")?"&":"?")+new URLSearchParams(params):"");
     const res=await fetch(url,body?{method:"POST",body:JSON.stringify(body),redirect:"follow"}:{redirect:"follow"}); const j=await res.json(); if(!j.ok) throw new Error(j.error||"error"); return j; }
   async function flush(){ if(!on()||busy||!q.length){ status(); return; } if(navigator.onLine===false){ status(); return; } busy=true;
@@ -1061,7 +1061,7 @@ const Sync=(function(){
   const pending=k=>q.some(x=>x.k===k);
   async function pull(){
     if(!on()||navigator.onLine===false) return; const d=state.date, e=state.equip; let j;
-    try{ j=await call({action:"load",token:cfg.token,date:d,equip:e}); lastErr=""; }catch(err){ lastErr=String(err.message||err); status(); return; }
+    try{ j=await call({action:"load",token:cfg.token,date:d,equip:e}); lastErr=""; try{ window.__chg&&window.__chg.seen((j.items||[]).map(it=>({k:`${it.type}|${d}|${e}|${it.ref}`,raw:it.raw}))); }catch(_e){} }catch(err){ lastErr=String(err.message||err); status(); return; }
     if(state.date!==d||state.equip!==e) return; let changed=false, selChanged=false, evChanged=false;
     (j.items||[]).forEach(it=>{ const k=`${it.type}|${d}|${e}|${it.ref}`; if(pending(k)) return; const raw=it.raw||{};
       if(it.type==="header"){ if((it.u||0)>(state.hu||0)){ state.confirmBy=String(raw.confirmBy??""); state.tensile=String(raw.tensile??""); state.counter=String(raw.counter??""); state.waits=Array.isArray(raw.waits)?raw.waits:[]; state.hu=it.u; changed=true; renderHeader(); renderWaits(); } }
@@ -1341,6 +1341,67 @@ const EXP={csv:()=>csvRows(), master:async()=>{ await Sync.loadMaster(true); awa
 })();
 })();
 </script>
+<!-- ===== 後日の変更の通知：前の日の日報を、翌朝 7:30（毎朝の自動出力）より後に変えたら、変更前→変更後を管理者画面に知らせる ===== -->
+<script>
+(function(){
+"use strict";
+var APPN = (function(p){ return /suna/.test(p) ? "砂処理" : /yokai/.test(p) ? "溶解" : /zokei/.test(p) ? "造型" : /chuto/.test(p) ? "注湯" : /kensa/.test(p) ? "検査" : /shot/.test(p) ? "ショット" : "日報"; })(location.pathname);
+var CUT_H = 7, CUT_M = 30;                      // 日報の日の翌朝 7:30 より後の変更を「後日の変更」とする
+var IDLE = 10000;                               // 入力が止まってから 10 秒でまとめて記録
+var LSG = function(k, d){ try{ var v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } };
+var LSS = function(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} };
+var base = {}, latest = {}, timers = {}, Q = LSG("chg:q", []), cfg = null, busy = false;
+var SKIP = /^(u|calc|condEdit|jOut|ngOut|elapsed|sched|tp|matLabel|drMain|drMainKg|drMainCnt|drOtherKg|drOtherCnt|qtyOut|totOut|wOut|rowQty|ok|id|slot|clear|cols|type|date|equip|t0|t1|sec|src|show2|plan|calcLog|hu)$/;
+var L = {st:"開始",en:"終了",worker:"作業者",total:"総数",hin:"品番",name:"品名",lot:"ロット",lot1:"ロット1",lot2:"ロット2",t1:"ロット1の数",t2:"ロット2の数",pal:"パレット内残品",note:"備考",freq:"修正頻度",
+  mat:"材質",temp:"温度",tap:"出湯時刻",sen:"銑鉄",kou:"鋼鉄",dar:"ダライ粉",mod:"戻り材",kat:"加炭材",sil:"シリコン",ce:"CE",c:"C",si:"Si",ten:"引張強度",dem:"デマンド回数",kwh:"電力量",delay:"出湯の遅れ",
+  koma:"駒数",unp:"未注湯",kowa:"中子破損",tot:"造型総数",unit:"単重",confirmBy:"記録確認(監督者)",counter:"カウンター造型数",tensile:"引張棒採取",start:"開始",end:"終了",time:"時刻",person:"担当",content:"内容",action:"処置",
+  stops:"停止・待ち",waits:"湯待ち・砂待ち",items:"品番",d:"不良",d1:"ロット1の不良",d2:"ロット2の不良",r:"理由",memo:"メモ",ch:"チャージ",del:"削除",bari:"バリ取り",contFrom:"前日の続き",fix:"修正",batch:"バッチ数",sandRemain:"砂の残量",
+  addC:"C追加",addSi:"Si追加",addSc:"スクラップ追加",add:"添加材",drType:"ダライ粉2種類目",drKg:"2種類目(kg)",drM:"岡本(kg)",judge:"判定",jm:"判定(手動)",mold:"金型",cKoma:"駒部",cHouan:"方案部",cJouban:"定盤部",sq:"スクイズ圧力",sqt:"スクイズ時間",fup:"吹上圧力",fut:"吹上時間",mt:"モールド厚",amp:"電流",test:"テスト品番"};
+function lab(path){ var p = path.split("."), out = [];
+  for(var i = 0; i < p.length; i++){ var k = p[i];
+    if(/^\d+$/.test(k)){ out[out.length-1] = (out[out.length-1] || "") + (+k + 1); continue; }
+    if((p[i-1] === "d" || p[i-1] === "d1" || p[i-1] === "d2") && window.__chgDef && window.__chgDef[k]){ out.push(window.__chgDef[k]); continue; }
+    out.push(L[k] || k); }
+  return out.join(" "); }
+function flat(o, pre, out){ out = out || {}; if(o == null) return out;
+  if(typeof o !== "object"){ out[pre] = String(o); return out; }
+  Object.keys(o).forEach(function(k){ if(SKIP.test(k) || /Out$/.test(k)) return; var v = o[k], p = pre ? pre + "." + k : k;
+    if(v && typeof v === "object") flat(v, p, out); else if(v !== "" && v != null && v !== false) out[p] = v === true ? "○" : String(v); });
+  return out; }
+function contentOf(op){ if(op.raw && typeof op.raw === "object") return op.raw; var c = {}; Object.keys(op).forEach(function(k){ if(!SKIP.test(k)) c[k] = op[k]; }); return c; }
+function isLate(date){ if(!/^\d{4}-\d{2}-\d{2}$/.test(date || "")) return false; var a = date.split("-").map(Number); return Date.now() > new Date(a[0], a[1]-1, a[2] + 1, CUT_H, CUT_M).getTime(); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+// サーバーの今の内容（変更前）を覚える：日報を開いたとき・読み込んだとき
+function seen(list){ (list || []).forEach(function(x){ if(!x || !x.k || latest[x.k]) return; base[x.k] = flat(x.raw || {}); }); }
+// 入力して送るとき
+function mark(k, op){ if(!op || !isLate(op.date)) return; if(window.__chgView && window.__chgView()) return;
+  latest[k] = op; clearTimeout(timers[k]); timers[k] = setTimeout(function(){ fin(k); }, IDLE); }
+function fin(k){ var op = latest[k]; if(!op) return; delete latest[k]; clearTimeout(timers[k]);
+  var now = flat(contentOf(op)), was = base[k], known = !!was; was = was || {}; var keys = {}, ch = [];
+  Object.keys(now).forEach(function(x){ keys[x] = 1; }); Object.keys(was).forEach(function(x){ keys[x] = 1; });
+  Object.keys(keys).sort().forEach(function(x){ var a = was[x] == null ? "" : was[x], b = now[x] == null ? "" : now[x]; if(a !== b) ch.push([lab(x), known ? a : "（不明）", b]); });
+  base[k] = now; if(!ch.length) return;
+  var c = contentOf(op), who = c.worker || c.person || c.inspector || (APPN === "検査" ? op.equip : "") || "";
+  var no = op.type === "row" ? (op.slot != null ? +op.slot + 1 : +op.ref + 1) : null;
+  var kind = op.type === "row" ? "行" : op.type === "header" ? "見出し" : op.type === "event" ? "異常/変化点" : op.type;
+  var raw = {id:uid(), app:APPN, d:op.date, equip:op.equip || "", kind:kind, no:no, hin:c.hin || ((c.items || [])[0] || {}).hin || "", who:String(who), at:Date.now(), ch:ch.slice(0, 40), more:Math.max(0, ch.length - 40), known:known};
+  var m = new Date(); m = m.getFullYear() + "-" + String(m.getMonth()+1).padStart(2, "0");
+  Q.push({type:"chg", date:m, equip:"chg", ref:raw.id, u:raw.at, raw:raw}); LSS("chg:q", Q); flush(); }
+function finAll(){ Object.keys(latest).forEach(fin); }
+async function getCfg(){ if(cfg) return cfg; try{ var t = await (await fetch("/henka/config.js", {cache:"no-store"})).text(); var w = {}; new Function("window", t)(w); var c = w.HENKA_CONFIG || w.SUNA_CONFIG || {}; if(c.syncUrl) cfg = c; }catch(e){} return cfg; }
+async function flush(){ if(busy || !Q.length) return; var c = await getCfg(); if(!c) return; busy = true;
+  try{ while(Q.length){ var b = Q.slice(0, 20); var r = await fetch(c.syncUrl, {method:"POST", body:JSON.stringify({token:c.token, ops:b}), redirect:"follow"}); var j = await r.json(); if(!j.ok) throw new Error(j.error || "error");
+      var ids = {}; b.forEach(function(x){ ids[x.ref] = 1; }); Q = LSG("chg:q", Q).filter(function(x){ return !ids[x.ref]; }); LSS("chg:q", Q); } }catch(e){}
+  busy = false; }
+document.addEventListener("visibilitychange", function(){ if(document.visibilityState === "hidden") finAll(); else flush(); });
+window.addEventListener("pagehide", finAll);
+window.addEventListener("online", flush);
+setInterval(flush, 60000); setTimeout(flush, 3000);
+window.__chg = {seen:seen, mark:mark, finAll:finAll, _base:base, _q:function(){ return Q; }};
+})();
+</script>
+
 <!-- ===== 緊急地震速報（浜松市＝静岡県西部）＋ 災害対応チェックシート（全アプリ共通） ===== -->
 <style>
 #eewOv{position:fixed;inset:0;z-index:99999;background:#b00020;color:#fff;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;font-family:Meiryo,"Hiragino Sans",sans-serif;animation:eewBl 1s steps(2,end) infinite}
