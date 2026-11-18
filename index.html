@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>造型日報</title>
+<title>注湯日報</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" content="#1d4e5c">
+<meta name="theme-color" content="#5c1f16">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="造型日報">
+<meta name="apple-mobile-web-app-title" content="注湯日報">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <style>
 :root{
@@ -92,24 +92,6 @@ tr.off td{color:#9aa1ad}
 dialog{border:none;border-radius:12px;padding:0;max-width:640px;width:calc(100% - 32px)}
 dialog::backdrop{background:rgba(0,0,0,.45)}
 .dlg{padding:18px}
-/* v26：湯待ち・砂待ち */
-.wbtns{display:flex;gap:12px;flex-wrap:wrap}
-.wbtns button{flex:1 1 200px;min-height:64px;font-size:22px;font-weight:bold;border-radius:12px;border:0;color:#fff}
-.wbtns button[data-w="yu"]{background:#c62828}.wbtns button[data-w="suna"]{background:#8d6e63}
-.wbtns button small{display:block;font-size:12px;font-weight:normal;opacity:.9}
-.wlist{margin-top:10px;display:grid;gap:8px}
-.witem{display:flex;align-items:center;gap:10px;flex-wrap:wrap;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:#fafcfd;cursor:pointer}
-.witem .wr{font-weight:bold;border-radius:6px;padding:2px 10px;color:#fff;font-size:15px}
-.witem .wr.yu{background:#c62828}.witem .wr.suna{background:#8d6e63}
-.witem .wt{font-size:18px;font-weight:bold;font-variant-numeric:tabular-nums}
-.witem .wm{margin-left:auto;font-size:18px;font-weight:bold}
-.witem.open{border:2px solid #e65100;background:#fff8e1}
-.witem.open .wm{color:#e65100}
-#dlgWait .wtimes{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
-#dlgWait .wtimes input{font-size:26px;min-height:56px;width:100%}
-#dlgWait .wtimes .now{margin-top:6px;width:100%;min-height:42px}
-#dlgWait .wmin{font-size:20px;font-weight:bold;text-align:center;min-height:28px}
-#dlgWait .wtitle{font-size:22px;font-weight:bold;padding:6px 12px;border-radius:8px;color:#fff;display:inline-block}
 .dlg h3{margin:0 0 12px}
 .dlg .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:end;margin-bottom:8px}
 .dlg .row .lbl{font-weight:bold;font-size:14px;align-self:center}
@@ -139,105 +121,95 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 }
 </style>
 <style>
-header.top{background:#1d4e5c}
-button.ghost{border-color:#6f9aa6}
-.id{font-size:12px;color:var(--sub);font-weight:normal}
+header.top{background:#5c1f16}
+button.ghost{border-color:#b07a70}
+.id{font-size:12px;color:var(--sub)}
 .notice{background:#fff7e6;border:1px solid #f0c36d;border-radius:10px;padding:10px 12px;font-size:14px;line-height:1.6}
-.docinfo{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:6px;font-size:13px;color:var(--sub);margin-top:10px}
+.notice strong{color:#b00020}
+.docinfo{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:6px;font-size:13px;color:var(--sub);margin-top:10px}
 .docinfo b{color:var(--ink);font-weight:normal}
-label.sup{color:#c62828;font-weight:bold}
-label.sup input{border:2px solid #e53935;background:#fff1f1;color:#b00020;font-weight:bold}
-label.sup input::placeholder{color:#e57373;font-weight:normal}
-.chipsN{display:grid;grid-template-columns:repeat(10,1fr);gap:6px}
-.chipsN .chip{min-height:56px;font-size:16px;line-height:1.15;padding:4px 2px;overflow:hidden}
-.chipsN .chip small{display:block;font-size:10px;font-weight:normal;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.eh{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
-.eh .bigno{font-size:32px;font-weight:bold;min-width:70px;text-align:center;border-radius:12px;padding:2px 10px;border:2px solid var(--line)}
-.tcell{display:flex;gap:4px}.tcell input{flex:1;min-width:0}.tcell button{padding:4px 8px;font-size:13px;min-height:46px}
-.seg{display:flex;gap:6px;flex-wrap:wrap}
-.seg button{flex:1;min-width:64px;font-size:15px}
-.seg button.on-none{background:#44536b;color:#fff;border-color:#44536b}
-.seg button.on-ok{background:#2e8b57;color:#fff;border-color:#2e8b57}
-.seg button.on-ng{background:#c62828;color:#fff;border-color:#c62828}
-.seg button.on-sel{background:#1d4e5c;color:#fff;border-color:#1d4e5c}
-td.no{font-weight:bold}
-tr.sum td{background:#eef1f6;font-weight:bold}
-tr.sub td{border-top:1px dashed var(--line)}
-td.chg,input.chg{color:#d50000!important;font-weight:bold;background:#fff1f1}
-/* 品番 */
-.items{display:grid;gap:10px}
-.item{display:grid;grid-template-columns:minmax(220px,2fr) repeat(auto-fill,minmax(110px,1fr));gap:8px;align-items:end;border:1px solid var(--line);border-radius:10px;padding:8px;background:#fafcfd}
-.item .hin input{font-size:20px;font-weight:bold;letter-spacing:.5px;text-transform:uppercase}
-.item .del{min-height:46px}
-.item .kowa{grid-column:span 2;min-width:200px}
-.kstep{display:flex;align-items:stretch;gap:6px}
-.kstep button{flex:0 0 52px;min-height:50px;font-size:28px;font-weight:bold;line-height:1;border-radius:10px;padding:0;border:2px solid #9aa4b3;background:#fff;color:#1d2330}
-.kstep button[data-kstep="1"]{background:#fff1f1;border-color:#e57373;color:#b00020}
-.kstep button:active{transform:scale(.95)}
-.kstep input{flex:1 1 auto;min-width:60px;width:70px}
-.item .kowa input{font-size:24px;font-weight:bold;text-align:center}
-.item .kowa.on input{border:2px solid #d50000;background:#fff1f1;color:#b00020}
-.item .kowa.on{color:#b00020;font-weight:bold}
-.hinwrap{position:relative}
-.sugg{position:absolute;left:0;right:0;top:100%;z-index:20;background:#fff;border:2px solid #1d4e5c;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);max-height:340px;overflow-y:auto;margin-top:2px;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;min-width:min(420px,90vw)}
-.sugg .hd{font-size:13px;color:#fff;background:#1d4e5c;padding:6px 10px;font-weight:bold}
-.sugg button{display:block;width:100%;text-align:left;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:10px 12px;min-height:52px;background:#fff;font-size:16px}
-.sugg button:hover,.sugg button.act{background:#e3f1f4}
-.sugg b{font-size:19px;letter-spacing:.5px}
-.sugg mark{background:#ffe082;padding:0}
-.sugg .grp{display:block;font-size:12px;color:#b26a00}
-.hinst{font-size:13px;margin-top:3px;min-height:1.2em}
-.hinst.ok{color:#2e7d32;font-weight:bold}.hinst.ng{color:#c62828;font-weight:bold}
-.moldnote{background:#fff3e0;border:1px solid #ffb74d;border-radius:8px;padding:6px 10px;font-size:14px;color:#8a4b00;font-weight:bold}
-.chkgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.g-cond{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
-.mval{font-size:12px;color:#c62828;font-weight:bold;min-height:1.1em}
-.trange{display:flex;gap:4px;align-items:center}.trange input{flex:1;min-width:0}
-.qtybox{border:2px solid #1d4e5c;border-radius:10px;padding:8px 12px;background:#f1f8fa}
-.qtybox .big{font-size:30px;font-weight:bold;color:#1d4e5c}
-.qtyline{font-size:15px;margin:2px 0}
-.tot{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;align-items:end}
-.tot .big{font-size:30px;font-weight:bold;color:#1d4e5c}
-.yieldbox{border:2px solid #1d4e5c;border-radius:10px;padding:6px 10px;background:#f2f8f9}
-.yieldbox .big{color:#0b6b3a}
-.yieldbox.over{border-color:#d50000;background:#ffebee}.yieldbox.over .big{color:#d50000}
-#yieldNote{line-height:1.5}
-.mstat{font-size:13px;color:var(--sub)}
-.mstat.warn{color:#c62828;font-weight:bold}
-body.view #entryCard input,body.view #events input,body.view #events textarea,body.view .card input,body.view .card select{pointer-events:none;background:#f3f5f8}
-body.view #btnClearRow,body.view #btnAddEv,body.view #btnInstall,body.view [data-del],body.view [data-now],body.view #btnAddItem,body.view .item .del{display:none!important}
-body.view .seg{pointer-events:none}
-body.view #viewNote{display:block!important}
-body.view #cfgSec{display:none}
-.ev{grid-template-columns:110px 110px 1fr 1fr 140px auto}
+.charges{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.charges .chip{min-height:58px;font-size:15px;line-height:1.25}
+.charges .chip small{display:block;font-weight:normal;font-size:12px}
+.rowhead,.mrow{display:grid;grid-template-columns:30px 1.4fr 1fr 62px 1fr 62px 1fr 62px 72px 1.3fr;gap:6px;align-items:center}
+.rowhead{font-size:12px;color:var(--sub);font-weight:bold;padding:0 2px 4px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.rowhead small{display:block;font-weight:normal;font-size:10px}
+.mrow{padding:6px 2px;border-bottom:1px dashed var(--line)}
+.mrow .no{font-weight:bold;text-align:center;color:var(--sub)}
+.mrow input{font-size:17px;min-height:44px;padding:6px 8px}
+.tcell{display:flex;gap:4px;flex-wrap:wrap}
+.tcell input{flex:1}
+.tcell .ml{width:100%}
+.tcell input{min-width:0}
+.tcell button{padding:4px 8px;min-height:44px;font-size:13px;white-space:nowrap}
+.jbtn{min-height:44px;padding:4px;font-size:20px;font-weight:bold;width:100%}
+.jbtn.o{background:var(--ok);color:var(--ok-ink);border-color:#9fd3b1}
+.jbtn.x{background:var(--ng);color:var(--ng-ink);border-color:#f19999}
+.jbtn .m{display:block;font-size:10px;font-weight:normal;color:var(--sub);line-height:1}
+.ml{display:none;font-size:11px;color:var(--sub)}
+.srow{display:grid;grid-template-columns:34px minmax(0,1.4fr) minmax(0,1fr);gap:8px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line)}
+.mat{display:flex;gap:6px;flex-wrap:wrap}
+.mat label{display:flex;align-items:center;gap:6px;border:1px solid #b9c2cf;border-radius:8px;padding:0 10px;min-height:44px;cursor:pointer;background:#fff;font-weight:bold}
+.mat input{width:22px;height:22px;min-height:0}
+.mat label.on{background:#e3eeff;border-color:var(--pri)}
+.ev{grid-template-columns:110px 110px 160px 1fr 1fr auto!important}
 @media (max-width:900px){
-  .chipsN{grid-template-columns:repeat(5,1fr)}
-  .item{grid-template-columns:1fr 1fr;}
-  .item .hin{grid-column:1/-1}
-  .ev{grid-template-columns:1fr 1fr}
+  .charges{grid-template-columns:repeat(3,1fr)}
+  .rowhead{display:none}
+  .mrow{grid-template-columns:repeat(4,1fr);gap:6px 8px;padding:10px 0}
+  .mrow .no{grid-column:1/-1;text-align:left;font-size:14px}
+  .mrow .tcell{grid-column:span 2}
+  .ml{display:block}
+  .srow{grid-template-columns:1fr 1fr}
+  .srow .no{grid-column:1/-1}
+  .ev{grid-template-columns:1fr 1fr!important}
 }
-input::placeholder{color:#a8b0bd}
-.cond input[readonly]{background:#eef6f8;border-color:#9cc3cc;color:#1d4e5c;font-weight:bold;font-size:20px}
-.wide2{grid-column:span 2}
-.iinfo{grid-column:1/-1;display:flex;gap:6px 14px;flex-wrap:wrap;font-size:14px;color:#2b3a4a}
-.iinfo b{color:#1d4e5c}
-.ichk{grid-column:1/-1;background:#ffebee;border:2px solid #e53935;color:#b00020;font-weight:bold;border-radius:8px;padding:6px 10px;font-size:15px}
-.chg{color:#d50000;font-weight:bold}
-.miss{background:#d50000;color:#fff;font-weight:bold;border-radius:10px;padding:10px 14px;margin-top:8px;line-height:1.5}
-.f.need input{border:2px solid #d50000;background:#fff1f1}
-#cfMsg{white-space:pre-line}
-.testbtn{margin-top:4px;min-height:36px;padding:4px 10px;font-size:13px;border:1px dashed #d50000;color:#d50000;background:#fff}
-.testbtn.on{background:#d50000;color:#fff;border-style:solid}
-.testbtn.on .id{color:#ffd6d6}
-/* v10 */
+
+/* ---- 新しい注湯日報 ---- */
 html,body,button,input,select,textarea,label,.chip{touch-action:manipulation}
-.chip.inprog{background:#fff8e1;border-color:#f0c36d;color:#7a5a00}
-.wk .wkrow{display:flex;gap:8px}.wk .wkrow select{flex:1;min-width:0;font-weight:bold}
-.wsel.pend{color:#2e7d32;border-style:dashed}
-input.dbl{background:#f3f5f8;cursor:pointer}
-input.unlock{background:#fff3e0;border-color:#e65100;color:#e65100;font-weight:bold}
-.lg-ip::before{background:#fff8e1!important;border-color:#f0c36d!important}
-.legend .id::before,.legend .lg-txt::before{display:none}
+body{font-size:17px} label.f{font-size:15px} .id{font-size:13px} .small{font-size:14px}
+input,select,textarea{font-size:20px;min-height:50px} textarea{font-size:18px;min-height:90px} input::placeholder{font-size:16px}
+button{font-size:17px}
+.mrow .pline{grid-column:2/-1}
+.mrow input,.mrow select{font-size:19px;min-height:48px;padding:6px 8px}
+.padin{cursor:pointer;border-style:dashed;font-weight:bold;background:#fffdf5}
+.padin.ok{background:var(--ok)} .padin.ng{background:var(--ng);color:var(--ng-ink)}
+.wsel{font-weight:bold;min-width:0;width:100%}
+.prod{font-size:14px;min-height:34px;padding:3px 10px;border-radius:999px;background:#f3f5f8;border:1px solid #c9d1dc;text-align:left}
+.prod.man{background:#fff3e0;border-color:#e65100;color:#8a3b00}.prod.none{color:#8a93a3}
+.jbtn{min-height:48px}
+.calc-disp{font-size:34px;font-weight:bold;text-align:right;padding:8px 12px;border:2px solid var(--line);border-radius:10px;min-height:56px;background:#fff;font-variant-numeric:tabular-nums}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.keys button{min-height:58px;font-size:24px;font-weight:bold}
+.keys .op{background:#eef1f6}
+.keys .ok{background:var(--pri);color:#fff;border-color:var(--pri);font-size:18px}
+.linkline{margin-top:10px;padding:8px 12px;border-radius:10px;font-size:14px;background:#f3f5f8}
+.linkline.ok{background:#e8f5ec;color:#1b5e20}.linkline.off,.linkline.err{background:#fff3e0;color:#8a3b00}
+.chead{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(0,2fr);gap:10px;margin-bottom:12px;align-items:end}
+.tpbtn{min-height:50px;font-weight:bold;width:100%}.tpbtn.on{background:#2e7d32;color:#fff;border-color:#2e7d32}
+.matb{display:flex;gap:6px;flex-wrap:wrap}.matb button{min-height:50px;font-weight:bold;flex:1;min-width:76px}
+.m-FC200{--mc:#2f6fdb;--mb:#d6e6ff;--mt:#123f8c}.m-FC250{--mc:#21945a;--mb:#d3f2dc;--mt:#0c5a32}.m-otherH{--mc:#c99a00;--mb:#fff0b3;--mt:#6b5000}.m-otherL{--mc:#d0457f;--mb:#ffd9ea;--mt:#8a1f4f}
+.matb button{border-left:6px solid var(--mc)} .matb button.on{background:var(--mc);color:#fff;border-color:var(--mc)}
+.chip.m-FC200,.chip.m-FC250,.chip.m-otherH,.chip.m-otherL{background:var(--mb);border-color:var(--mc);color:var(--mt)}
+.lg-m{padding:2px 10px;border-radius:6px;border:2px solid var(--mc);background:var(--mb);color:var(--mt);font-weight:bold}
+.legend .lg-m::before,.legend .lg-txt::before{display:none}
+/* 新しい材質（溶解日報と同じ色） */
+.m-SiL{--mc:#7b3fd0;--mb:#e9dcff;--mt:#3f1a80}.m-1204{--mc:#0f8a99;--mb:#d4f1f4;--mt:#064a53}
+.chip.m-SiL,.chip.m-1204{background:var(--mb);border-color:var(--mc);color:var(--mt)}
+.mchip.m-SiL{background:#e9dcff;border-color:#7b3fd0;color:#3f1a80}.mchip.m-1204{background:#d4f1f4;border-color:#0f8a99;color:#064a53}
+.smat{display:flex;gap:6px}.smat button{min-height:48px;font-weight:bold;flex:1}.smat button.on{background:var(--mc);color:#fff;border-color:var(--mc)}
+.prodlist{max-height:55vh;overflow-y:auto;margin-top:8px;display:grid;gap:6px}
+.prodlist button{text-align:left;min-height:54px;font-size:16px}.prodlist button.on{background:#e3eeff;border-color:var(--pri)}
+.viewbadge{background:#ffeb3b;color:#000;font-weight:bold;border-radius:6px;padding:2px 8px;font-size:14px}
+body.view #btnClearCharge,body.view #btnAddEv,body.view [data-now],body.view [data-snow],body.view [data-del]{display:none}
+@media (max-width:900px){
+  .mrow{grid-template-columns:repeat(4,1fr)}
+  .mrow .w{grid-column:span 2}
+  .mrow .pline{grid-column:1/-1}
+  .chead{grid-template-columns:1fr 1fr}
+  .chead .wide{grid-column:1/-1}
+}
+@media (min-width:600px) and (max-width:900px){ .mrow{grid-template-columns:repeat(6,minmax(0,1fr))} .mrow .tcell{grid-column:span 2} .mrow .w{grid-column:span 2} }
 .swbtn{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;background:#ffd54f;color:#3a2a00;border:2px solid #fff;font-weight:bold;font-size:18px;min-height:46px;padding:4px 16px;border-radius:999px;text-decoration:none;line-height:1.15;white-space:nowrap}
 .swbtn small{font-size:12px;font-weight:normal}
 .meltbar{flex-basis:100%;display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;background:#fff;color:#1d2330;border-radius:10px;padding:6px 12px;font-size:15px;border:2px solid #fff}
@@ -262,21 +234,40 @@ input.unlock{background:#fff3e0;border-color:#e65100;color:#e65100;font-weight:b
   .mchip{font-size:15px;padding:1px 8px}
 }
 /* 黄色の切りかえボタンと溶解の材質の帯：下にスクロールしても上に残る */
-.sticktop{position:sticky;top:var(--meltTop,0px);z-index:19;background:#1d4e5c;display:flex;gap:10px;align-items:center;padding:8px 16px;box-shadow:0 3px 8px rgba(0,0,0,.25)}
+.sticktop{position:sticky;top:var(--meltTop,0px);z-index:19;background:#5c1f16;display:flex;gap:10px;align-items:center;padding:8px 16px;box-shadow:0 3px 8px rgba(0,0,0,.25)}
 .sticktop .meltbar{flex:1 1 0;min-width:0}
 .sticktop .swbtn{flex:0 0 auto}
 @media (max-width:700px){ .sticktop{flex-wrap:wrap;padding:6px 8px;gap:6px} .sticktop .meltbar{flex:1 1 100%} .sticktop .swbtn{font-size:16px;min-height:40px;width:100%;flex-direction:row;gap:8px} .sticktop.stuck .mi small{display:none} }
 @media print{ .sticktop{display:none!important} }
+label.sup{color:#c62828;font-weight:bold}
+label.sup input{border:2px solid #e53935;background:#fff1f1;color:#b00020;font-weight:bold}
+label.sup input::placeholder{color:#e57373;font-weight:normal}
+.srow input.padin:disabled{background:#eef0f3;color:#8a93a3;border-style:dashed}
 .meltbar[hidden]{display:none!important}
+.nightbar{flex-basis:100%;display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#311b92;color:#fff;border-radius:10px;padding:8px 12px;font-weight:bold;font-size:15px}
+.nightbar[hidden]{display:none!important}
+.nightbar button{min-height:42px;font-weight:bold;background:#fff;color:#311b92;border:0;border-radius:8px;padding:0 12px;margin-left:auto}
+.tcell .tclr{min-width:40px;padding:4px 6px;color:#b00020;font-weight:bold}
+/* v17：注湯の止めの帯（紫）は溶解の帯の下に1行で。溶解の帯が細く縦長にならないように */
+.sticktop{flex-wrap:wrap}
+.sticktop .meltbar{flex:1 1 360px}
+.sticktop .nightbar{flex:1 1 100%;order:3;padding:5px 10px;font-size:14px;gap:6px 10px}
+.nightbar .ntx{flex:1 1 300px;min-width:0}
+.nightbar .id{font-size:12px;font-weight:normal}
+.nightbar button{min-height:36px;font-size:14px}
+.nightbar #gateOverride{margin-left:0}
+.sticktop.stuck .nightbar .id,.sticktop.stuck #gateOverride{display:none}
+.sticktop.stuck .meltbar small{display:none}
+body.view .tclr{display:none}
 </style>
+</head>
 <body>
 <header class="top">
-  <h1>造型日報 <span id="viewBadge" hidden style="font-size:13px;background:#fff;color:#1d4e5c;border-radius:999px;padding:3px 10px;vertical-align:3px">閲覧用</span></h1>
-  <label class="small" style="color:#d6e8ec">生産日 <span class="id" style="color:#d6e8ec">Tanggal</span> <input id="date" type="date" style="width:auto;min-height:40px;font-size:16px"></label>
-  <label class="small" style="color:#d6e8ec">号機 <span class="id" style="color:#d6e8ec">Mesin</span>
-    <select id="equip" style="width:auto;min-height:40px;font-size:16px">
-      <option>1号機</option><option>2号機</option>
-    </select></label>
+  <h1>注湯日報</h1>
+  <span class="viewbadge" id="viewBadge" hidden>閲覧用（見るだけ）</span>
+  <label class="small" style="color:#f0d9d4">生産日 <span class="id" style="color:#f0d9d4">Tanggal</span> <input id="date" type="date" style="width:auto;min-height:40px;font-size:16px"></label>
+  <label class="small" style="color:#f0d9d4">号機 <span class="id" style="color:#f0d9d4">Mesin</span>
+    <select id="equip" style="width:auto;min-height:40px;font-size:16px"><option>1号機</option><option>2号機</option></select></label>
   <button class="sync" id="syncStat" hidden>同期</button>
   <span class="sp"></span>
   <button class="ghost" id="btnInstall" hidden>ホーム画面に追加</button>
@@ -285,187 +276,139 @@ input.unlock{background:#fff3e0;border-color:#e65100;color:#e65100;font-weight:b
   <button class="pri" id="btnCsv">Excel保存</button>
 </header>
 <div class="sticktop" id="stickTop">
-  <a class="swbtn" id="btnSwitch" data-to="../chuto2-nippo/" href="../chuto2-nippo/">注湯日報へ ▶<small id="swEq"></small></a>
+  <a class="swbtn" id="btnSwitch" data-to="../zokei-nippo/" href="../zokei-nippo/">◀ 造型日報へ<small id="swEq"></small></a>
   <div class="meltbar" id="meltBar" hidden></div>
+  <div class="nightbar" id="nightBar" hidden></div>
 </div>
 
 <main>
-  <div id="viewNote" style="display:none;background:#e3eeff;border:1px solid #9cc0f5;border-radius:10px;padding:10px 14px;font-size:15px">
-    <b>閲覧用の画面です。</b> 入力・修正はできません。<span class="id">Layar hanya untuk melihat.</span>
-  </div>
-
   <section class="card">
     <h2>日報ヘッダー <span class="id">Header laporan</span></h2>
-    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;align-items:start">
-      <label class="f">引張棒採取 <span class="id">batang tarik</span><span class="tcell"><input type="time" id="tensile"><button data-hnow="tensile">今</button></span></label>
-      <label class="f sup">記録確認（監督者記入）<span class="id">Konfirmasi (pengawas)</span><input id="confirmBy" placeholder="監督者記入"></label>
+    <div class="grid" style="grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:12px">
+      <label class="f sup">記録確認（監督者記入）<span class="id">Konfirmasi (pengawas)</span><input id="recordCheck" placeholder="監督者記入"></label>
+      <div class="notice"><b>成分TP採取タイミング</b> <span class="id">Waktu pengumpulan TP komponen</span><br>
+        <strong>チャージ（1.5t）毎に1回目の溶湯で採取すること</strong><br>
+        <span class="id">Kumpulkan dengan logam cair pertama untuk setiap muatan (1,5t)</span></div>
     </div>
-    <div class="notice" style="margin-top:10px">試作や対策トライなどの少数生産品番、廃却予定の合い込み品番などもすべて記載すること（在庫管理のため）<br>
-      <span class="id">Merekam semua nomor produk produksi kecil-kuantitas seperti prototipe dan uji coba penanggulangan, dan nomor produk dijadwalkan akan dibuang. (Untuk pengendalian inventaris)</span></div>
-    <div class="mstat" id="masterStat" style="margin-top:8px"></div>
+    <div class="linkline" id="linkLine"></div>
     <div class="docinfo">
-      <div>製作日 <b>2009/08/05</b></div><div>改定日 <b>2019/12/23・2020/08/20</b></div>
-      <div>作成 <b>土橋</b></div><div>照査 <b>皓輝</b></div><div>承認 <b>浅見</b></div>
+      <div>製作日 <b>2009/8/5</b></div><div>改定日 <b>2017/3/9</b></div>
+      <div>作成 <b>大杉</b></div><div>照査 <b>土橋</b></div><div>承認 <b>田代</b></div>
     </div>
   </section>
 
-  <section class="card">
-    <h2>行を選択 <span class="id">Pilih baris</span></h2>
-    <div class="chipsN" id="chips"></div>
-    <div class="legend"><span class="lg-ip">入力中 <span class="id">Sedang diisi</span></span><span class="lg-ok">造型総数まで入力済 <span class="id">Selesai</span></span><span class="lg-ng">NG（金型確認）</span><span class="lg-txt">行は足りなくなると自動で5行ふえます</span></div>
+  <section class="card" id="chargeCard">
+    <h2>チャージを選択 <span class="id">Pilih muatan</span></h2>
+    <div class="charges" id="charges"></div>
+    <div class="legend"><span class="lg-m m-FC200">FC200</span><span class="lg-m m-FC250">FC250</span><span class="lg-m m-otherH">その他H</span><span class="lg-m m-otherL">その他L</span><span class="lg-m m-SiL">その他SiL</span><span class="lg-m m-1204">1204</span><span class="lg-ng">×あり</span><span class="lg-txt">チャージは足りなくなると自動でふえます</span></div>
   </section>
 
   <section class="card" id="entryCard">
-    <div class="eh">
-      <div class="bigno" id="bigNo">1</div>
-      <div class="small">行 No. <span class="id">Baris</span></div>
+    <div class="entry-head">
+      <div class="slot" id="chargeTitle">チャージ 1</div>
       <span class="sp" style="flex:1"></span>
-      <button id="btnClearRow">この行をクリア</button>
+      <button id="btnClearCharge">このチャージをクリア</button>
     </div>
-
-    <div class="sec">
-      <div class="t">生産情報 <span class="id">Info produksi</span> — <span class="small" style="color:var(--pri)">品番を数文字打つと候補が出ます（数字だけでもOK）。タップで確定 / Ketik beberapa huruf, lalu pilih</span></div>
-      <div class="items" id="items"></div>
-      <div id="moldNote"></div>
-      <div id="missWarn"></div>
-      <button id="btnAddItem" style="margin-top:8px">＋ 同じ金型の品番を追加 <span class="id">Tambah nomor produk (cetakan sama)</span></button>
+    <div class="chead">
+      <label class="f">マンガン <span class="id">MANGAN</span> (kg)<input id="c_mangan" class="padin" readonly inputmode="none" placeholder="タップで入力"></label>
+      <label class="f">硫化鉄 <span class="id">RYUKATETSU</span> (kg)<input id="c_ryuka" class="padin" readonly inputmode="none" placeholder="タップで入力"></label>
+      <div class="f"><span class="small">TP採取 <span class="id">Koleksi TP</span></span><button id="btnTp" class="tpbtn">TP採取</button></div>
+      <div class="f wide"><span class="small">材質 <span class="id">Bahan</span> <span id="matNote" class="small" style="color:#2e7d32"></span></span>
+        <div class="matb" id="matBtns"><button data-mat="FC200" class="m-FC200">FC200</button><button data-mat="FC250" class="m-FC250">FC250</button><button data-mat="その他H" class="m-otherH">その他H</button><button data-mat="その他L" class="m-otherL">その他L</button><button data-mat="その他SiL" class="m-SiL">その他SiL</button><button data-mat="1204" class="m-1204">1204</button></div></div>
     </div>
-
-    <div class="sec">
-      <div class="t">金型確認 <span class="id">Pemeriksaan cetakan</span></div>
-      <div class="chkgrid">
-        <div><div class="small">駒部 <span class="id">Koma</span></div><div class="seg" data-chk="cKoma"><button data-v="OK">OK</button><button data-v="NG">NG</button></div></div>
-        <div><div class="small">方案部 <span class="id">Houan</span></div><div class="seg" data-chk="cHouan"><button data-v="OK">OK</button><button data-v="NG">NG</button></div></div>
-        <div><div class="small">定盤部 <span class="id">Jouban</span></div><div class="seg" data-chk="cJouban"><button data-v="OK">OK</button><button data-v="NG">NG</button></div></div>
-      </div>
-      <button id="btnAllOk" style="margin-top:8px">3つともOK <span class="id">Semua OK</span></button>
+    <div class="rowhead">
+      <div>No</div><div>時間<small>waktu</small></div><div>受湯 ℃<small>Mulai suhu</small></div><div>判定</div>
+      <div>再測定 ℃<small>ulang</small></div><div>判定</div><div>再々測定 ℃<small>ulang 2</small></div><div>判定</div><div>リターン回数<small>kembali</small></div><div>作業者<small>nama</small></div>
     </div>
-
-    <div class="sec">
-      <div class="t">造型時間 <span class="id">Waktu cetakan</span></div>
-      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
-        <label class="f">開始 <span class="id">Mulailah</span><span class="tcell"><input type="time" data-k="st"><button data-now="st">今</button></span></label>
-        <label class="f">完了 <span class="id">Akhir</span><span class="tcell"><input type="time" data-k="en"><button data-now="en">今</button></span></label>
-      </div>
-    </div>
-
-    <div class="sec">
-      <div class="t">製造条件 <span class="id">Kondisi produksi</span> <span class="small" style="color:var(--pri)">品番を確定すると自動で表示されます（製品ごとに固定） / Otomatis dari master</span></div>
-      <div class="g-cond">
-        <label class="f cond wide2">注湯温度 規格 (℃) <span class="id">Suhu air panas (standar)</span><input data-k="temp" placeholder="例 1370~1400"></label>
-        <div class="f"><span class="small">スクイズ圧力 <span class="id">Tekan tekanan</span></span><div class="seg" data-sel="sq"><button data-v="高">高</button><button data-v="低">低</button></div></div>
-        <label class="f cond">スクイズ時間 <span class="id">Waktu pemerasan</span><input data-k="sqt" inputmode="decimal"></label>
-        <label class="f cond">吹上圧力 <span class="id">Tekanan ledakan</span><input data-k="fup" inputmode="decimal"></label>
-        <div class="f"><span class="small">吹上時間 <span class="id">Waktu mengamban</span></span><div class="seg" data-sel="fut"><button data-v="1.5">1.5</button><button data-v="2.0">2.0</button></div></div>
-        <label class="f cond">モールド厚 <span class="id">Ketebalan cetakan pasir</span><input data-k="mt" inputmode="numeric"></label>
-      </div>
-      <div class="small" id="condNote" style="margin-top:6px"></div>
-    </div>
-
-    <div class="sec">
-      <div class="t">生産実績 <span class="id">Hasil produksi</span></div>
-      <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr));align-items:start">
-        <label class="f">造型総数 <span class="id">Jumlah total cetakan</span><input data-k="total" inputmode="numeric" style="font-size:22px;font-weight:bold"></label>
-        <div class="qtybox"><div class="small">生産個数 = 駒数 × (造型総数 − 未注湯) <span class="id">Kuantitas produksi</span></div><div id="qtyView"></div></div>
-        <label class="f">未注湯 <span class="id">Tidak menuangkan</span><input data-k="unp" inputmode="numeric" placeholder="0"></label>
-        <div class="f wk"><span class="small">作業者（2名まで） <span class="id">nama pekerja</span></span><div class="wkrow"><select id="w1Sel" class="wsel"></select><select id="w2Sel" class="wsel"></select></div><input id="wNew" hidden placeholder="新しい名前を入力 / tulis nama baru"><div class="small" id="wNote" style="color:#2e7d32"></div></div>
-      </div>
-    </div>
+    <div id="rows"></div>
+    <div class="small" style="margin-top:8px">温度の欄をタップすると数字のキーが出ます。温度を入れると、時間（空欄のとき）と作業者（前の行と同じ）が自動で入ります。<br>判定は、造型日報の製品の注湯温度規格で自動で付きます。判定ボタンを押すと手で ○／× に変えられます（もう一度押すと自動に戻ります）。行が足りなくなると自動でふえます。</div>
     <div class="nav">
-      <button id="btnPrev">◀ 前 <span class="id">Sebelumnya</span></button>
-      <button class="pri" id="btnNext">次の行へ ▶ <span class="id" style="color:#dfe8f8">Berikutnya</span></button>
+      <button id="btnPrevC">◀ 前のチャージ</button>
+      <button class="pri" id="btnNextC">次のチャージへ ▶</button>
     </div>
   </section>
 
   <section class="card">
-    <h2>一覧 (行をタップで編集) <span class="id">Daftar</span></h2>
+    <h2>全チャージ一覧 <span class="id">(行をタップで編集)</span></h2>
     <div class="tbl-wrap">
-      <table style="min-width:1400px">
-        <thead>
-          <tr><th rowspan="2">No</th><th colspan="5">生産情報</th><th colspan="3">金型確認</th><th colspan="2">造型時間</th><th colspan="6">製造条件</th><th colspan="5">生産実績</th><th rowspan="2">作業者</th></tr>
-          <tr><th>品番</th><th>駒数</th><th>品名</th><th>材質</th><th>添加材</th><th>駒部</th><th>方案部</th><th>定盤部</th><th>開始</th><th>完了</th><th>注湯温度<br>(規格)</th><th>スクイズ<br>圧力</th><th>スクイズ<br>時間</th><th>吹上<br>圧力</th><th>吹上<br>時間</th><th>モールド厚</th><th>造型総数</th><th>生産個数</th><th>生産重量<br>(kg)</th><th>中子<br>破損</th><th>未注湯</th></tr>
-        </thead>
+      <table style="min-width:1100px">
+        <thead><tr><th>チャージ</th><th>材質</th><th>No</th><th>時間</th><th>品番</th><th>規格℃</th><th>受湯℃</th><th>判定</th><th>再測定℃</th><th>判定</th><th>再々測定℃</th><th>判定</th><th>リターン</th><th>作業者</th><th>マンガン kg</th><th>硫化鉄 kg</th></tr></thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
-    <div class="tot" style="margin-top:12px">
-      <div><div class="small">日計造型数 (自動) <span class="id">Total cetakan harian</span></div><div class="big"><span id="dayTotal">0</span> 枠</div></div>
-      <div><div class="small">日計 生産トン数 (自動) <span class="id">Total produksi (ton)</span></div><div class="big"><span id="dayTon">0.00</span> t <span class="small" id="dayKg"></span></div><div class="small" id="tonNote" style="color:#c62828;font-weight:bold"></div></div>
-      <div class="yieldbox"><div class="small">製品歩留まり（1・2号機の合計） <span class="id">Rendemen produk</span></div><div class="big"><span id="yieldPct">－</span> %</div><div class="small" id="yieldNote"></div></div>
-      <label class="f">カウンター造型数 <span class="id">Jumlah counter</span><input id="counter" inputmode="numeric" style="font-size:22px;font-weight:bold"><span class="small" id="counterDiff"></span></label>
-    </div>
   </section>
 
   <section class="card">
-    <h2>湯待ち・砂待ち <span class="id">Menunggu logam cair / pasir</span></h2>
-    <div class="wbtns"><button data-w="yu">🔥 湯待ち<small>Menunggu logam cair</small></button><button data-w="suna">⏳ 砂待ち<small>Menunggu pasir</small></button></div>
-    <div class="wlist" id="wList"></div>
-    <div class="small" id="wSum" style="margin-top:6px"></div>
+    <h2>採取時間・チル深さ <span class="id">Waktu / kedalaman chill</span></h2>
+    <div id="sampling"></div>
   </section>
 
   <section class="card">
-    <h2>異常/変化点履歴 <span class="id">Riwayat kelainan / titik perubahan</span></h2>
+    <h2>異常/変化点履歴 <span class="id">Abnormalitas / titik perubahan</span></h2>
     <div id="events"></div>
-    <button id="btnAddEv">＋ 異常/変化点を追加 <span class="id">Tambah</span></button>
+    <button class="no-print" id="btnAddEv">＋ 異常/変化点を追加</button>
   </section>
-  <p class="small" style="text-align:center">入力内容は自動で保存・共有されます。<span class="id">Data disimpan dan dibagikan otomatis.</span></p>
+
+  <p class="small no-print" style="text-align:center">入力内容は自動で保存・共有されます。「Excel保存」でパソコンに日報ファイルを保存できます。</p>
 </main>
 
 <datalist id="workerList"></datalist>
 
+<dialog id="dlgPad"><div class="dlg">
+  <h3 id="padTitle" style="margin-bottom:6px">入力</h3>
+  <div class="small" id="padSpec"></div>
+  <div class="calc-disp" id="padDisp" style="margin:8px 0 12px">0</div>
+  <div class="keys">
+    <button data-pk="7">7</button><button data-pk="8">8</button><button data-pk="9">9</button><button class="op" data-pk="bs">⌫</button>
+    <button data-pk="4">4</button><button data-pk="5">5</button><button data-pk="6">6</button><button class="op" data-pk="clr">C</button>
+    <button data-pk="1">1</button><button data-pk="2">2</button><button data-pk="3">3</button><button class="op" data-pk="cancel" style="font-size:15px">閉じる<br><span class="id">Tutup</span></button>
+    <button data-pk="0">0</button><button data-pk="." id="padDot">.</button><button data-pk="00">00</button><button class="ok" data-pk="ok">確定<br>Tetapkan</button>
+  </div>
+</div></dialog>
+
+<dialog id="dlgProd"><div class="dlg">
+  <h3 style="margin-bottom:4px">製品を選ぶ <span class="id">Pilih produk</span></h3>
+  <div class="small" id="prodNote"></div>
+  <div id="prodList" class="prodlist"></div>
+  <div style="display:flex;justify-content:space-between;gap:8px;margin-top:12px;flex-wrap:wrap"><button id="btnProdAuto">自動（造型日報の時間から）に戻す</button><button class="pri" id="btnProdClose">閉じる</button></div>
+</div></dialog>
+
 <dialog id="dlgSettings"><div class="dlg">
   <h3>設定</h3>
-  <div class="t" style="font-weight:bold;margin:8px 0">品番マスター <span class="id">Master nomor produk</span></div>
-  <div class="small" id="masterInfo"></div>
-  <div class="small">マスターはスプレッドシートの「品番マスター」シートで編集します。編集後に下のボタンを押すと、この端末に読み込みます（各端末は起動時にも自動で読み込みます）。</div>
-  <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button id="btnMasterReload">マスターを読み込み直す</button></div>
-  <div id="mImport" style="margin-top:12px;border:1px dashed var(--line);border-radius:10px;padding:10px">
-    <div class="t" style="font-weight:bold">マスターをExcelから更新（管理者・パソコン向け）</div>
-    <div class="small">「部品別データ.xlsx」を選ぶと、スプレッドシートの「品番マスター」を置き換えて全端末に反映します。（1枚目のシートの「品番」の行を見出しとして読み込みます）</div>
-    <div style="display:flex;gap:8px;align-items:end;flex-wrap:wrap;margin-top:8px">
-      <label class="f" style="min-width:160px">管理者パスワード<input id="mPin" type="password" inputmode="numeric"></label>
-      <label class="f" style="flex:1;min-width:200px">Excelファイル<input id="mFile" type="file" accept=".xlsx"></label>
-      <button class="pri" id="btnMasterImport">読み込んで反映</button>
-    </div>
-    <div class="small" id="mImpInfo" style="margin-top:6px"></div>
-  </div>
+  <div class="t" style="font-weight:bold;margin:8px 0">造型日報と連動（温度規格の自動判定）</div>
+  <div class="small">造型日報の Apps Script のURL（造型日報の config.js の syncUrl）と合言葉を入れます。通常は config.js に入れておけば設定不要です。</div>
+  <label class="f" style="margin-top:8px">造型日報のURL<input id="zkUrl" placeholder="https://script.google.com/macros/s/.../exec"></label>
+  <label class="f" style="margin-top:8px">造型日報の合言葉<input id="zkToken"></label>
+  <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button id="btnZkSave">この端末に保存して読み込む</button></div>
+  <div class="small" id="zkInfo" style="margin-top:6px"></div>
   <hr>
-  <div id="cfgSec">
   <div id="dirSec"><div class="t" style="font-weight:bold;margin:8px 0">Excelファイルの保存先フォルダ</div>
   <div class="small" id="dirInfo">未設定 (ブラウザの「ダウンロード」フォルダに保存されます)</div>
   <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button id="btnPickDir">保存先フォルダを選択</button><button id="btnClearDir">解除</button></div>
+  <div class="small" style="margin-top:6px">※ Chrome / Edge のパソコン版で利用できます。</div>
   <hr></div>
   <div class="t" style="font-weight:bold;margin:8px 0">スプレッドシート連携</div>
+  <div class="small">通常は設定不要です (config.js の設定が使われます)。</div>
   <label class="f" style="margin-top:8px">送信先URL (Apps Script)<input id="cfgUrl" placeholder="https://script.google.com/macros/s/.../exec"></label>
   <label class="f" style="margin-top:8px">合言葉<input id="cfgToken"></label>
   <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button id="btnCfgSave">この端末に保存</button><button id="btnCfgTest">接続テスト</button></div>
   <div class="small" id="cfgInfo" style="margin-top:6px"></div>
-  </div>
   <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px"><button class="pri" id="btnSettingsClose">閉じる</button></div>
 </div></dialog>
 
 <dialog id="dlgList"><div class="dlg">
   <h3 id="listTitle">日報一覧</h3>
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-    <button id="mPrev">◀</button><select id="mSel" style="width:auto;min-width:140px"></select><button id="mNext">▶</button>
+  <div id="listBar" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+    <button id="mPrev" aria-label="前の月">◀</button>
+    <select id="mSel" style="width:auto;min-width:140px"></select>
+    <button id="mNext" aria-label="次の月">▶</button>
     <button id="btnNewDay" style="margin-left:auto">＋ 今日の日報</button>
   </div>
   <div class="small" id="listSum" style="margin-bottom:6px"></div>
   <div id="savedList" style="max-height:60vh;overflow-y:auto"></div>
-  <div style="display:flex;justify-content:flex-end;margin-top:16px"><button class="pri" onclick="this.closest('dialog').close()">閉じる</button></div>
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px"><button class="pri" onclick="this.closest('dialog').close()">閉じる</button></div>
 </div></dialog>
 
-<dialog id="dlgWait"><div class="dlg" style="max-width:460px">
-  <div id="wTitle" class="wtitle"></div>
-  <div class="small" style="margin-top:6px">何時から何時まで待ったかを選んでください（まだ待っているときは開始だけでOK）</div>
-  <div class="wtimes">
-    <label class="f">開始 <span class="id">Mulai</span><input type="time" id="wSt"><button class="now" data-wnow="wSt">今 Sekarang</button></label>
-    <label class="f">終了 <span class="id">Selesai</span><input type="time" id="wEn"><button class="now" data-wnow="wEn">今 Sekarang</button></label>
-  </div>
-  <div class="wmin" id="wMin"></div>
-  <label class="f">メモ <span class="id">Catatan</span><input id="wMemo" placeholder="くわしい内容（なくてもよい）"></label>
-  <div style="display:flex;gap:8px;justify-content:space-between;margin-top:14px"><button id="wDel" style="color:#b00020">削除</button><span style="flex:1"></span><button id="wNo">やめる</button><button class="pri" id="wOk">保存</button></div>
-</div></dialog>
 <dialog id="dlgConfirm"><div class="dlg">
   <p id="cfMsg" style="font-size:17px;margin:4px 0 18px;white-space:pre-line"></p>
   <div style="display:flex;justify-content:flex-end;gap:8px"><button id="cfNo">キャンセル</button><button class="pri" id="cfYes">OK</button></div>
@@ -489,19 +432,15 @@ input.unlock{background:#fff3e0;border-color:#e65100;color:#e65100;font-weight:b
 <script>
 (function(){
 "use strict";
-const APP="zokei", MINR=20, ADDR=5, MAXIT=3;
+const APP="chuto2";
+const MINC=6, ADDC=3, MINR=5, ADDR=2, MINS=4, ADDS=2;
 const EQUIPS=["1号機","2号機"], EQUIP0="2号機";
-const WORKERS0=(window.SUNA_CONFIG&&window.SUNA_CONFIG.workers)||["神林","ジャヤ","バワ","デワ","ロシ","スブラタ"];
-const VIEW=/[?&#]view\b/.test(location.search+location.hash);
-if(VIEW) document.body.classList.add("view");
 const CFG=window.SUNA_CONFIG||{};
-// マスターに値がないときの標準値（用紙に印字されている値）
-const DEF_COND=Object.assign({sqt:"1.2",fup:"0.3",fut:"1.3"},CFG.defaultCond||{});
-const CONDK=["temp","sqt","fup","mt"];
-const FUTS=["1.5","2.0"];
-// 吹上時間は 1.5 / 2.0 から選ぶ。確認ポイントに「ブロー時間：2.0」とあれば 2.0、それ以外は 1.5
-function futOf(m){ return /(ブロー|吹上)時間[:：]?\s*2(\.0)?/.test(String(m&&m.check||""))?"2.0":"1.5"; }
-const CHKK=["cKoma","cHouan","cJouban"], CHKL={cKoma:"駒部",cHouan:"方案部",cJouban:"定盤部"};
+const WORKERS0=CFG.workers||["神林","ジャヤ","バワ","デワ","ロシ","スブラタ"];
+const MATS=[["FC200","FC200"],["FC250","FC250"],["その他H","その他H"],["その他L","その他L"],["その他SiL","その他SiL"],["1204","1204"]];
+const MATC={"FC200":"m-FC200","FC250":"m-FC250","その他H":"m-otherH","その他L":"m-otherL","その他SiL":"m-SiL","1204":"m-1204"};
+const VIEW=/[?&#](view|export)\b/.test(location.search+location.hash);
+if(VIEW) document.body.classList.add("view");
 const LS={ get(k,d){ try{ const v=localStorage.getItem(k); return v==null?d:JSON.parse(v);}catch(e){return d;} },
   set(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); return true;}catch(e){return false;} },
   del(k){ try{ localStorage.removeItem(k);}catch(e){} }, keys(){ try{ return Object.keys(localStorage);}catch(e){return [];} } };
@@ -510,297 +449,246 @@ const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",
 let workers=LS.get(APP+":workers",[]);
 let state, sel=0;
 
-// ---- 品番マスター ----
-let MASTER=LS.get(APP+":master",{rows:[],at:0});
-function normHin(s){ return String(s||"").replace(/[！-～]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0)).replace(/[\s\-_‐－ー―・.\/]/g,"").toUpperCase(); }
-let MIDX=[];
-function buildIdx(){ MIDX=(MASTER.rows||[]).filter(m=>m.hin).map(m=>Object.assign({},m,{n:normHin(m.hin)})); }
-buildIdx();
-function mFind(hin){ const n=normHin(hin); return n?MIDX.find(m=>m.n===n)||null:null; }
-function mGroup(m){ if(!m||!m.mold) return m?[m]:[]; const g=MIDX.filter(x=>x.mold===m.mold); return [m].concat(g.filter(x=>x!==m)).slice(0,MAXIT); }
-// 品番の候補：先頭が一致 → 「RD」などの英字のあとが一致（数字だけ打ってもOK）→ 途中が一致 の順
-function suggest(q){ const n=normHin(q); if(n.length<2) return [];
-  const pre=[], pre2=[], mid=[]; MIDX.forEach(m=>{ const i=m.n.indexOf(n); if(i===0) pre.push(m); else if(i>0){ (/^[A-Z]+$/.test(m.n.slice(0,i))?pre2:mid).push(m); } });
-  const byLen=(a,b)=>a.n.length-b.n.length||a.n.localeCompare(b.n); return pre.sort(byLen).concat(pre2.sort(byLen),mid.sort(byLen)).slice(0,15); }
-function condOf(m){ const c={}; CONDK.forEach(k=>c[k]=(m[k]!=null&&m[k]!=="")?String(m[k]):(DEF_COND[k]||"")); if(m.sq) c.sq=m.sq; return c; }
-function infoOf(m){ return {mat:m.mat||"",add:m.add||"",unit:m.unit||"",check:m.check||"",tana:m.tana||""}; }
-function itemFrom(m){ return Object.assign({hin:m.hin,koma:m.koma==null?"":String(m.koma),name:m.name||"",ok:true},infoOf(m)); }
-
-function todayStr(){ const d=new Date(); if(d.getHours()<8) d.setDate(d.getDate()-1); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+// ---- 日付・号機 ----
+// 朝7時で日付が切りかわる（7時前の注湯は前の日の日報）
+const DAY_START=7;
+function todayStr(){ const d=new Date(); if(d.getHours()<DAY_START) d.setDate(d.getDate()-1); return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+// 朝（7:00〜10:00）：前日の日報で、夜中に注湯したチャージがあり、当日の日報がまだ空なら、前日の日報を続けて使う
+function prevDay(d){ const x=new Date(d+"T00:00:00"); x.setDate(x.getDate()-1); return new Date(x.getTime()-x.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+function lastBlockInfo(st){ let li=-1, night=false; (st.blocks||[]).forEach((b,i)=>{ if((b.rows||[]).some(x=>x&&x.time)){ li=i; } }); if(li<0) return null;
+  (st.blocks||[]).forEach((b,i)=>{ if(i<=li&&(b.rows||[]).some(x=>{ const m=/^(\d{1,2}):(\d{2})/.exec((x&&x.time)||""); return m&&(+m[1]*60+(+m[2]))<DAY_START*60; })) night=true; });
+  return {no:li+1,night}; }
+function morningPrev(eq){ const h=new Date().getHours(); if(h<DAY_START||h>=10) return null; const t=todayStr(), p=prevDay(t);
+  const ps=LS.get(APP+":day:"+p+"|"+eq,null), ts=LS.get(APP+":day:"+t+"|"+eq,null); if(!ps) return null;
+  const pi=lastBlockInfo(ps), ti=ts?lastBlockInfo(ts):null; return (pi&&pi.night&&!ti)?p:null; }
 function defaultEquip(){ const e=(LS.get(APP+":last",{}).equip||""); return EQUIPS.includes(e)?e:EQUIP0; }
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
-function blankItem(){ return {hin:"",koma:"",name:"",tot:"",ok:false,test:false,mat:"",add:"",unit:"",check:"",tana:"",kowa:""}; }
-// v24：中子の破損の数（品番ごと）
-function kowaOf(it){ return num(it&&it.kowa)||0; }
-function dayKowa(){ return state.rows.reduce((a,r)=>rowHas(r)?a+liveItems(r).reduce((b,it)=>b+kowaOf(it),0):a,0); }
-function blankRow(){ return {items:[blankItem()],mold:"",cKoma:"",cHouan:"",cJouban:"",st:"",en:"",temp:"",sq:"",sqt:"",fup:"",fut:"",mt:"",total:"",unp:"",worker:"",u:0}; }
-function blankState(date,equip){ return {date,equip,confirmBy:"",tensile:"",counter:"",hu:0,waits:[],rows:Array.from({length:MINR},blankRow),events:[]}; }
+function blankRow(){ return {time:"",temp:"",judge:"",jm:false,retemp:"",rejudge:"",rjm:false,rrtemp:"",rrjudge:"",rrjm:false,ret:"",worker:"",hin:"",spec:"",mat:"",pm:false}; }
+function blankBlock(){ return {mangan:"",ryuka:"",tp:false,mat:"",matM:false,rows:Array.from({length:MINR},blankRow),u:0}; }
+function blankSRow(){ return {time:"",fc250:false,fc200:false,chill:""}; }
+function blankSampling(){ return {rows:Array.from({length:MINS},blankSRow),u:0}; }
+function blankState(date,equip){ return {date,equip,recordCheck:"",hu:0,blocks:Array.from({length:MINC},blankBlock),sampling:blankSampling(),events:[]}; }
 function key(){ return APP+":day:"+state.date+"|"+state.equip; }
 function save(){ state.updated=new Date().toISOString(); LS.set(key(),state); LS.set(APP+":last",{date:state.date,equip:state.equip}); }
-function normRow(x){ const r=Object.assign(blankRow(),x||{}); r.items=(r.items&&r.items.length?r.items:[blankItem()]).slice(0,MAXIT).map(it=>Object.assign(blankItem(),it)); return r; }
+function normBlock(x){ const b=Object.assign(blankBlock(),x||{}); b.rows=Array.from({length:Math.max(MINR,((x&&x.rows)||[]).length)},(_,j)=>{ const r=Object.assign(blankRow(),((x&&x.rows)||[])[j]||{}); delete r.jOut; delete r.rjOut; delete r.rrjOut; delete r.fOut; return r; }); return b; }
 function normalize(s){ const b=blankState(s.date,s.equip); s=Object.assign(b,s);
-  s.rows=Array.from({length:Math.max(MINR,(s.rows||[]).length)},(_,i)=>normRow((s.rows||[])[i])); ensureRows(s);
-  s.events=(s.events||[]).map(e=>Object.assign({id:uid(),u:1,start:"",end:"",person:"",content:"",action:""},e)); return s; }
+  s.blocks=Array.from({length:Math.max(MINC,(s.blocks||[]).length)},(_,i)=>normBlock((s.blocks||[])[i]));
+  s.sampling=Object.assign(blankSampling(),s.sampling||{}); s.sampling.rows=Array.from({length:Math.max(MINS,(s.sampling.rows||[]).length)},(_,j)=>Object.assign(blankSRow(),(s.sampling.rows||[])[j]||{}));
+  s.events=(s.events||[]).map(e=>Object.assign({id:uid(),u:1,start:"",end:"",person:"",content:"",action:""},e));
+  ensureAll(s); return s; }
 function load(date,equip){ state=normalize(LS.get(APP+":day:"+date+"|"+equip,null)||blankState(date,equip)); }
-function NR(){ return state.rows.length; }
-// 最後の行に入力が入ったら、自動で5行ふやす
-function ensureRows(s){ s=s||state; let add=false; while(rowHas(s.rows[s.rows.length-1])){ for(let k=0;k<ADDR;k++) s.rows.push(blankRow()); add=true; } return add; }
 function liveEvents(){ return state.events.filter(e=>!e.del); }
 
 // ---- 計算・判定 ----
 function num(v){ if(v===""||v==null) return null; const n=parseFloat(String(v).replace(/[，,]/g,".").replace(/[０-９．]/g,c=>String.fromCharCode(c.charCodeAt(0)-0xFEE0))); return isNaN(n)?null:n; }
-function fmtNum(n){ return Math.round(n*1000)/1000+""; }
-function liveItems(r){ return r.items.filter(it=>it.hin||it.koma||it.name); }
-// 2品番目以降は「この品番の造型総数」があればそれを使う(空欄なら1品番目と同じ)
-function totOf(r,it){ return (it!==r.items[0]&&it.tot!=null&&it.tot!=="")?it.tot:r.total; }
-// 生産個数 = 駒数 × (造型総数 − 未注湯)。未注湯は入力がなければ 0
-function unpOf(r){ return num(r.unp)||0; }
-function qtyOf(r,it){ const k=num(it.koma), t=num(totOf(r,it)); return (k!=null&&t!=null)?k*Math.max(0,t-unpOf(r)):null; }
-// 材質・添加材の文字色（マスターの値で色分け）
-const MATC={"FC250":"#1d2330","FC200":"#1565c0","その他H":"#d50000","その他L":"#7b1fa2","その他":"#e65100"};
-function matColor(v){ v=String(v||"").trim(); if(!v) return ""; return MATC[v]||"#e65100"; }
-function addColor(v){ v=String(v||"").trim(); if(!v||v==="通常") return ""; if(/溶[:：]/.test(v)) return "#7b1fa2"; if(/重量|以上|シリコン|イノパラ|％|%/.test(v)) return "#d50000"; return "#e65100"; }
-function cspan(v,c){ return `<b style="${c?`color:${c}`:""}">${esc(v||"－")}</b>`; }
-function rowQty(r){ return liveItems(r).reduce((a,it)=>a+(qtyOf(r,it)||0),0); }
-function rowHas(r){ return liveItems(r).length>0 || ["st","en","total","unp","worker",...CHKK].some(k=>(r[k]||"")!==""); }
-function ngList(r){ return CHKK.filter(k=>r[k]==="NG").map(k=>CHKL[k]); }
-function weightOf(r,it){ if(it.test) return null; const q=qtyOf(r,it), w=num(it.unit); return (q!=null&&w!=null)?Math.round(q*w*100)/100:null; }
-function dayKg(){ return state.rows.reduce((a,r)=>a+liveItems(r).reduce((b,it)=>b+(weightOf(r,it)||0),0),0); }
-function fmtT(kg){ return (Math.round(kg/10)/100).toFixed(2); }
-// 単重・駒数が入っていない品番（生産トン数が計算できない）
-function missOf(r){ return liveItems(r).filter(it=>it.hin).map(it=>({hin:it.hin,f:[num(it.koma)==null?"駒数":"",(!it.test&&num(it.unit)==null)?"単重":""].filter(Boolean)})).filter(x=>x.f.length); }
-function hinStyle(it){ return it.test?"color:#d50000;font-weight:bold":""; }
-function missText(r){ return missOf(r).map(x=>`${x.hin}：${x.f.join("・")}`).join("\n"); }
-function dayTotal(){ return state.rows.reduce((a,r)=>a+(num(r.total)||0),0); }
+function rowHas(r){ return ["time","temp","retemp","rrtemp","ret","judge","rejudge","rrjudge"].some(k=>(r[k]||"")!==""); }
+function blockHas(b){ return b.mangan!==""||b.ryuka!==""||b.tp||b.rows.some(rowHas); }
+function sHas(s){ return !!(s.time||s.chill||s.fc250||s.fc200); }
+function finalJ(r){ return r.rrjudge||r.rejudge||r.judge||""; }
+function blockStat(b){ const L=b.rows.filter(rowHas); return {n:L.length,x:L.filter(r=>[r.judge,r.rejudge,r.rrjudge].includes("×")).length}; }
+// 行が足りなくなったら自動でふやす
+function ensureAll(s){ s=s||state; let ch=false;
+  s.blocks.forEach(b=>{ while(rowHas(b.rows[b.rows.length-1])){ for(let k=0;k<ADDR;k++) b.rows.push(blankRow()); ch=true; } });
+  while(blockHas(s.blocks[s.blocks.length-1])){ for(let k=0;k<ADDC;k++) s.blocks.push(blankBlock()); ch=true; }
+  while(sHas(s.sampling.rows[s.sampling.rows.length-1])){ for(let k=0;k<ADDS;k++) s.sampling.rows.push(blankSRow()); ch=true; }
+  return ch; }
+// 温度規格 "1370~1400" → {min,max}
+function parseSpec(t){ const m=/(\d{3,4}(?:\.\d+)?)\s*[~〜～\-－]\s*(\d{3,4}(?:\.\d+)?)/.exec(String(t||"")); return m?{min:+m[1],max:+m[2]}:null; }
+// 規格の幅による公差：幅が TOL_W℃ 以下なら ±TOL℃ を認める（例 10℃・15℃幅 → ±3℃ 適用、20℃・30℃幅 → 適用しない）
+const TOL_W=(window.SUNA_CONFIG&&+window.SUNA_CONFIG.tolWidth)||15, TOL=(window.SUNA_CONFIG&&+window.SUNA_CONFIG.tol)||3;
+function tolOf(sp){ return sp&&(sp.max-sp.min)<=TOL_W?TOL:0; }
+function specLabel(sp){ if(!sp) return ""; const t=tolOf(sp); return `${sp.min}〜${sp.max}℃`+(t?`（±${t} → ${sp.min-t}〜${sp.max+t}℃）`:"（公差なし）"); }
+function autoJ(v,sp){ const n=num(v); if(n==null||!sp) return ""; const t=tolOf(sp); return (n<sp.min-t||n>sp.max+t)?"×":"○"; }
+function mins(hm){ const m=/^(\d{1,2}):(\d{2})/.exec(hm||""); return m?(+m[1])*60+(+m[2]):null; }
+function dayIdx(d){ const [y,m,dd]=d.split("-").map(Number); return Date.UTC(y,m-1,dd)/864e5; }
+// 注湯は「チャージ」で日を決める：夜中（0:00〜7:00）に注湯したチャージ以降は、7:00を過ぎても翌朝の時刻として扱う（最大3時間）
+const CARRY_MIN=180;
+function nightReached(ci){ for(let c=0;c<=ci&&c<state.blocks.length;c++){ if(state.blocks[c].rows.some(x=>{ const t=mins(x.time); return t!=null&&t<DAY_START*60; })) return true; } return false; }
+// 時刻 → 日時：日報の上から順に時刻を見て、日付をまたいだ（時刻が6時間以上もどった）ところから翌日として扱う
+// 最初の時刻が 6:00 より前なら夜中（翌日）、6:00〜7:00 は朝早く始めた分としてその日のまま
+function timeline(){ const m=new Map(), base=dayIdx(state.date)*1440; let off=null, prev=null;
+  state.blocks.forEach(b=>b.rows.forEach(r=>{ const t=mins(r.time); if(t==null) return;
+    if(off==null) off=(t<DAY_START*60-60)?1440:0; else if(t<prev-360) off+=1440;
+    prev=t; m.set(r,base+off+t); })); return m; }
+function pourAbs(r,b){ const t=mins(r.time); if(t==null) return null; const a=timeline().get(r); return a!=null?a:dayIdx(state.date)*1440+t+(t<DAY_START*60-60?1440:0); }
+// この時刻より前で、いちばん新しい「手で選んだ製品」の行
+function manualBefore(r0,ab){ if(ab==null) return null; let best=null;
+  state.blocks.forEach(b=>b.rows.forEach(r=>{ if(r===r0||!r.pm||!r.hin) return; const a=pourAbs(r,b); if(a!=null&&a<=ab&&(!best||a>=best.ab)) best={r,ab:a}; })); return best; }
+// 造型日報から、その時間に流している製品を決める
+function applyAuto(b,r){
+  if(!r.pm){ const ab=pourAbs(r,b), p=Link.productAt(ab), m=manualBefore(r,ab); r.pi=false;
+    // 前の行で製品を手で選んでいて、そのあと造型日報で製品が切りかわっていなければ、手で選んだ製品を引き継ぐ
+    if(m&&ab!=null&&Link.productAt(m.ab)===p){ r.hin=m.r.hin; r.spec=m.r.spec; r.mat=m.r.mat; r.pi=true; }
+    else if(p){ r.hin=p.hin; r.spec=p.temp; r.mat=p.mat; } else if(Link.ready()){ r.hin=""; r.spec=""; r.mat=""; } }
+  const sp=parseSpec(r.spec);
+  if(!r.jm) r.judge=autoJ(r.temp,sp);
+  if(!r.rjm) r.rejudge=autoJ(r.retemp,sp);
+  if(!r.rrjm) r.rrjudge=autoJ(r.rrtemp,sp);
+  if(!b.matM){ const f=b.rows.find(x=>rowHas(x)&&x.mat); b.mat=f?normMat(f.mat):b.mat; }
+}
+function normMat(m){ m=String(m||"").trim(); return MATS.find(x=>x[0]===m)?m:(m?m:""); }
+function lastWorker(c,i){ for(let k=c;k>=0;k--){ const rows=state.blocks[k].rows; for(let j=(k===c?i-1:rows.length-1);j>=0;j--){ if(rows[j].worker) return rows[j].worker; } } return LS.get(APP+":lastW",""); }
+function workerNames(){ const base=(typeof Crew!=="undefined"&&Crew.list())||WORKERS0; return [...base,...workers.filter(w=>!base.includes(w))]; }
 
 // ---- 描画 ----
-function chipClass(r){ if(ngList(r).length) return "ng"; if(num(r.total)!=null) return "filled"; return rowHas(r)?"inprog":""; }
-function renderChips(){ $("chips").innerHTML=state.rows.map((r,i)=>`<button class="chip ${chipClass(r)} ${i===sel?"sel":""}" data-i="${i}">${i+1}<small style="${hinStyle(r.items[0])}">${esc(r.items[0].hin||"－")}${liveItems(r).length>1?" 他":""}</small></button>`).join(""); }
-function renderHeader(){ $("date").value=state.date; $("equip").value=state.equip; $("confirmBy").value=state.confirmBy; $("tensile").value=state.tensile; $("counter").value=state.counter; renderTotals(); renderMasterStat(); }
-function renderMasterStat(){ const n=MIDX.length, at=MASTER.at?new Date(MASTER.at):null;
-  const t=n?`品番マスター：${n}件` + (at?`（${at.getMonth()+1}/${at.getDate()} ${at.getHours()}:${String(at.getMinutes()).padStart(2,"0")} 読込）`:"") : "品番マスターが未登録です（スプレッドシートの「品番マスター」に入力してください）";
-  $("masterStat").textContent=t; $("masterStat").className="mstat"+(n?"":" warn"); if($("masterInfo")) $("masterInfo").textContent=t; }
-function renderTotals(){ const t=dayTotal(); $("dayTotal").textContent=fmtNum(t);
-  const kg=dayKg(), miss=state.rows.filter(r=>missOf(r).length).length; $("dayTon").textContent=fmtT(kg); $("dayKg").textContent=kg?`（${fmtNum(Math.round(kg*10)/10)} kg）`:"";
-  const tests=state.rows.reduce((a,r)=>a+liveItems(r).filter(it=>it.test).length,0);
-  $("tonNote").textContent=[miss?`⚠ 単重・駒数が未入力の行が ${miss} 行あります（トン数に入っていません）`:"", tests?`テスト品番 ${tests}件はトン数に含めていません`:""].filter(Boolean).join(" / "); const c=num(state.counter);
-  $("counterDiff").textContent = c!=null&&t? (c===t?"日計と一致 ✓":`日計との差 ${fmtNum(c-t)} 枠`) : ""; $("counterDiff").style.color=c!=null&&c!==t?"#c62828":"#2e7d32"; if(Yield) Yield.render(); }
-function itemStatus(it){ if(it.test) return ["ng","テスト品番（単重なし・生産トン数には入りません） / Produk uji"]; if(!it.hin) return ["",""]; if(it.ok) return ["ok","✓ マスター登録あり / Terdaftar"]; return ["ng","マスターにない品番です（駒数・品名・単重を手入力） / Tidak ada di master"]; }
-function renderItems(){ const r=state.rows[sel];
-  $("items").innerHTML=r.items.map((it,i)=>{ const [c,t]=itemStatus(it); return `<div class="item" data-it="${i}">
-    <div class="f hin"><span class="small">品番 ${i?i+1:""} <span class="id">Nomor produk</span></span><div class="hinwrap"><input data-ik="hin" value="${esc(it.hin)}" style="${hinStyle(it)}" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="例 RD2364A"><div class="sugg" hidden></div></div><div class="hinst ${c}">${t}</div><button class="testbtn ${it.test?"on":""}" data-itest="${i}">${it.test?"✓ テスト品番":"テスト品番"} <span class="id">Uji</span></button></div>
-    <label class="f">駒数 <span class="id">Jumlah</span><input data-ik="koma" inputmode="numeric" value="${esc(it.koma)}"></label>
-    <label class="f">品名 <span class="id">Nama</span><input data-ik="name" value="${esc(it.name)}"></label>
-    <div class="f kowa ${kowaOf(it)?"on":""}"><span>中子破損 (個) <span class="id">Inti rusak</span></span><div class="kstep"><button type="button" data-kstep="-1" data-ki="${i}" ${VIEW?"disabled":""} aria-label="へらす">−</button><input data-ik="kowa" inputmode="numeric" value="${esc(it.kowa||"")}" placeholder="0" ${VIEW?"readonly":""}><button type="button" data-kstep="1" data-ki="${i}" ${VIEW?"disabled":""} aria-label="ふやす">＋</button></div></div>
-    ${(!it.test&&(!it.ok||num(it.unit)==null))?`<label class="f ${it.hin&&num(it.unit)==null?"need":""}">単重 (kg) <span class="id">Berat satuan</span><input data-ik="unit" inputmode="decimal" value="${esc(it.unit)}" placeholder="必ず入力"></label>`:""}
-    ${i?`<label class="f">造型総数 <span class="id">Total cetakan</span><input data-ik="tot" inputmode="numeric" value="${esc(it.tot)}" placeholder="同じ: ${esc(r.total||"－")}"></label><button class="del" data-idel="${i}">削除</button>`:"<span></span><span></span>"}
-    ${it.ok?`<div class="iinfo"><span>材質 ${cspan(it.mat,matColor(it.mat))}</span><span>添加材 ${cspan(it.add,addColor(it.add))}</span><span>単重 <b>${esc(it.unit||"－")}</b> kg</span>${it.tana?`<span>棚 <b>${esc(it.tana)}</b></span>`:""}</div>`:""}
-    ${it.check?`<div class="ichk">⚠ 確認ポイント：${esc(it.check)}</div>`:""}</div>`; }).join("");
-  $("btnAddItem").hidden = r.items.length>=MAXIT;
-  const li=liveItems(r); $("moldNote").innerHTML = li.length>1 ? `<div class="moldnote" style="margin-top:8px">この金型は ${li.length}品番取り：${li.map(x=>esc(x.hin)).join(" ＋ ")}（2品番目以降の造型総数は、違うときだけ入力 / Isi jika berbeda）</div>` : "";
+function renderHeader(){ $("date").value=state.date; $("equip").value=state.equip; $("recordCheck").value=state.recordCheck; renderLink(); }
+function renderLink(){ const s=Link.status(); $("linkLine").innerHTML=s.html; $("linkLine").className="linkline "+s.cls; }
+function chipMat(b){ return MATC[b.mat]||""; }
+function renderCharges(){
+  $("charges").innerHTML=state.blocks.map((b,i)=>{ const st=blockStat(b), has=blockHas(b);
+    return `<button class="chip ${st.x?"ng":(has?(b.mat?chipMat(b):"filled"):"")} ${i===sel?"sel":""}" data-i="${i}">チャージ${i+1}<small>${b.mat?esc(b.mat)+" ":""}${st.n?st.n+"件":""}${st.x?` ×${st.x}`:""}${b.tp?" TP✓":""}</small></button>`; }).join(""); }
+function jbtn(r,f,mf){ const v=r[f]||"", man=!!r[mf], sp=parseSpec(r.spec);
+  return `<button class="jbtn ${v==="○"?"o":v==="×"?"x":""}" data-j="${f}">${v||"－"}<span class="m">${v?(man?"手入力":(sp?"自動":"")):""}</span></button>`; }
+function padInp(k,v,cls){ return `<input data-k="${k}" data-pad="1" readonly inputmode="none" value="${esc(v)}" class="padin ${cls||""}" placeholder="－">`; }
+function wSel(r){ const names=workerNames(); if(r.worker&&!names.includes(r.worker)) names.push(r.worker);
+  return `<select data-k="worker" class="wsel" ${VIEW?"disabled":""}><option value="">－</option>${names.map(n=>`<option ${n===r.worker?"selected":""}>${esc(n)}</option>`).join("")}<option value="__add">＋ 追加</option></select>`; }
+function tcls(r,f){ const v=r[f]; return v==="×"?"ng":v==="○"?"ok":""; }
+function prodChip(r){ if(!r.hin&&!rowHas(r)) return ""; const sp=parseSpec(r.spec);
+  return `<button class="prod ${r.pm||r.pi?"man":""} ${r.hin?"":"none"}" data-prod="1">${r.hin?`<b>${esc(r.hin)}</b> ${sp?specLabel(sp):"規格なし"}${r.pm?" (手で選択)":(r.pi?" (前の行の手で選択を引き継ぎ)":"")}`:"製品：造型日報から見つかりません（タップで選ぶ）"}</button>`; }
+function renderRows(){
+  const b=state.blocks[sel];
+  $("chargeTitle").textContent="チャージ "+(sel+1);
+  $("c_mangan").value=b.mangan; $("c_ryuka").value=b.ryuka;
+  $("btnTp").className="tpbtn "+(b.tp?"on":""); $("btnTp").innerHTML=b.tp?"TP採取 ✓ 済み":"TP採取 （未）";
+  document.querySelectorAll("#matBtns [data-mat]").forEach(x=>{ x.classList.toggle("on",x.dataset.mat===b.mat); });
+  $("matNote").textContent=b.mat?(b.matM?"手で選択":"造型日報から自動"):"";
+  $("rows").innerHTML=b.rows.map((r,i)=>`
+    <div class="mrow" data-row="${i}">
+      <div class="no">${i+1}</div>
+      <div class="tcell"><span class="ml">時間 waktu</span><input type="time" data-k="time" value="${esc(r.time)}" ${VIEW?"readonly":""}><button data-now="1">今</button><button data-tclr="1" class="tclr" aria-label="時間を消す">×</button></div>
+      <div><span class="ml">受湯 [℃]</span>${padInp("temp",r.temp,tcls(r,"judge"))}</div>
+      <div><span class="ml">判定</span>${jbtn(r,"judge","jm")}</div>
+      <div><span class="ml">再測定 [℃]</span>${padInp("retemp",r.retemp,tcls(r,"rejudge"))}</div>
+      <div><span class="ml">判定</span>${jbtn(r,"rejudge","rjm")}</div>
+      <div><span class="ml">再々測定 [℃]</span>${padInp("rrtemp",r.rrtemp,tcls(r,"rrjudge"))}</div>
+      <div><span class="ml">判定</span>${jbtn(r,"rrjudge","rrjm")}</div>
+      <div><span class="ml">リターン回数</span>${padInp("ret",r.ret,"")}</div>
+      <div class="w"><span class="ml">作業者 nama</span>${wSel(r)}</div>
+      <div class="pline">${prodChip(r)}</div>
+    </div>`).join("");
 }
-function renderEntry(){ const r=state.rows[sel];
-  $("bigNo").textContent=sel+1; renderItems(); wAdding=""; renderWorkerSel();
-  document.querySelectorAll("#entryCard input[data-k]").forEach(inp=>{ const k=inp.dataset.k; inp.value=r[k]||"";
-    if(k==="worker"&&!r.worker){ const p=sel>0?state.rows[sel-1].worker:""; inp.placeholder=p?"前回 "+p:"氏名 / nama"; } });
-  updateMarks(); }
-function updateMarks(){ const r=state.rows[sel], fixed=!!(r.items[0]&&r.items[0].ok);
-  CHKK.forEach(k=>document.querySelectorAll(`[data-chk="${k}"] button`).forEach(b=>b.className= r[k]===b.dataset.v ? (b.dataset.v==="OK"?"on-ok":"on-ng") : ""));
-  document.querySelectorAll('[data-sel="sq"] button').forEach(b=>b.className= r.sq===b.dataset.v ? "on-sel" : "");
-  document.querySelectorAll('[data-sel="fut"] button').forEach(b=>b.className= r.fut===b.dataset.v ? "on-sel" : "");
-  CONDK.forEach(k=>{ const inp=document.querySelector(`#entryCard input[data-k="${k}"]`), un=(r.condEdit||{})[k]; inp.readOnly=(fixed&&!un)||VIEW; inp.classList.toggle("unlock",fixed&&!!un); inp.classList.toggle("dbl",fixed&&!un&&UNLOCKABLE.includes(k)&&!VIEW); });
-  const li=liveItems(r), diff=li.length>1 && li.some(it=>it.ok&&li[0].ok&&false);
-  $("condNote").textContent = fixed ? "マスターの値です。注湯温度とモールド厚は、ダブルタップで変更できます / Ketuk 2x untuk ubah" : (li.length?"マスターにない品番のため、手入力してください / Isi manual":"");
-  $("qtyView").innerHTML = li.length ? li.map(it=>{ const q=qtyOf(r,it), w=weightOf(r,it); return `<div class="qtyline">${esc(it.hin||"(品番なし)")}：${esc(it.koma||"?")} × (${esc(totOf(r,it)||"?")}${unpOf(r)?` − 未注湯 ${unpOf(r)}`:""}) = <span class="big">${q==null?"－":fmtNum(q)}</span> 個${w!=null?`　<span class="small">${fmtNum(w)} kg</span>`:""}</div>`; }).join("") : '<div class="small">品番を入れてください</div>';
-  const ms=missOf(r); $("missWarn").innerHTML = ms.length ? `<div class="miss">⚠ 入力が足りません：${ms.map(x=>`<b>${esc(x.hin)}</b> の ${x.f.join("・")}`).join("、")}<br><span style="font-weight:normal">生産トン数が計算できません / Isi jumlah & berat satuan</span></div>` : "";
-}
+// 時間の入力中などに、行を作り直さずに製品・判定だけを書きかえる（iPadの時間の選択が閉じないように）
+function refreshRowsInPlace(){ const b=state.blocks[sel];
+  document.querySelectorAll("#rows .mrow").forEach(el=>{ const i=+el.dataset.row, r=b.rows[i]; if(!r) return;
+    const t=el.querySelector('[data-k="time"]'); if(t&&document.activeElement!==t&&t.value!==r.time) t.value=r.time;
+    const pl=el.querySelector(".pline"); if(pl) pl.innerHTML=prodChip(r);
+    [["temp","judge","jm"],["retemp","rejudge","rjm"],["rrtemp","rrjudge","rrjm"]].forEach(([k,f,mf])=>{ const inp=el.querySelector(`[data-k="${k}"]`); if(inp) inp.className="padin "+tcls(r,f);
+      const jb=el.querySelector(`[data-j="${f}"]`); if(jb) jb.outerHTML=jbtn(r,f,mf); }); }); }
 function renderTable(){
   const out=[];
-  state.rows.forEach((r,i)=>{ if(!rowHas(r)) return; const li=liveItems(r).length?liveItems(r):[blankItem()], n=li.length;
-    const rs=`rowspan="${n}"`;
-    li.forEach((it,x)=>{ const q=qtyOf(r,it);
-      let h=`<tr data-i="${i}" class="${i===sel?"sel":""} ${x?"sub":""}">`;
-      if(!x) h+=`<td ${rs} class="no"><b>${i+1}</b></td>`;
-      h+=`<td style="white-space:nowrap;${hinStyle(it)}">${esc(it.hin)}${it.test?' <span style="font-size:11px">(テスト)</span>':""}${it.hin&&!it.ok&&!it.test?' <span style="color:#c62828">*</span>':""}${it.check?' <span title="確認ポイント" style="color:#c62828">⚠</span>':""}</td><td>${esc(it.koma)}</td><td>${esc(it.name)}</td><td style="white-space:nowrap;color:${matColor(it.mat)}">${esc(it.mat)}</td><td style="white-space:nowrap;font-size:12px;color:${addColor(it.add)}">${esc(it.add)}</td>`;
-      if(!x) h+=CHKK.map(k=>`<td ${rs} class="${r[k]==="NG"?"jNG":""}">${r[k]}</td>`).join("")+`<td ${rs}>${esc(r.st)}</td><td ${rs}>${esc(r.en)}</td><td ${rs} style="white-space:nowrap">${esc(r.temp)}</td>`+
-        ["sq","sqt","fup","fut","mt"].map(k=>`<td ${rs}>${esc(r[k])}</td>`).join("");
-      h+=`<td>${x?(totOf(r,it)!==r.total?`<b style="color:#e65100">${esc(totOf(r,it))}</b>`:esc(totOf(r,it))):`<b>${esc(r.total)}</b>`}</td><td>${q==null?"":fmtNum(q)}</td><td class="${it.hin&&weightOf(r,it)==null?"jNG":""}">${weightOf(r,it)==null?(it.hin?"未入力":""):fmtNum(weightOf(r,it))}</td><td class="${kowaOf(it)?"jNG":""}">${kowaOf(it)||""}</td>`;
-      if(!x) h+=`<td ${rs}>${esc(r.unp||"0")}</td><td ${rs}>${esc(r.worker)}</td>`;
-      out.push(h+"</tr>"); }); });
-  const tq=state.rows.reduce((a,r)=>a+rowQty(r),0), tu=state.rows.reduce((a,r)=>a+(num(r.unp)||0),0);
-  $("tbody").innerHTML=(out.length?out.join(""):'<tr><td colspan="23" class="small" style="padding:12px">まだ入力がありません</td></tr>')+
-    `<tr class="sum"><td colspan="17">合計 <span class="id">Total</span></td><td>${fmtNum(dayTotal())}</td><td>${tq?fmtNum(tq):""}</td><td>${dayKg()?fmtNum(Math.round(dayKg()*10)/10):""}</td><td class="${dayKowa()?"jNG":""}">${dayKowa()||""}</td><td></td><td></td></tr>`;
-  renderTotals();
+  state.blocks.forEach((b,c)=>b.rows.forEach((r,i)=>{ if(!rowHas(r)) return; const sp=parseSpec(r.spec);
+    out.push(`<tr data-c="${c}" class="${c===sel?"sel":""}"><td><b>${c+1}</b></td><td>${esc(b.mat)}</td><td>${i+1}</td><td>${esc(r.time)}</td><td style="white-space:nowrap">${esc(r.hin)}</td><td style="white-space:nowrap">${sp?sp.min+"〜"+sp.max:""}</td>`+
+      [["temp","judge"],["retemp","rejudge"],["rrtemp","rrjudge"]].map(([t,j])=>`<td class="${r[j]==="×"?"jNG":""}">${esc(r[t])}</td><td class="${r[j]==="×"?"jNG":""}">${esc(r[j])}</td>`).join("")+
+      `<td>${esc(r.ret)}</td><td>${esc(r.worker)}</td><td>${i===0||!b.rows.slice(0,i).some(rowHas)?esc(b.mangan):""}</td><td>${i===0||!b.rows.slice(0,i).some(rowHas)?esc(b.ryuka):""}</td></tr>`); }));
+  $("tbody").innerHTML=out.length?out.join(""):'<tr><td colspan="17" class="small" style="padding:12px">まだ入力がありません</td></tr>';
 }
+function renderSampling(){
+  $("sampling").innerHTML=state.sampling.rows.map((s,i)=>`
+    <div class="srow" data-s="${i}">
+      <div class="no"><b>${i+1}</b></div>
+      <div class="tcell"><input type="time" data-sk="time" value="${esc(s.time)}" ${VIEW?"readonly":""}><button data-snow="1">今</button></div>
+      <label class="f">チル深さ (mm) <span class="id">kedalaman chill</span><input data-sk="chill" data-pad="1" readonly inputmode="none" value="${esc(s.chill)}" class="padin" placeholder="－"></label>
+    </div>`).join(""); }
 function renderEvents(){
   if(!liveEvents().length){ $("events").innerHTML='<div class="small" style="margin-bottom:10px">記録なし</div>'; return; }
   $("events").innerHTML=state.events.map((e,i)=>e.del?"":`
    <div class="ev" data-e="${i}">
-     <label class="f">発生時刻 <span class="id">Waktu</span><input type="time" data-ek="start" value="${esc(e.start)}" ${VIEW?"readonly":""}></label>
+     <label class="f">発生時間<input type="time" data-ek="start" value="${esc(e.start)}" ${VIEW?"readonly":""}></label>
      <label class="f">〜<input type="time" data-ek="end" value="${esc(e.end)}" ${VIEW?"readonly":""}></label>
-     <label class="f wide">異常/変化点内容 <span class="id">Detail kelainan</span><textarea data-ek="content" ${VIEW?"readonly":""}>${esc(e.content)}</textarea></label>
-     <label class="f wide">処置内容 <span class="id">Tindakan</span><textarea data-ek="action" ${VIEW?"readonly":""}>${esc(e.action)}</textarea></label>
-     <label class="f">担当 <span class="id">yang bertanggung</span><input data-ek="person" list="workerList" value="${esc(e.person)}" ${VIEW?"readonly":""}></label>
+     <label class="f">担当<input lang="ja" data-ek="person" list="workerList" value="${esc(e.person)}" ${VIEW?"readonly":""}></label>
+     <label class="f wide">異常/変化点内容 <span class="id">Detail kelainan</span><textarea lang="ja" data-ek="content" ${VIEW?"readonly":""}>${esc(e.content)}</textarea></label>
+     <label class="f wide">処置内容 <span class="id">Tindakan</span><textarea lang="ja" data-ek="action" ${VIEW?"readonly":""}>${esc(e.action)}</textarea></label>
      <button data-del="${i}" style="align-self:end">削除</button>
    </div>`).join(""); }
-function workerNames(){ const base=(typeof Crew!=="undefined"&&Crew.list())||WORKERS0; return [...base,...workers.filter(w=>!base.includes(w))]; }
 function renderWorkers(){ $("workerList").innerHTML=workerNames().map(w=>`<option value="${esc(w)}">`).join(""); }
-// ---- 作業者（2名・プルダウン）----
-function splitW(r){ if(!r.w1&&!r.w2&&r.worker){ const p=String(r.worker).split(/[・,、\s]+/).filter(Boolean); r.w1=p[0]||""; r.w2=p[1]||""; } }
-function joinW(r){ r.worker=[r.w1,r.w2].filter(Boolean).join("・"); }
-function carryW(i){ for(let j=i-1;j>=0;j--){ const r=state.rows[j]; splitW(r); if(r.w1||r.w2) return {w1:r.w1||"",w2:r.w2||""}; } const l=LS.get(APP+":lastW",{}); return {w1:l.w1||"",w2:l.w2||""}; }
-let wAdding="";
-function wOpts(v,carry){ const names=workerNames(); if(v&&!names.includes(v)) names.push(v);
-  return `<option value="">${carry?"（なし）":"選んでください / pilih"}</option>`+names.map(n=>`<option value="${esc(n)}">${esc(n)}</option>`).join("")+`<option value="__add">＋ 名前を追加 / tambah nama</option>`; }
-function renderWorkerSel(){ const r=state.rows[sel]; splitW(r); const pend=!r.wInit&&!r.w1&&!r.w2, c=pend?carryW(sel):{w1:r.w1||"",w2:r.w2||""};
-  ["w1","w2"].forEach(k=>{ const s=$(k+"Sel"); s.innerHTML=wOpts(c[k],pend); s.value=wAdding===k?"__add":(c[k]||""); s.disabled=VIEW; s.classList.toggle("pend",pend&&!!c[k]); });
-  $("wNew").hidden=!wAdding; $("wNote").textContent=pend&&(c.w1||c.w2)?"前の行と同じ名前です（入力を始めると自動で入ります） / Sama dengan sebelumnya":""; }
-["w1","w2"].forEach(k=>$(k+"Sel").addEventListener("change",()=>{ if(VIEW) return; const r=state.rows[sel], v=$(k+"Sel").value;
-  if(!r.wInit){ r.wInit=true; if(!r.w1&&!r.w2){ const c=carryW(sel); r.w1=c.w1; r.w2=c.w2; } }
-  if(v==="__add"){ wAdding=k; $("wNew").value=""; renderWorkerSel(); $("wNew").focus(); return; }
-  wAdding=""; r[k]=v; joinW(r); LS.set(APP+":lastW",{w1:r.w1,w2:r.w2}); touchRow(sel); renderWorkerSel(); refreshLight(); }));
-$("wNew").addEventListener("change",()=>{ if(VIEW||!wAdding) return; const v=$("wNew").value.trim(), r=state.rows[sel]; if(v){ rememberWorker(v); r[wAdding]=v; joinW(r); LS.set(APP+":lastW",{w1:r.w1,w2:r.w2}); touchRow(sel); } wAdding=""; renderWorkerSel(); refreshLight(); });
-function renderAll(){ renderHeader(); renderChips(); renderEntry(); renderTable(); renderEvents(); renderWorkers(); renderWaits(); }
-function refreshLight(){ renderChips(); renderTable(); updateMarks(); }
+function renderAll(){ renderHeader(); renderCharges(); renderRows(); renderTable(); renderSampling(); renderEvents(); renderWorkers();  renderNight(); }
+function refreshLight(){ if(typeof renderNight==="function") try{ renderNight(); }catch(e){}  renderCharges(); renderTable(); }
 function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2600); }
 function askConfirm(msg,yes,no){ return new Promise(res=>{ const d=$("dlgConfirm"); $("cfMsg").textContent=msg; $("cfYes").textContent=yes||"OK"; $("cfNo").textContent=no||"キャンセル";
   const done=v=>{ $("cfYes").onclick=$("cfNo").onclick=null; d.onclose=null; if(d.open) d.close(); res(v); };
   $("cfYes").onclick=()=>done(true); $("cfNo").onclick=()=>done(false); d.onclose=()=>done(false); d.showModal(); }); }
 function nowHM(){ const d=new Date(); return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"); }
-function rememberWorker(w){ if(w&&typeof Crew!=="undefined") Crew.add(w); if(w&&!workers.includes(w)){ workers.unshift(w); workers=workers.slice(0,40); LS.set(APP+":workers",workers); renderWorkers(); } }
-function selectRow(i){ sel=(i+NR())%NR(); renderChips(); renderEntry(); renderTable(); }
-// 行を移るときに、単重・駒数の入れ忘れを警告する
-async function leaveOk(){ if(VIEW) return true; const r=state.rows[sel]; if(!missOf(r).length) return true;
-  return !(await askConfirm(`⚠ No.${sel+1} に入力されていない項目があります。\n\n${missText(r)}\n\n単重・駒数がないと生産トン数が計算できません。`,"入力に戻る","このまま進む")); }
-async function goRow(i){ if(i===sel) return; if(await leaveOk()) selectRow(i); else document.querySelector('#items input[data-ik="unit"],#items input[data-ik="koma"]')?.focus(); }
-function touchRow(i){ if(VIEW) return; const r=state.rows[i];
-  if(!r.wInit&&rowHas(r)){ r.wInit=true; if(!r.w1&&!r.w2&&!r.worker){ const c=carryW(i); r.w1=c.w1; r.w2=c.w2; joinW(r); if(i===sel) setTimeout(renderWorkerSel,0); } }
-  r.u=Date.now(); if(ensureRows()) setTimeout(renderChips,0); save(); Sync.queue("row",i); }
-function touchHeader(){ if(VIEW) return; state.hu=Date.now(); save(); Sync.queue("header",""); }
-// ---- v26：湯待ち・砂待ち（ボタンを押して、何時から何時までかを選ぶ。日報の見出しと一緒に送る）----
-const WAIT_L={yu:"湯待ち",suna:"砂待ち"};
-function hm2m(v){ const m=/^(\d{1,2}):(\d{2})/.exec(v||""); return m?(+m[1])*60+(+m[2]):null; }
-function waitMin(x){ const a=hm2m(x.st), b=hm2m(x.en); if(a==null||b==null) return null; let m=b-a; if(m<0) m+=1440; return m; }
-function liveWaits(){ return (state.waits||[]).filter(x=>!x.del).sort((a,b)=>String(a.st).localeCompare(String(b.st))); }
-function waitSum(){ const t={yu:0,suna:0}; liveWaits().forEach(x=>{ const m=waitMin(x); if(m!=null&&t[x.r]!=null) t[x.r]+=m; }); return t; }
-let wCur=null;
-function renderWaits(){ const box=$("wList"); if(!box||!state) return; const L=liveWaits();
-  box.innerHTML=L.map(x=>{ const m=waitMin(x); return `<div class="witem ${x.en?"":"open"}" data-wid="${esc(x.id)}"><span class="wr ${x.r}">${WAIT_L[x.r]||""}</span><span class="wt">${esc(x.st||"")} 〜 ${esc(x.en||"")}</span>${x.memo?`<span class="small">${esc(x.memo)}</span>`:""}<span class="wm">${m!=null?m+" 分":"待ち中（タップで終了を入れる）"}</span></div>`; }).join("");
-  const t=waitSum(); $("wSum").textContent=L.length?`今日の合計：湯待ち ${t.yu} 分・砂待ち ${t.suna} 分（合計 ${t.yu+t.suna} 分）　※タップで時間を直せます`:"";
-  document.querySelectorAll(".wbtns button").forEach(b=>b.disabled=!!VIEW); }
-function wShow(){ const m=waitMin({st:$("wSt").value,en:$("wEn").value}); $("wMin").textContent=m!=null?`${m} 分`:($("wSt").value?"終了は、待ちが終わってから入れてもOK":""); }
-function openWait(x){ wCur=Object.assign({},x); $("wTitle").textContent=(x.r==="yu"?"🔥 ":"⏳ ")+WAIT_L[x.r]+(x.r==="yu"?" Menunggu logam cair":" Menunggu pasir"); $("wTitle").style.background=x.r==="yu"?"#c62828":"#8d6e63";
-  $("wSt").value=x.st||""; $("wEn").value=x.en||""; $("wMemo").value=x.memo||""; $("wDel").hidden=!(state.waits||[]).some(y=>y.id===x.id); wShow(); $("dlgWait").showModal(); }
-document.querySelectorAll(".wbtns button").forEach(b=>b.addEventListener("click",()=>{ if(VIEW) return;
-  const open=liveWaits().find(x=>x.r===b.dataset.w&&!x.en); if(open){ openWait(Object.assign({},open,{en:open.en||nowHM()})); return; }   // 待ち中のものがあれば終了を入れる
-  openWait({id:uid(),r:b.dataset.w,st:nowHM(),en:"",memo:""}); }));
-$("wList").addEventListener("click",e=>{ const it=e.target.closest("[data-wid]"); if(!it||VIEW) return; const x=(state.waits||[]).find(y=>y.id===it.dataset.wid); if(x) openWait(Object.assign({},x,{en:x.en||nowHM()})); });
-document.querySelectorAll("[data-wnow]").forEach(b=>b.addEventListener("click",e=>{ e.preventDefault(); $(b.dataset.wnow).value=nowHM(); wShow(); }));
-["wSt","wEn"].forEach(id=>$(id).addEventListener("input",wShow));
-$("wNo").onclick=()=>$("dlgWait").close();
-$("wOk").onclick=()=>{ const x=wCur; x.st=$("wSt").value; x.en=$("wEn").value; x.memo=$("wMemo").value.trim();
-  if(!x.st){ toast("開始の時刻を選んでください"); return; }
-  const L=state.waits=state.waits||[], k=L.findIndex(y=>y.id===x.id); if(k>=0) L[k]=x; else L.push(x);
-  touchHeader(); renderWaits(); $("dlgWait").close(); const m=waitMin(x); toast(`${WAIT_L[x.r]}を記録しました（${x.st}〜${x.en||"待ち中"}${m!=null?"・"+m+"分":""}）`); };
-$("wDel").onclick=async()=>{ const x=(state.waits||[]).find(y=>y.id===wCur.id); $("dlgWait").close(); if(!x) return;
-  if(await askConfirm(`この${WAIT_L[x.r]}（${x.st}〜${x.en||""}）を削除しますか?`)){ x.del=true; touchHeader(); renderWaits(); } };
+function rememberWorker(w){ if(w&&typeof Crew!=="undefined") Crew.add(w); if(w&&!workerNames().includes(w)){ workers.unshift(w); workers=workers.slice(0,40); LS.set(APP+":workers",workers); renderWorkers(); } }
+function selectCharge(i){ sel=(i+state.blocks.length)%state.blocks.length; renderCharges(); renderRows(); renderTable(); }
 
-// ---- 品番の入力と予測 ----
-let sugg={i:-1,list:[],act:0};
-function showSugg(i,q){ const box=document.querySelector(`.item[data-it="${i}"] .sugg`); if(!box) return; const list=suggest(q); sugg={i,list,act:0};
-  if(!list.length){ box.hidden=true; box.innerHTML=""; return; }
-  const n=normHin(q), hl=s=>{ const ns=normHin(s); const p=ns.indexOf(n); return p<0?esc(s):esc(s)+"" ; };
-  box.innerHTML=`<div class="hd">この品番ですか？ <span style="font-weight:normal">Apakah nomor ini?</span></div>`+list.map((m,x)=>{ const g=mGroup(m).slice(1);
-    return `<button type="button" data-pick="${x}" class="${x===0?"act":""}"><b>${esc(m.hin)}</b>　${esc(m.name||"")}　<span class="small">駒数 ${esc(m.koma??"")}</span>${g.length?`<span class="grp">同じ金型：${g.map(x=>esc(x.hin)).join("・")}</span>`:""}</button>`; }).join("");
-  box.hidden=false; fitSugg(box); }
-// 候補の一覧を、キーボードの上の見えている場所いっぱいに広げる（せまいときは入力欄を上に寄せる）
-function fitSugg(box){ const inp=box.parentElement.querySelector("input"); if(!inp) return; const vv=window.visualViewport;
-  const H=vv?vv.height+vv.offsetTop:window.innerHeight, st=$("stickTop"), hd=document.querySelector("header.top");
-  const topLimit=Math.max(st?st.getBoundingClientRect().bottom:0, hd&&getComputedStyle(hd).position==="sticky"?hd.getBoundingClientRect().bottom:0, vv?vv.offsetTop:0)+8;
-  let r=inp.getBoundingClientRect(), room=H-r.bottom-12;
-  if(room<300&&r.top>topLimit+4){ window.scrollBy(0,r.top-topLimit); r=inp.getBoundingClientRect(); room=H-r.bottom-12; }
-  box.style.maxHeight=Math.max(200,room)+"px"; }
-if(window.visualViewport) window.visualViewport.addEventListener("resize",()=>{ const b=document.querySelector(".sugg:not([hidden])"); if(b) fitSugg(b); });
-function hideSugg(){ document.querySelectorAll(".sugg").forEach(b=>{ b.hidden=true; b.innerHTML=""; }); sugg={i:-1,list:[],act:0}; }
-function pickMaster(i,m){ const r=state.rows[sel];
-  if(i===0){ const g=mGroup(m); r.items=g.map(itemFrom); r.mold=m.mold||"";
-    const c=condOf(m); CONDK.forEach(k=>{ r[k]=c[k]||""; }); r.sq=c.sq||"高"; r.fut=futOf(m);
-    if(g.length>1) toast(`同じ金型の品番も入れました：${g.slice(1).map(x=>x.hin).join("・")}`); }
-  else { r.items[i]=itemFrom(m); }
-  hideSugg(); touchRow(sel); renderEntry(); refreshLight();
-  if(m.check) toast("⚠ 確認ポイント："+m.check); }
-function tryAutoConfirm(i){ const r=state.rows[sel], it=r.items[i]; if(!it||it.ok||it.test||!it.hin) return; const m=mFind(it.hin); if(m) pickMaster(i,m); }
-$("items").addEventListener("input",e=>{ if(VIEW) return; const box=e.target.closest(".item"), k=e.target.dataset.ik; if(!box||!k) return; const i=+box.dataset.it, r=state.rows[sel], it=r.items[i];
-  it[k]=k==="hin"?e.target.value.toUpperCase():e.target.value.trim();
-  if(k==="unit"||k==="koma") e.target.closest(".f").classList.toggle("need",num(e.target.value)==null&&k==="unit");
-  if(k==="kowa"){ it.kowa=e.target.value.replace(/[^\d]/g,""); if(e.target.value!==it.kowa) e.target.value=it.kowa; e.target.closest(".f").classList.toggle("on",!!kowaOf(it)); }
-  if(k==="hin"){ if(it.ok){ ["mat","add","unit","check","tana"].forEach(x=>it[x]=""); } it.ok=false; const st=box.querySelector(".hinst"); const [c,t]=itemStatus(it); st.className="hinst "+c; st.textContent=t; showSugg(i,it.hin); }
-  touchRow(sel); renderChips(); renderTable(); updateMarks(); });
-// v25：中子破損の ＋ − ボタン（数字をタップすると直接入力）
-$("items").addEventListener("click",e=>{ const b=e.target.closest("[data-kstep]"); if(!b||VIEW) return; e.preventDefault();
-  const r=state.rows[sel], it=r.items[+b.dataset.ki]; if(!it) return; const v=Math.max(0,kowaOf(it)+(+b.dataset.kstep));
-  it.kowa=v?String(v):""; const box=b.closest(".kowa"), inp=box.querySelector("input"); inp.value=it.kowa; box.classList.toggle("on",!!v);
-  touchRow(sel); renderChips(); renderTable(); updateMarks(); });
-$("items").addEventListener("focusin",e=>{ if(e.target.dataset.ik==="kowa"&&!VIEW) setTimeout(()=>{ try{ e.target.select(); }catch(x){} },0); });
-$("items").addEventListener("keydown",e=>{ if(e.target.dataset.ik!=="hin") return; const i=+e.target.closest(".item").dataset.it;
-  if(sugg.i===i&&sugg.list.length&&(e.key==="ArrowDown"||e.key==="ArrowUp")){ e.preventDefault(); sugg.act=(sugg.act+(e.key==="ArrowDown"?1:-1)+sugg.list.length)%sugg.list.length;
-    document.querySelectorAll(`.item[data-it="${i}"] .sugg button`).forEach((b,x)=>b.classList.toggle("act",x===sugg.act)); return; }
-  if(e.key==="Enter"){ e.preventDefault(); if(sugg.i===i&&sugg.list.length){ const exact=mFind(e.target.value); pickMaster(i, exact||sugg.list[sugg.act]); } else tryAutoConfirm(i); }
-  if(e.key==="Escape") hideSugg(); });
-// 候補はタップしたときだけ決定（指で上下にスクロールしたときは決定しない）
-let tapP=null;
-$("items").addEventListener("pointerdown",e=>{ const b=e.target.closest("[data-pick]"); if(!b) return;
-  if(e.pointerType==="mouse"){ e.preventDefault(); const i=+b.closest(".item").dataset.it; pickMaster(i,sugg.list[+b.dataset.pick]); return; }
-  tapP={b,x:e.clientX,y:e.clientY,moved:false,st:b.closest(".sugg").scrollTop}; });
-$("items").addEventListener("pointermove",e=>{ if(tapP&&(Math.abs(e.clientX-tapP.x)>8||Math.abs(e.clientY-tapP.y)>8)) tapP.moved=true; });
-$("items").addEventListener("pointercancel",()=>{ tapP=null; });
-$("items").addEventListener("pointerup",e=>{ const t=tapP; tapP=null; if(!t||t.moved) return; const box=t.b.closest(".sugg"); if(!box||box.hidden||Math.abs(box.scrollTop-t.st)>4) return;
-  const b=e.target.closest("[data-pick]"); if(b!==t.b) return; e.preventDefault(); const i=+b.closest(".item").dataset.it; pickMaster(i,sugg.list[+b.dataset.pick]); });
-$("items").addEventListener("focusout",e=>{ if(e.target.dataset.ik!=="hin") return; const i=+e.target.closest(".item").dataset.it; setTimeout(()=>{ if(tapP) return; if(document.activeElement&&document.activeElement.closest&&document.activeElement.closest(".sugg")) return; hideSugg(); tryAutoConfirm(i); },120); });
-$("items").addEventListener("focusin",e=>{ if(e.target.dataset.ik!=="hin"||VIEW) return; const i=+e.target.closest(".item").dataset.it; const it=state.rows[sel].items[i]; if(it&&!it.ok&&it.hin) showSugg(i,it.hin); });
-$("items").addEventListener("click",e=>{ const b=e.target.closest("[data-itest]"); if(!b||VIEW) return; e.preventDefault(); const it=state.rows[sel].items[+b.dataset.itest];
-  it.test=!it.test; if(it.test){ it.ok=false; ["mat","add","unit","check","tana"].forEach(x=>it[x]=""); toast("テスト品番にしました（単重なし・トン数に含めません）"); }
-  hideSugg(); touchRow(sel); renderEntry(); refreshLight(); });
-$("items").addEventListener("click",async e=>{ const d=e.target.closest("[data-idel]"); if(!d||VIEW) return; const r=state.rows[sel]; r.items.splice(+d.dataset.idel,1); touchRow(sel); renderEntry(); refreshLight(); });
-$("btnAddItem").onclick=()=>{ if(VIEW) return; const r=state.rows[sel]; if(r.items.length>=MAXIT) return; r.items.push(blankItem()); touchRow(sel); renderItems(); const ins=document.querySelectorAll('#items input[data-ik="hin"]'); ins[ins.length-1].focus(); };
+// ---- 変更の記録 ----
+function touchBlock(c){ if(VIEW) return; const b=state.blocks[c]; b.rows.forEach(r=>applyAuto(b,r)); b.u=Date.now(); const grew=ensureAll(); save(); Sync.queue("block",c); if(grew) setTimeout(()=>{ renderCharges(); if(c===sel) renderRows(); },0); }
+function touchSampling(){ if(VIEW) return; state.sampling.u=Date.now(); const grew=ensureAll(); save(); Sync.queue("sampling",""); if(grew) setTimeout(renderSampling,0); }
+function rowStart(c,i){ const r=state.blocks[c].rows[i]; if(!r.time) r.time=nowHM(); if(!r.worker){ const w=lastWorker(c,i); if(w) r.worker=w; } }
+
+// ---- 数字キー ----
+let pad={cb:null,cur:"",dot:true};
+function openPad(title,sub,val,dot,cb){ if(VIEW) return; pad={cb,cur:String(val||""),dot}; $("padTitle").textContent=title; $("padSpec").textContent=sub||""; $("padDot").disabled=!dot; $("padDisp").textContent=pad.cur||"0"; $("dlgPad").showModal(); }
+document.querySelector("#dlgPad .keys").addEventListener("click",e=>{ const b=e.target.closest("[data-pk]"); if(!b||b.disabled) return; const k=b.dataset.pk;
+  if(/^[0-9]+$/.test(k)){ if(pad.cur.length<8) pad.cur=(pad.cur==="0"?"":pad.cur)+k; }
+  else if(k==="."){ if(!pad.cur.includes(".")) pad.cur=(pad.cur||"0")+"."; }
+  else if(k==="bs") pad.cur=pad.cur.slice(0,-1);
+  else if(k==="clr") pad.cur="";
+  else if(k==="cancel"){ $("dlgPad").close(); return; }
+  else if(k==="ok"){ const v=pad.cur.replace(/\.$/,""); $("dlgPad").close(); if(pad.cb) pad.cb(v); return; }
+  $("padDisp").textContent=pad.cur||"0"; });
+$("dlgPad").addEventListener("cancel",e=>{ e.preventDefault(); $("dlgPad").close(); });
+document.addEventListener("keydown",e=>{ if(!$("dlgPad").open) return; const map={"Enter":"ok","Backspace":"bs","Escape":"cancel"}; const k=map[e.key]||(/^[0-9.]$/.test(e.key)?e.key:null); if(!k) return; e.preventDefault(); const b=document.querySelector(`#dlgPad [data-pk="${k}"]`); if(b) b.click(); });
+const PADL={temp:"受湯温度 (℃)",retemp:"再測定 (℃)",rrtemp:"再々測定 (℃)",ret:"リターン回数"};
 
 // ---- 入力イベント ----
-$("chips").addEventListener("click",e=>{ const b=e.target.closest(".chip"); if(b) goRow(+b.dataset.i); });
-$("tbody").addEventListener("click",e=>{ const tr=e.target.closest("tr[data-i]"); if(tr){ goRow(+tr.dataset.i); $("entryCard").scrollIntoView({behavior:"smooth",block:"start"}); } });
-document.querySelectorAll("#entryCard input[data-k]").forEach(inp=>{
-  inp.addEventListener("input",()=>{ if(VIEW||inp.readOnly) return; const r=state.rows[sel], k=inp.dataset.k; r[k]=inp.value.trim(); touchRow(sel); refreshLight();
-    if(k==="total") document.querySelectorAll('#items input[data-ik="tot"]').forEach(x=>x.placeholder="同じ: "+(r.total||"－")); });
+$("charges").addEventListener("click",e=>{ const b=e.target.closest(".chip"); if(b) selectCharge(+b.dataset.i); });
+$("tbody").addEventListener("click",e=>{ const tr=e.target.closest("tr[data-c]"); if(tr){ selectCharge(+tr.dataset.c); $("entryCard").scrollIntoView({behavior:"smooth",block:"start"}); } });
+["mangan","ryuka"].forEach(k=>$("c_"+k).addEventListener("click",()=>{ const b=state.blocks[sel]; openPad(k==="mangan"?"マンガン (kg)":"硫化鉄 (kg)",`チャージ ${sel+1}`,b[k],true,v=>{ b[k]=v; $("c_"+k).value=v; touchBlock(sel); refreshLight(); }); }));
+$("btnTp").onclick=()=>{ if(VIEW) return; const b=state.blocks[sel]; b.tp=!b.tp; touchBlock(sel); renderRows(); refreshLight(); };
+$("matBtns").addEventListener("click",e=>{ const x=e.target.closest("[data-mat]"); if(!x||VIEW) return; const b=state.blocks[sel]; if(b.mat===x.dataset.mat&&b.matM){ b.matM=false; b.mat=""; } else { b.mat=x.dataset.mat; b.matM=true; } touchBlock(sel); renderRows(); refreshLight(); });
+$("rows").addEventListener("click",e=>{
+  const row=e.target.closest(".mrow"); if(!row||VIEW) return; const i=+row.dataset.row, b=state.blocks[sel], r=b.rows[i];
+  if(e.target.closest("[data-now]")){ r.time=nowHM(); rowStart(sel,i); touchBlock(sel); renderRows(); refreshLight(); Link.load(true,true); return; }
+  if(e.target.closest("[data-tclr]")){ r.time=""; touchBlock(sel); renderRows(); refreshLight(); return; }
+  const pin=e.target.closest("[data-pad]"); if(pin){ const k=pin.dataset.k, sp=parseSpec(r.spec);
+    openPad(`チャージ${sel+1} No.${i+1}　${PADL[k]}`, k==="ret"?"":(sp?`規格 ${specLabel(sp)}　${r.hin}`:"規格なし（判定は手で）"), r[k], k!=="ret", v=>{ r[k]=v; if(v!=="") rowStart(sel,i); touchBlock(sel); renderRows(); refreshLight(); if(v!==""&&k!=="ret") Link.load(true,true); }); return; }
+  if(e.target.closest("[data-prod]")){ openProd(i); return; }
+  const jb=e.target.closest("[data-j]"); if(jb){ const f=jb.dataset.j, mf={judge:"jm",rejudge:"rjm",rrjudge:"rrjm"}[f], sp=parseSpec(r.spec);
+    if(sp){ // 自動 → 手で○ → 手で× → 自動
+      if(!r[mf]){ r[mf]=true; r[f]=r[f]==="○"?"×":"○"; } else if(r[f]==="○"){ r[f]="×"; } else { r[mf]=false; } }
+    else { r[mf]=true; r[f]=r[f]==="○"?"×":(r[f]==="×"?"":"○"); if(!r[f]) r[mf]=false; }
+    if(r[f]) rowStart(sel,i); touchBlock(sel); renderRows(); refreshLight(); }
 });
-// 注湯温度・モールド厚：マスターの値でも、ダブルタップ（ダブルクリック）で変更できる
-const UNLOCKABLE=["temp","mt"];
-async function unlockCond(k){ if(VIEW) return; const r=state.rows[sel]; if(!(r.items[0]&&r.items[0].ok)||(r.condEdit||{})[k]) return;
-  const lbl=k==="temp"?"注湯温度":"モールド厚";
-  if(!await askConfirm(`No.${sel+1} の${lbl}を変更しますか？\n（マスターの値：${r[k]||"－"}）`,"変更する","やめる")) return;
-  r.condEdit=Object.assign({},r.condEdit,{[k]:true}); touchRow(sel); updateMarks(); const inp=document.querySelector(`#entryCard input[data-k="${k}"]`); inp.focus(); inp.select(); }
-UNLOCKABLE.forEach(k=>{ const inp=document.querySelector(`#entryCard input[data-k="${k}"]`); let last=0;
-  inp.addEventListener("dblclick",e=>{ e.preventDefault(); unlockCond(k); });
-  inp.addEventListener("pointerup",e=>{ if(e.pointerType==="mouse") return; const t=Date.now(); if(t-last<400){ last=0; e.preventDefault(); unlockCond(k); } else last=t; }); });
-document.querySelectorAll("[data-now]").forEach(b=>b.addEventListener("click",e=>{ e.preventDefault(); if(VIEW) return; const k=b.dataset.now; state.rows[sel][k]=nowHM(); document.querySelector(`#entryCard input[data-k="${k}"]`).value=state.rows[sel][k]; touchRow(sel); refreshLight(); }));
-document.querySelectorAll("[data-chk]").forEach(g=>g.addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||VIEW) return; const r=state.rows[sel], k=g.dataset.chk; r[k]= r[k]===b.dataset.v ? "" : b.dataset.v; touchRow(sel); refreshLight(); }));
-$("btnAllOk").onclick=()=>{ if(VIEW) return; const r=state.rows[sel]; CHKK.forEach(k=>r[k]="OK"); touchRow(sel); refreshLight(); };
-document.querySelector('[data-sel="fut"]').addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||VIEW) return; const r=state.rows[sel]; r.fut=b.dataset.v; touchRow(sel); refreshLight(); });
-document.querySelector('[data-sel="sq"]').addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||VIEW) return; const r=state.rows[sel]; r.sq= r.sq===b.dataset.v ? "" : b.dataset.v; touchRow(sel); refreshLight(); });
-$("btnClearRow").onclick=async()=>{ if(VIEW) return; if(await askConfirm(`No.${sel+1} の入力内容をクリアしますか?`)){ const u=Date.now(); state.rows[sel]=blankRow(); state.rows[sel].u=u; save(); Sync.queue("row",sel); renderAll(); } };
-$("btnNext").onclick=async()=>{ if(!await leaveOk()) return; selectRow(sel+1); window.scrollTo({top:$("entryCard").offsetTop-70,behavior:"smooth"}); };
-$("btnPrev").onclick=()=>goRow((sel-1+NR())%NR());
-$("confirmBy").addEventListener("input",e=>{ if(VIEW) return; state.confirmBy=e.target.value.trim(); touchHeader(); });
-$("tensile").addEventListener("input",e=>{ if(VIEW) return; state.tensile=e.target.value; touchHeader(); });
-$("counter").addEventListener("input",e=>{ if(VIEW) return; state.counter=e.target.value.trim(); touchHeader(); renderTotals(); });
-document.querySelector('[data-hnow="tensile"]').onclick=e=>{ e.preventDefault(); if(VIEW) return; state.tensile=nowHM(); $("tensile").value=state.tensile; touchHeader(); };
-$("btnAddEv").onclick=()=>{ if(VIEW) return; const ev={id:uid(),u:Date.now(),start:nowHM(),end:"",person:"",content:"",action:""}; state.events.push(ev); save(); Sync.queue("event",ev.id); renderEvents(); };
+$("rows").addEventListener("input",e=>{ const row=e.target.closest(".mrow"); if(!row||VIEW||e.target.dataset.k!=="time") return; const i=+row.dataset.row, r=state.blocks[sel].rows[i]; r.time=e.target.value; if(r.time) rowStart(sel,i); touchBlock(sel); refreshRowsInPlace(); refreshLight(); });
+// 時間を手で入れ終わったら、造型日報を読み直して、その時間に造型していた製品で判定する
+$("rows").addEventListener("focusout",e=>{ if(e.target.dataset.k!=="time"||VIEW) return; Link.load(true,true).then(()=>{ if(document.activeElement&&document.activeElement.dataset&&document.activeElement.dataset.k==="time") refreshRowsInPlace(); else renderRows(); }); });
+$("rows").addEventListener("change",e=>{ const row=e.target.closest(".mrow"); if(!row||VIEW) return; const i=+row.dataset.row, r=state.blocks[sel].rows[i];
+  if(e.target.dataset.k==="time"){ r.time=e.target.value; touchBlock(sel); refreshRowsInPlace(); refreshLight(); return; }
+  if(e.target.dataset.k!=="worker") return; let v=e.target.value;
+  if(v==="__add"){ v=(prompt("作業者の名前を入れてください / Tulis nama")||"").trim(); if(!v){ renderRows(); return; } rememberWorker(v); }
+  r.worker=v; if(v) LS.set(APP+":lastW",v); if(v&&!r.time) r.time=nowHM();
+  // 名前を変えたら、この行より後の同じチャージの入力済みの行はそのまま、空の行に引き継ぐ
+  touchBlock(sel); renderRows(); refreshLight(); });
+// 製品の選びなおし
+let prodRow=-1;
+function openProd(i){ prodRow=i; const r=state.blocks[sel].rows[i], L=Link.list();
+  $("prodList").innerHTML=(L.length?L.map((p,x)=>`<button data-px="${x}" class="${p.hin===r.hin?"on":""}"><b>${esc(p.hin)}</b>　${esc(p.name||"")}<br><span class="small">${esc(p.st)}〜 / 規格 ${esc(p.temp||"なし")} / ${esc(p.mat||"")}</span></button>`).join(""):'<div class="small" style="padding:10px">造型日報に今日の製品がありません（設定の「造型日報と連動」を確認してください）</div>');
+  $("prodNote").textContent=r.pm?"いまは手で選んだ製品です":"いまは造型日報の時間から自動で選んでいます"; $("dlgProd").showModal(); }
+$("prodList").addEventListener("click",e=>{ const b=e.target.closest("[data-px]"); if(!b) return; const p=Link.list()[+b.dataset.px], bl=state.blocks[sel], r=bl.rows[prodRow];
+  r.pm=true; r.hin=p.hin; r.spec=p.temp; r.mat=p.mat; r.jm=r.rjm=r.rrjm=false; $("dlgProd").close(); touchBlock(sel); renderRows(); refreshLight(); });
+$("btnProdAuto").onclick=()=>{ const bl=state.blocks[sel], r=bl.rows[prodRow]; r.pm=false; r.hin=r.spec=r.mat=""; r.jm=r.rjm=r.rrjm=false; $("dlgProd").close(); touchBlock(sel); renderRows(); refreshLight(); };
+$("btnProdClose").onclick=()=>$("dlgProd").close();
+$("btnClearCharge").onclick=async()=>{ if(VIEW) return; if(await askConfirm("チャージ"+(sel+1)+" の入力内容をクリアしますか?")){ state.blocks[sel]=blankBlock(); touchBlock(sel); renderAll(); } };
+$("btnNextC").onclick=()=>{ selectCharge(sel+1); window.scrollTo({top:$("entryCard").offsetTop-70,behavior:"smooth"}); };
+$("btnPrevC").onclick=()=>selectCharge(sel-1);
+$("sampling").addEventListener("click",e=>{ const row=e.target.closest(".srow"); if(!row||VIEW) return; const s=state.sampling.rows[+row.dataset.s];
+  if(e.target.closest("[data-snow]")){ s.time=nowHM(); touchSampling(); renderSampling(); return; }
+  const m=e.target.closest("[data-sm]"); if(m){ const k=m.dataset.sm; s[k]=!s[k]; if(s[k]){ (k==="fc250")?s.fc200=false:s.fc250=false; if(!s.time) s.time=nowHM(); } if(s.fc200) s.chill=""; touchSampling(); renderSampling(); return; }
+  const p=e.target.closest("[data-pad]"); if(p) openPad("チル深さ (mm)",`採取 No.${+row.dataset.s+1}`,s.chill,true,v=>{ s.chill=v; s.fc250=!!v; s.fc200=false; if(v&&!s.time) s.time=nowHM(); touchSampling(); renderSampling(); }); });
+$("sampling").addEventListener("input",e=>{ const row=e.target.closest(".srow"); if(!row||VIEW||e.target.dataset.sk!=="time") return; state.sampling.rows[+row.dataset.s].time=e.target.value; touchSampling(); });
+$("recordCheck").addEventListener("input",e=>{ if(VIEW) return; state.recordCheck=e.target.value.trim(); state.hu=Date.now(); save(); Sync.queue("header",""); });
+$("btnAddEv").onclick=()=>{ if(VIEW) return; const ev={id:uid(),u:Date.now(),start:nowHM(),end:"",person:lastWorker(state.blocks.length-1,state.blocks[state.blocks.length-1].rows.length)||"",content:"",action:""}; state.events.push(ev); save(); Sync.queue("event",ev.id); renderEvents(); };
 $("events").addEventListener("input",e=>{ if(VIEW) return; const box=e.target.closest(".ev"), k=e.target.dataset.ek; if(box&&k){ const ev=state.events[+box.dataset.e]; ev[k]=e.target.value; ev.u=Date.now(); save(); Sync.queue("event",ev.id); } });
 $("events").addEventListener("click",async e=>{ const d=e.target.dataset.del; if(d!=null&&!VIEW&&await askConfirm("この記録を削除しますか?")){ const ev=state.events[+d]; ev.del=true; ev.u=Date.now(); save(); Sync.queue("event",ev.id); renderEvents(); } });
-function switchDay(){ const d=$("date").value, q=$("equip").value; if(!d) return; load(d,q); sel=0; renderAll(); Sync.pull(); }
+async function switchDay(){ const d=$("date").value, q=$("equip").value; if(!d) return; if(!(await canLeave(d))){ $("date").value=state.date; $("equip").value=state.equip; return; } load(d,q); sel=firstOpen(); renderAll(); Sync.pull(); Link.load(true); }
+function firstOpen(){ let i=state.blocks.length-1; while(i>0&&!blockHas(state.blocks[i-1])) i--; return Math.max(0,Math.min(i,state.blocks.length-1)); }
 $("date").addEventListener("change",switchDay);
 $("equip").addEventListener("change",switchDay);
-$("btnSettings").onclick=()=>{ renderMasterStat(); updateDirInfo(); const c=Sync.getCfg(); $("cfgUrl").value=c.syncUrl||""; $("cfgToken").value=c.token||""; $("cfgInfo").textContent=""; $("dlgSettings").showModal(); };
+
+// ---- 設定 ----
+$("btnSettings").onclick=()=>{ updateDirInfo(); const c=Sync.getCfg(); $("cfgUrl").value=c.syncUrl||""; $("cfgToken").value=c.token||""; $("cfgInfo").textContent=""; const z=Link.cfg(); $("zkUrl").value=z.url||""; $("zkToken").value=z.token||""; $("zkInfo").textContent=""; $("dlgSettings").showModal(); };
 $("btnSettingsClose").onclick=()=>$("dlgSettings").close();
-$("btnMasterReload").onclick=async()=>{ $("masterInfo").textContent="読み込み中…"; const r=await Sync.loadMaster(true); renderMasterStat(); toast(r); };
 
 // ---- 日報一覧 ----
 const WD="日月火水木金土";
@@ -811,11 +699,12 @@ function fmtTime(u){ if(!u) return ""; const x=new Date(u); return `${x.getMonth
 let listYM=null;
 function localDays(){
   return LS.keys().filter(k=>k.startsWith(APP+":day:")).map(k=>{ const [date,equip]=k.slice(APP.length+5).split("|"); const st=normalize(LS.get(k,{date,equip}));
-    return {date,equip,filled:st.rows.filter(rowHas).length,ng:st.rows.filter(r=>ngList(r).length).length,total:st.rows.reduce((a,r)=>a+(num(r.total)||0),0),events:st.events.filter(e=>!e.del).length,u:Date.parse(st.updated||"")||0}; });
+    let n=0,x=0; st.blocks.forEach(b=>{ const s=blockStat(b); n+=s.n; x+=s.x; });
+    return {date,equip,filled:n,ng:x,events:st.events.filter(e=>!e.del).length,u:Date.parse(st.updated||"")||0}; });
 }
 function dayItem(it){
   const today=it.date===todayStr(), cur=it.date===state.date&&it.equip===state.equip;
-  const badges=[`<span class="badge ${it.filled?"b-ok":"b-g"}">${it.filled}行</span>`, it.total?`<span class="badge b-g">造型 ${it.total}枠</span>`:"", it.ng?`<span class="badge b-ng">NG ${it.ng}</span>`:"", it.events?`<span class="badge b-g">異常/変化点 ${it.events}</span>`:""].join("");
+  const badges=[`<span class="badge ${it.filled?"b-ok":"b-g"}">${it.filled}件</span>`, it.ng?`<span class="badge b-ng">× ${it.ng}</span>`:"", it.events?`<span class="badge b-g">異常/変化点 ${it.events}</span>`:""].join("");
   return `<div class="list-item open" data-d="${esc(it.date)}" data-q="${esc(it.equip)}" style="${cur?"background:#e3eeff;":""}">
     <div><b style="font-size:17px">${fmtDay(it.date)}</b> <span class="small">${esc(it.equip)}</span>${today?' <span class="badge b-w">今日</span>':""}<br>${badges}</div>
     <div class="small" style="text-align:right">${it.u?"更新 "+fmtTime(it.u):""}<br><span style="color:var(--pri);font-weight:bold">開く ›</span></div></div>`;
@@ -833,20 +722,20 @@ async function renderList(){
   $("mSel").innerHTML=[...months].sort().reverse().map(m=>`<option value="${m}" ${m===ym?"selected":""}>${m.replace("-","年")}月</option>`).join("");
   items.sort((a,b)=> a.date===b.date ? a.equip.localeCompare(b.equip) : (a.date<b.date?1:-1));
   const ng=items.reduce((a,b)=>a+(b.ng||0),0);
-  $("listSum").textContent=(note?note+" / ":"")+`${items.length}件の日報`+(ng?` ・ NG 合計 ${ng}件`:"");
+  $("listSum").textContent=(note?note+" / ":"")+`${items.length}件の日報`+(ng?` ・ × 合計 ${ng}件`:"");
   box.innerHTML=items.length?items.map(dayItem).join(""):'<div class="small" style="padding:12px">この月の日報はありません</div>';
 }
 $("btnList").onclick=()=>{ listYM=ymOf(state.date||todayStr()); $("dlgList").showModal(); renderList(); };
 $("mPrev").onclick=()=>{ listYM=ymShift(listYM,-1); renderList(); };
 $("mNext").onclick=()=>{ listYM=ymShift(listYM,1); renderList(); };
 $("mSel").onchange=e=>{ listYM=e.target.value; renderList(); };
-$("btnNewDay").onclick=()=>{ $("dlgList").close(); load(todayStr(),defaultEquip()); sel=0; renderAll(); Sync.pull(); };
-$("savedList").addEventListener("click",e=>{ const it=e.target.closest(".list-item.open"); if(!it) return;
-  $("dlgList").close(); load(it.dataset.d,it.dataset.q); sel=0; renderAll(); Sync.pull(); toast(fmtDay(it.dataset.d)+" "+it.dataset.q+" を開きました"); window.scrollTo({top:0,behavior:"smooth"}); });
+$("btnNewDay").onclick=async()=>{ $("dlgList").close(); if(!(await canLeave(todayStr()))) return; load(todayStr(),defaultEquip()); sel=firstOpen(); renderAll(); Sync.pull(); Link.load(true); };
+$("savedList").addEventListener("click",async e=>{ const it=e.target.closest(".list-item.open"); if(!it) return;
+  $("dlgList").close(); if(!(await canLeave(it.dataset.d))) return; load(it.dataset.d,it.dataset.q); sel=firstOpen(); renderAll(); Sync.pull(); Link.load(true); toast(fmtDay(it.dataset.d)+" "+it.dataset.q+" を開きました"); window.scrollTo({top:0,behavior:"smooth"}); });
 
 // ---- folder handle (File System Access API) ----
 let dirHandle=null;
-function idb(){ return new Promise((res,rej)=>{ const r=indexedDB.open("zokei-nippo",1); r.onupgradeneeded=()=>r.result.createObjectStore("kv"); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+function idb(){ return new Promise((res,rej)=>{ const r=indexedDB.open("chuto-nippo",1); r.onupgradeneeded=()=>r.result.createObjectStore("kv"); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
 async function idbGet(k){ try{ const db=await idb(); return await new Promise(res=>{ const q=db.transaction("kv").objectStore("kv").get(k); q.onsuccess=()=>res(q.result); q.onerror=()=>res(null); }); }catch(e){ return null; } }
 async function idbSet(k,v){ try{ const db=await idb(); await new Promise(res=>{ const t=db.transaction("kv","readwrite"); t.objectStore("kv").put(v,k); t.oncomplete=res; t.onerror=res; }); }catch(e){} }
 function updateDirInfo(){ $("dirInfo").textContent = dirHandle ? "保存先: "+dirHandle.name+" フォルダ" : "未設定 (ブラウザの「ダウンロード」フォルダに保存されます)"; $("btnPickDir").disabled=!window.showDirectoryPicker; }
@@ -899,7 +788,7 @@ Sheet.prototype.xml=function(){
   if(this.autoFilter) x+=`<autoFilter ref="${this.autoFilter}"/>`;
   if(this.merges.length) x+=`<mergeCells count="${this.merges.length}">`+this.merges.map(m=>`<mergeCell ref="${m}"/>`).join("")+'</mergeCells>';
   x+='<pageMargins left="0.3" right="0.3" top="0.4" bottom="0.4" header="0.2" footer="0.2"/>';
-  if(this.landscape) x+='<pageSetup paperSize="9" orientation="landscape" fitToWidth="1" fitToHeight="0"/>';
+  if(this.landscape) x+='<pageSetup paperSize="9" orientation="portrait" fitToWidth="1" fitToHeight="0"/>';
   return x+'</worksheet>'; };
 // zip (store)
 const CRC=(()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=c&1?0xEDB88320^(c>>>1):c>>>1; t[n]=c>>>0; } return t; })();
@@ -926,91 +815,52 @@ function workbook(sheets){
 
 
 // ---- Excel ----
-const DATA_HEAD=["生産日","号機","No","品番","駒数","品名","マスター登録","材質","添加材","単重(kg)","駒部","方案部","定盤部","開始","完了","注湯温度(規格)","スクイズ圧力","スクイズ時間","吹上圧力","吹上時間","モールド厚","造型総数","生産個数","生産重量(kg)","未注湯","作業者","確認ポイント","引張棒採取","記録確認","中子破損(個)"];
-// CSV（必要な項目だけ）：生産日・号機・品番・品名・生産個数
-// ---- 生産管理システム用：品番コード・社員番号（パソコンが毎朝「生産管理システム_対応表.xlsx」から送る）----
-var SysM=(function(){ let d=null, idx=null;
-  const norm=h=>String(h||"").normalize("NFKC").toUpperCase().replace(/[\s　]/g,"").replace(/^RD0*(\d)/,"RD$1");
-  const nn=s=>String(s||"").normalize("NFKC").replace(/[\s　]/g,"");
-  function set(x){ d=x; idx={}; Object.entries((d&&d.m)||{}).forEach(([c,v])=>{ const k=norm(v[0]); (idx[k]=idx[k]||[]).push(c); }); }
-  { const c=LS.get(APP+":sysm",null); if(c) set(c); }
-  // 検査日報のスプレッドシートに置いてある（造型日報は検査日報の config.js から場所を知る）
-  async function cfg(){ if(APP==="kensa") return Sync.getCfg(); try{ const t=await (await fetch("/kensa-nippo/config.js",{cache:"no-store"})).text(); const w={}; new Function("window",t)(w); const c=w.SUNA_CONFIG||{}; return c.syncUrl?c:null; }catch(e){ return null; } }
-  async function load(){ try{ const c=await cfg(); if(!c||!c.syncUrl) return; const u=c.syncUrl+(c.syncUrl.includes("?")?"&":"?")+new URLSearchParams({action:"load",token:c.token||"",date:"_global",equip:"sysm"});
-      const j=await (await fetch(u,{redirect:"follow"})).json(); const L=(j.items||[]).filter(x=>x.type==="sysm"&&x.raw), b=L.find(x=>x.ref==="sysm"); if(!b) return;
-      const raw=Object.assign({},b.raw,{m:{}}); L.forEach(x=>{ if(x.ref!=="sysm"&&x.raw.at===b.raw.at) Object.assign(raw.m,x.raw.m||{}); }); set(raw); LS.set(APP+":sysm",raw); }catch(e){} }
-  // 品番 → {code, hin(生産管理の品番), name, cust}。対応表 → 0のちがいを無視した一致（1つだけのとき）
-  function hin(h){ if(!d||!h) return null; const map=d.map||{}, has=x=>Object.prototype.hasOwnProperty.call(map,x); let code;
-    if(has(h)) code=map[h];   // 対応表にある（NG のときは空 → 品番コードなし）
-    else { const k=norm(h); const k2=Object.keys(map).find(x=>norm(x)===k); if(k2) code=map[k2]; else { const c=idx[k]; if(c&&c.length===1) code=c[0]; } }
-    const m=code&&(d.m||{})[code]; return m?{code,hin:m[0],name:m[1],cust:m[2]}:(code?{code,hin:h,name:"",cust:""}:null); }
-  // 名前 → 社員番号（同じ名前 → 空白を除いて同じ → 名前の頭が1人だけ一致）
-  function emp(n){ if(!d||!n) return ""; const E=d.emp||{}; if(E[n]!=null) return String(E[n]); const k=nn(n); let hit=Object.keys(E).filter(x=>nn(x)===k);
-    if(!hit.length) hit=Object.keys(E).filter(x=>nn(x).startsWith(k)||k.startsWith(nn(x))); return hit.length===1?String(E[hit[0]]):""; }
-  const names=s=>String(s||"").split(/[・,、\/\s　]+/).map(x=>x.trim()).filter(Boolean);
-  return {load,hin,emp,names,ready:()=>!!d,info:()=>d?{at:d.at,file:d.file}:null};
-})();
-const sysDate=d=>String(d||"").replace(/-/g,"/");
-
-// v21：生産管理システムに取り込む CSV（1行＝勤務・品番。7:00〜20:00 が1勤、20:00〜7:00 が2勤。テスト品は入れない）
-function shiftOf(r){ const m=/^(\d{1,2}):(\d{2})/.exec(r.st||r.en||""); if(!m) return 1; const t=(+m[1])*60+(+m[2]); return (t>=420&&t<1200)?1:2; }
-function csvRows(){ const out=[["生産日","勤務","作業者","号機コード","号機","品番コード","品番","品名","客先コード","生産個数","作業者","コメント"]];
-  const G=new Map(), eqNo=(String(state.equip).match(/\d+/)||[""])[0];
-  state.rows.forEach(r=>{ if(!rowHas(r)) return; const sh=shiftOf(r); liveItems(r).forEach(it=>{ if(!it.hin||it.test) return; const q=qtyOf(r,it); const k=sh+"|"+it.hin;
-      const g=G.get(k)||(G.set(k,{sh,hin:it.hin,name:it.name||"",q:0,w:[]}),G.get(k)); g.q+=q||0; SysM.names(r.worker).forEach(n=>{ if(!g.w.includes(n)) g.w.push(n); }); }); });
-  [...G.values()].sort((a,b)=>a.sh-b.sh).forEach(g=>{ const s=SysM.hin(g.hin)||{}; const ws=g.w.map(n=>SysM.emp(n)).filter(Boolean);
-    out.push([sysDate(state.date),g.sh,4,eqNo,state.equip,s.code||"",s.hin||g.hin,g.name,s.cust||"",Math.round(g.q),[...new Set(ws)].join("."),""]); });
+const DATA_HEAD=["生産日","号機","チャージNo","材質","マンガン(kg)","硫化鉄(kg)","TP採取","No","時間","品番","温度規格(℃)","受湯(℃)","判定","再測定(℃)","再判定","再々測定(℃)","再々判定","最終判定","リターン回数","作業者","記録確認"];
+function specTxt(r){ const sp=parseSpec(r.spec); if(!sp) return ""; const t=tolOf(sp); return `${sp.min}~${sp.max}`+(t?`(±${t})`:""); }
+function dataRows(){ const out=[DATA_HEAD];
+  state.blocks.forEach((b,c)=>b.rows.forEach((r,i)=>{ if(!rowHas(r)) return;
+    out.push([state.date,state.equip,c+1,b.mat,b.mangan,b.ryuka,b.tp?"○":"",i+1,r.time,r.hin,specTxt(r),r.temp,r.judge,r.retemp,r.rejudge,r.rrtemp,r.rrjudge,finalJ(r),r.ret,r.worker,state.recordCheck]); }));
   return out; }
-function dataRows(){
-  const out=[DATA_HEAD];
-  state.rows.forEach((r,i)=>{ if(!rowHas(r)) return; const li=liveItems(r).length?liveItems(r):[blankItem()];
-    li.forEach(it=>{ const q=qtyOf(r,it), w=weightOf(r,it);
-      out.push([state.date,state.equip,i+1,it.hin,it.koma,it.name,it.test?"テスト":(it.hin?(it.ok?"○":"×"):""),it.mat,it.add,it.unit,r.cKoma,r.cHouan,r.cJouban,r.st,r.en,r.temp,r.sq,r.sqt,r.fup,r.fut,r.mt,totOf(r,it),q==null?"":q,w==null?"":w,r.unp||0,r.worker,it.check,state.tensile,state.confirmBy,kowaOf(it)||""]); }); });
-  return out;
-}
-function eventRows(){ const out=[["生産日","号機","No","発生時刻","終了時刻","担当","異常/変化点内容","処置内容"]]; liveEvents().forEach((e,i)=>out.push([state.date,state.equip,i+1,e.start,e.end,e.person,e.content,e.action])); return out; }
+function samplingRows(){ const out=[["生産日","号機","No","採取時間","チル深さ(mm)"]];
+  state.sampling.rows.forEach((s,i)=>{ if(!sHas(s)) return; out.push([state.date,state.equip,i+1,s.time,s.chill]); });
+  return out; }
+function eventRows(){ const out=[["生産日","号機","No","発生時間","終了時間","担当","異常/変化点内容","処置内容"]];
+  liveEvents().forEach((e,i)=>out.push([state.date,state.equip,i+1,e.start,e.end,e.person,e.content,e.action])); return out; }
 function buildNippoSheet(){
-  const S=new Sheet("日報"); S.landscape=true; S.showGrid=false; const L=18;
-  S.cols=[16,5,7,5,5,5,7,7,12,6,6,6,6,7,8,9,6,6,9];
+  const S=new Sheet("日報"); S.landscape=true; S.showGrid=false; const L=11;
+  S.cols=[5,7,8,6,8,6,8,6,7,9,14,11];
   const H=st({font:1,fill:"head",border:1,h:"center",wrap:true}), B=st({border:1,h:"center"}), NG=st({font:2,border:1,h:"center",fill:"ng"}), BL=st({border:1,h:"left"});
-  S.set(0,0,"造型日報",st({font:3})); S.heights[0]=26;
-  S.set(0,1,"生産日",H); S.merge(1,1,3,1,state.date,B); S.merge(4,1,5,1,"号機",H); S.merge(6,1,8,1,state.equip,B);
-  S.merge(9,1,10,1,"引張棒採取",H); S.merge(11,1,12,1,state.tensile,B); S.merge(13,1,14,1,"記録確認(監督者)",st({font:2,fill:"ng",border:1,h:"center"})); S.merge(15,1,L,1,state.confirmBy,st({font:2,border:1,h:"center"}));
-  S.set(0,2,"試作や対策トライなどの少数生産品番、廃却予定の合い込み品番などもすべて記載すること（在庫管理のため）　* = マスターにない品番",st({font:4}));
-  const r0=3;
-  S.merge(0,r0,2,r0,"生産情報",H); S.merge(3,r0,5,r0,"金型確認",H); S.merge(6,r0,7,r0,"造型時間",H); S.merge(8,r0,13,r0,"製造条件",H); S.merge(14,r0,17,r0,"生産実績",H); S.merge(L,r0,L,r0+1,"作業者",H);
-  ["品番","駒数","品名","駒部","方案部","定盤部","開始","完了","注湯温度","スクイズ圧力","スクイズ時間","吹上圧力","吹上時間","モールド厚","造型総数","生産個数","未注湯","中子破損"].forEach((t,i)=>S.set(i,r0+1,t,H)); S.heights[r0+1]=30;
-  let y=r0+2, tq=0, tu=0;
-  state.rows.forEach(r=>{ if(!rowHas(r)) return; const li=liveItems(r).length?liveItems(r):[blankItem()], y2=y+li.length-1;
-    const sh=(c,v,s)=>S.merge(c,y,c,y2,v,s||B);
-    li.forEach((it,x)=>{ const q=qtyOf(r,it); S.set(0,y+x,it.hin+(it.test?" (テスト)":(it.hin&&!it.ok?" *":"")),it.test?st({font:2,border:1,h:"left"}):BL); S.set(1,y+x,it.koma,B); S.set(2,y+x,it.name,B); S.set(14,y+x,totOf(r,it),B); S.set(15,y+x,q==null?"":q,B); S.set(17,y+x,kowaOf(it)||"",kowaOf(it)?NG:B); tq+=q||0; });
-    CHKK.forEach((k,x)=>sh(3+x,r[k],r[k]==="NG"?NG:B)); sh(6,r.st); sh(7,r.en); sh(8,r.temp);
-    ["sq","sqt","fup","fut","mt"].forEach((k,x)=>sh(9+x,r[k])); sh(16,r.unp||0); sh(18,r.worker); tu+=num(r.unp)||0;
-    y=y2+1; });
-  const HS=st({font:1,border:1,h:"center",fill:"head"});
-  S.merge(0,y,13,y,"合計",HS); S.set(14,y,dayTotal()||"",HS); S.set(15,y,tq||"",HS); S.set(16,y,"",HS); S.set(17,y,dayKowa()||"",HS); S.set(18,y,"",HS); y+=1;
-  S.merge(12,y,14,y,"日計造型数",H); S.merge(15,y,L,y,dayTotal()+" 枠",st({font:1,border:1,h:"center"})); y++;
-  S.merge(12,y,14,y,"日計 生産トン数",H); S.merge(15,y,L,y,fmtT(dayKg())+" t",st({font:1,border:1,h:"center"})); y++;
-  { const yv=Yield&&Yield.val(); S.merge(12,y,14,y,"製品歩留まり(全号機)",H); S.merge(15,y,L,y,yv&&yv.pct!=null?yv.pct.toFixed(1)+" %":"",st({font:1,border:1,h:"center"})); y++; }
-  S.merge(12,y,14,y,"カウンター造型数",H); S.merge(15,y,L,y,state.counter?state.counter+" 枠":"",st({font:1,border:1,h:"center"})); y+=2;
-  { const WL=liveWaits(), ws=waitSum(); S.merge(0,y,L,y,"湯待ち・砂待ち"+(WL.length?`（湯待ち ${ws.yu} 分・砂待ち ${ws.suna} 分・合計 ${ws.yu+ws.suna} 分）`:""),st({font:1,fill:"head",border:1})); y++;
-    S.set(0,y,"種類",H); S.merge(1,y,3,y,"開始",H); S.merge(4,y,6,y,"終了",H); S.merge(7,y,8,y,"時間(分)",H); S.merge(9,y,L,y,"メモ",H); y++;
-    (WL.length?WL:[{}]).forEach(x=>{ const m=waitMin(x); S.set(0,y,WAIT_L[x.r]||"",B); S.merge(1,y,3,y,x.st||"",B); S.merge(4,y,6,y,x.en||"",B); S.merge(7,y,8,y,m==null?"":m,B); S.merge(9,y,L,y,x.memo||"",st({border:1,wrap:true})); y++; }); y++; }
+  S.set(0,0,"注湯日報",st({font:3})); S.heights[0]=26;
+  S.merge(0,1,1,1,"生産日",H); S.merge(2,1,4,1,state.date,B); S.merge(5,1,6,1,"号機",H); S.merge(7,1,8,1,state.equip,B); S.merge(9,1,9,1,"記録確認",H); S.merge(10,1,L,1,state.recordCheck,B);
+  S.merge(0,2,L,2,"判定は造型日報の製品ごとの注湯温度規格で自動判定（赤 = ×）　成分TP：チャージ(1.5t)毎に1回目の溶湯で採取",st({font:4}));
+  let y=4;
+  state.blocks.forEach((b,c)=>{ if(!blockHas(b)) return;
+    const CH=st({font:1,fill:"head",border:1,h:"center"});
+    S.merge(0,y,1,y,"チャージ"+(c+1),CH); S.merge(2,y,3,y,"マンガン "+(b.mangan||"－")+" kg",B); S.merge(4,y,5,y,"硫化鉄 "+(b.ryuka||"－")+" kg",B);
+    S.merge(6,y,7,y,"TP採取 "+(b.tp?"✓":"－"),B); S.merge(8,y,9,y,"材質 "+(b.mat||"－"),B); S.merge(10,y,L,y,"",B); y++;
+    ["No","時間","受湯℃","判定","再測定℃","判定","再々測定℃","判定","リターン","作業者","品番","温度規格"].forEach((t,i)=>S.set(i,y,t,H)); y++;
+    b.rows.forEach((r,i)=>{ if(!rowHas(r)) return; const J=v=>v==="×"?NG:B;
+      S.set(0,y,i+1,B); S.set(1,y,r.time,B); S.set(2,y,r.temp,J(r.judge)); S.set(3,y,r.judge,J(r.judge)); S.set(4,y,r.retemp,J(r.rejudge)); S.set(5,y,r.rejudge,J(r.rejudge));
+      S.set(6,y,r.rrtemp,J(r.rrjudge)); S.set(7,y,r.rrjudge,J(r.rrjudge)); S.set(8,y,r.ret,B); S.set(9,y,r.worker,B); S.set(10,y,r.hin,BL); S.set(11,y,specTxt(r),B); y++; });
+    y++; });
+  S.merge(0,y,5,y,"採取時間・チル深さ",st({font:1,fill:"head",border:1})); y++;
+  S.set(0,y,"No",H); S.merge(1,y,2,y,"採取時間",H); S.merge(3,y,5,y,"チル深さ(mm)",H); y++;
+  const SR=state.sampling.rows.filter(sHas); (SR.length?SR:[blankSRow()]).forEach((s,i)=>{ S.set(0,y,SR.length?i+1:"",B); S.merge(1,y,2,y,s.time,B); S.merge(3,y,5,y,s.chill,B); y++; });
+  y++;
   S.merge(0,y,L,y,"異常/変化点履歴",st({font:1,fill:"head",border:1})); y++;
-  S.set(0,y,"発生時刻",H); S.merge(1,y,8,y,"異常/変化点内容",H); S.merge(9,y,15,y,"処置内容",H); S.merge(16,y,L,y,"担当",H); y++;
-  const W=st({border:1,wrap:true}); const LE=liveEvents(); (LE.length?LE:[{start:"",end:"",person:"",content:"",action:""}]).forEach(e=>{
-    S.set(0,y,(e.start||e.end)?`${e.start}〜${e.end}`:"",B); S.merge(1,y,8,y,e.content,W); S.merge(9,y,15,y,e.action,W); S.merge(16,y,L,y,e.person,B); S.heights[y]=30; y++; });
+  S.set(0,y,"発生",H); S.set(1,y,"〜",H); S.set(2,y,"担当",H); S.merge(3,y,7,y,"異常/変化点内容",H); S.merge(8,y,L,y,"処置内容",H); y++;
+  const Wr=st({border:1,wrap:true}); const LE=liveEvents(); (LE.length?LE:[{start:"",end:"",person:"",content:"",action:""}]).forEach(e=>{
+    S.set(0,y,e.start,B); S.set(1,y,e.end,B); S.set(2,y,e.person,B); S.merge(3,y,7,y,e.content,Wr); S.merge(8,y,L,y,e.action,Wr);
+    const lines=Math.max(1,...[e.content,e.action].map(t=>String(t||"").split("\n").reduce((a,l)=>a+Math.max(1,Math.ceil(l.length/24)),0))); S.heights[y]=Math.max(30,lines*16); y++; });
   return S;
 }
 function tableSheet(name,rows,widths){ const S=new Sheet(name); S.freeze=1; S.cols=widths; const H=st({font:1,fill:"head",border:1,h:"center",wrap:true});
   rows.forEach((row,r)=>row.forEach((v,c)=>S.set(c,r,v,r===0?H:st({border:1})))); S.autoFilter="A1:"+ref(rows[0].length-1,Math.max(rows.length-1,0)); S.heights[0]=32; return S; }
-function buildXlsx(){ return workbook([buildNippoSheet(), tableSheet("データ",dataRows(),[11,12,5,16,6,8,8,8,16,8,6,6,6,7,7,11,8,8,8,8,8,9,9,10,7,10,24,9,10,9]), tableSheet("異常変化点",eventRows(),[11,12,5,9,9,10,50,50]), tableSheet("湯待ち・砂待ち",[["生産日","号機","No","種類","開始","終了","時間(分)","メモ"],...liveWaits().map((x,i)=>[state.date,state.equip,i+1,WAIT_L[x.r]||"",x.st||"",x.en||"",waitMin(x)??"",x.memo||""])],[11,12,5,9,9,9,9,40])]); }
+function buildXlsx(){ return workbook([buildNippoSheet(), tableSheet("データ",dataRows(),[11,7,8,8,9,9,7,5,7,16,11,8,6,9,6,9,6,8,8,10,10]), tableSheet("TP採取",samplingRows(),[11,7,5,9,11]), tableSheet("異常変化点",eventRows(),[11,7,5,9,9,10,50,50])]); }
 $("btnCsv").onclick=async()=>{
-  if(!state.rows.some(rowHas)&&!liveEvents().length){ toast("入力データがありません"); return; }
-  const bad=state.rows.map((r,i)=>missOf(r).length?`No.${i+1}  ${missText(r).replace(/\n/g,"  ")}`:"").filter(Boolean);
-  if(bad.length&&!await askConfirm(`⚠ 単重・駒数が入力されていない品番があります。\n生産トン数に入っていません。\n\n${bad.join("\n")}`,"このまま保存","入力に戻る")) return;
+  if(!state.blocks.some(blockHas)&&!samplingRows()[1]&&!liveEvents().length){ toast("入力データがありません"); return; }
   await Sync.flush();
-  const where=await writeFile("造型日報_"+state.equip.replace(/[\\/:*?"<>|（）() ]/g,"")+"_"+state.date.replace(/-/g,"")+".xlsx",buildXlsx());
+  const where=await writeFile("注湯日報_"+state.equip+"_"+state.date.replace(/-/g,"")+".xlsx",buildXlsx());
   if(where) toast("保存しました: "+where);
 };
 let dl=null;
@@ -1037,20 +887,63 @@ async function writeFile(name,blob){
   return "ダウンロード\\"+name;
 }
 
+// ---- 造型日報との連動（今流している製品と注湯温度規格を読む）----
+const Link=(function(){
+  const base={url:CFG.zokeiUrl||"",token:CFG.zokeiToken||""};
+  let c=Object.assign({},base,LS.get(APP+":zk",{}));
+  let prods=[], at=0, err="", key="", busy=false;
+  const on=()=>!!c.url;
+  function cfg(){ return c; }
+  function setCfg(url,token){ const o={}; if(url) o.url=url; if(token) o.token=token; LS.set(APP+":zk",o); c=Object.assign({},base,o); at=0; }
+  async function get(date,equip){ const u=c.url+(c.url.includes("?")?"&":"?")+new URLSearchParams({action:"load",token:c.token,date,equip});
+    const r=await fetch(u,{redirect:"follow"}); const j=await r.json(); if(!j.ok) throw new Error(j.error||"error"); return j.items||[]; }
+  function prevDate(d){ const x=new Date(d+"T00:00:00"); x.setDate(x.getDate()-1); return new Date(x.getTime()-x.getTimezoneOffset()*60000).toISOString().slice(0,10); }
+  // 造型日報は朝8時で日付が切りかわる
+  // 造型日報の1日は朝7時から翌朝7時まで（7時前の開始時刻は夜勤＝次の日の朝）
+  const Z_START=7;
+  let again=false;
+  async function load(force,now){
+    if(!on()||!state||navigator.onLine===false) return;
+    const k=state.date+"|"+state.equip; if(busy){ if(now) again=true; return; }
+    if(now){ const L=$("linkLine"); if(L){ L.className="linkline"; L.innerHTML="造型日報を確認して判定中…"; } } if(!force&&k===key&&Date.now()-at<3*60*1000) return;
+    busy=true;
+    try{ const d=state.date, list=[];
+      const nextD=(()=>{ const x=new Date(d+"T00:00:00"); x.setDate(x.getDate()+1); return new Date(x.getTime()-x.getTimezoneOffset()*60000).toISOString().slice(0,10); })();
+      for(const zd of [prevDate(d),d,nextD]){ const items=await get(zd,state.equip);
+        let off=null, prev=null;
+        items.filter(it=>it.type==="row").sort((a,b)=>(+a.ref)-(+b.ref)).forEach(it=>{ const x=it.raw||{}, it0=(x.items||[]).find(v=>v&&v.hin); const t=mins(x.st); if(!it0||t==null) return;
+          if(off==null) off=(t<Z_START*60-60)?1440:0; else if(t<prev-360) off+=1440; prev=t;
+          list.push({hin:it0.hin,name:it0.name||"",mat:it0.mat||"",temp:x.temp||"",st:x.st,abs:dayIdx(zd)*1440+off+t}); }); }
+      list.sort((a,b)=>a.abs-b.abs); prods=list; at=Date.now(); key=k; err="";
+      if(state.date+"|"+state.equip===k){ let ch=false; state.blocks.forEach((b,ci)=>{ const before=JSON.stringify(b.rows); b.rows.forEach(r=>{ if(rowHas(r)) applyAuto(b,r); }); if(JSON.stringify(b.rows)!==before&&!VIEW){ b.u=Date.now(); Sync.queue("block",ci); ch=true; } });
+        if(ch){ save(); const act=document.activeElement; const tFocus=act&&act.dataset&&act.dataset.k==="time"; if(tFocus) refreshRowsInPlace(); else if((now&&!$("dlgPad").open)||!(act&&act.closest&&act.closest("#entryCard"))) renderRows(); refreshLight(); } }
+    }catch(e){ err=String(e.message||e); }
+    busy=false; renderLink(); if(again){ again=false; load(true); } }
+  function productAt(abs){ if(abs==null) return null; let best=null; prods.forEach(p=>{ if(p.abs<=abs&&abs-p.abs<12*60) best=p; }); return best; }
+  function list(){ const d0=dayIdx(state.date)*1440+DAY_START*60; return prods.filter(p=>p.abs>=d0-60&&p.abs<d0+24*60); }
+  function status(){
+    if(!on()) return {cls:"off",html:"⚠ 造型日報と連動していません（設定 →「造型日報と連動」にURLを入れると、温度規格で自動判定します）。判定は手で入れてください。"};
+    if(err) return {cls:"err",html:`⚠ 造型日報を読み込めませんでした（${esc(err)}）。前に読んだ製品で判定します。`};
+    if(!at) return {cls:"",html:"造型日報を読み込み中…"};
+    const L=list(), t=new Date(at);
+    return {cls:"ok",html:`造型日報（${esc(state.equip)}）と連動中：今日の製品 ${L.length}件 <span class="small">（${t.getHours()}:${String(t.getMinutes()).padStart(2,"0")} 読込）</span> — 受湯温度を入れるたびに造型日報を読み直し、その時間の製品の注湯温度規格で ○× を自動で付けます（規格の幅が${TOL_W}℃以下なら ±${TOL}℃ まで○）`}; }
+  function ready(){ return on()&&at>0&&!err; }
+  return {load,productAt,list,status,cfg,setCfg,on,ready};
+})();
+
 // ---- スプレッドシート同期 ----
 const Sync=(function(){
   const base=Object.assign({syncUrl:"",token:""},window.SUNA_CONFIG||{});
   let cfg=Object.assign({},base,LS.get(APP+":cfg",{}));
   let q=LS.get(APP+":queue",[]); let busy=false, timer=null, lastErr="";
   const on=()=>!!cfg.syncUrl, persist=()=>LS.set(APP+":queue",q);
-  const STRIP=["ngOut","qtyOut","totOut","wOut","rowQty"];
   function build(type,ref){
     const d=state.date, e=state.equip; let u, raw;
-    if(type==="header"){ u=state.hu||Date.now(); raw={confirmBy:state.confirmBy,tensile:state.tensile,counter:state.counter,waits:(state.waits||[]).filter(x=>!x.del)}; }
-    else if(type==="row"){ const r=state.rows[ref]; u=r.u||Date.now(); raw=Object.assign({},r,{ngOut:ngList(r).join("・"),qtyOut:r.items.map(it=>qtyOf(r,it)),totOut:r.items.map(it=>totOf(r,it)),wOut:r.items.map(it=>weightOf(r,it)),rowQty:rowQty(r)}); }
+    if(type==="header"){ u=state.hu||Date.now(); raw={recordCheck:state.recordCheck}; }
+    else if(type==="block"){ const b=state.blocks[ref]; u=b.u||Date.now(); raw=Object.assign({},b,{rows:b.rows.map(r=>Object.assign({},r,{fOut:rowHas(r)?finalJ(r):"",specOut:specTxt(r)}))}); delete raw.u; }
+    else if(type==="sampling"){ u=state.sampling.u||Date.now(); raw={rows:state.sampling.rows.map(s=>Object.assign({},s))}; }
     else { const ev=state.events.find(x=>x.id===ref); u=ev.u; raw=Object.assign({},ev); }
-    return {k:`${type}|${d}|${e}|${ref}`,op:{type,date:d,equip:e,ref:String(ref),u,raw}};
-  }
+    return {k:`${type}|${d}|${e}|${ref}`,op:{type,date:d,equip:e,ref:String(ref),u,raw}}; }
   function queue(type,ref){ if(!on()||VIEW) return; const it=build(type,ref); try{ window.__chg&&window.__chg.mark(it.k,it.op); }catch(e){} q=q.filter(x=>x.k!==it.k); q.push(it); persist(); status(); clearTimeout(timer); timer=setTimeout(flush,1200); }
   async function call(params,body){ const url=cfg.syncUrl+(params?(cfg.syncUrl.includes("?")?"&":"?")+new URLSearchParams(params):"");
     const res=await fetch(url,body?{method:"POST",body:JSON.stringify(body),redirect:"follow"}:{redirect:"follow"}); const j=await res.json(); if(!j.ok) throw new Error(j.error||"error"); return j; }
@@ -1060,26 +953,22 @@ const Sync=(function(){
     catch(e){ lastErr=String(e.message||e); console.warn("sync",e); } busy=false; status(); }
   const pending=k=>q.some(x=>x.k===k);
   async function pull(){
-    if(!on()||navigator.onLine===false) return; const d=state.date, e=state.equip; let j;
+    if(!on()||navigator.onLine===false) return; const d=state.date,e=state.equip; let j;
     try{ j=await call({action:"load",token:cfg.token,date:d,equip:e}); lastErr=""; try{ window.__chg&&window.__chg.seen((j.items||[]).map(it=>({k:`${it.type}|${d}|${e}|${it.ref}`,raw:it.raw}))); }catch(_e){} }catch(err){ lastErr=String(err.message||err); status(); return; }
-    if(state.date!==d||state.equip!==e) return; let changed=false, selChanged=false, evChanged=false;
+    if(state.date!==d||state.equip!==e) return;
+    let changed=false, selChanged=false, sampChanged=false, evChanged=false;
     (j.items||[]).forEach(it=>{ const k=`${it.type}|${d}|${e}|${it.ref}`; if(pending(k)) return; const raw=it.raw||{};
-      if(it.type==="header"){ if((it.u||0)>(state.hu||0)){ state.confirmBy=String(raw.confirmBy??""); state.tensile=String(raw.tensile??""); state.counter=String(raw.counter??""); state.waits=Array.isArray(raw.waits)?raw.waits:[]; state.hu=it.u; changed=true; renderHeader(); renderWaits(); } }
-      else if(it.type==="row"){ const i=+it.ref; if(!(i>=0&&i<1000)) return; while(state.rows.length<=i) state.rows.push(blankRow()); if((it.u||0)>(state.rows[i].u||0)){ const r=normRow(Object.assign({},raw,{u:it.u})); STRIP.forEach(x=>delete r[x]); state.rows[i]=r; changed=true; if(i===sel) selChanged=true; } }
+      if(it.type==="header"){ if((it.u||0)>(state.hu||0)){ state.recordCheck=String(raw.recordCheck??""); state.hu=it.u; changed=true; renderHeader(); } }
+      else if(it.type==="block"){ const c=+it.ref; if(!(c>=0&&c<1000)) return; while(state.blocks.length<=c) state.blocks.push(blankBlock());
+        if((it.u||0)>(state.blocks[c].u||0)){ const b=normBlock(raw); b.u=it.u; b.rows.forEach(r=>{ delete r.specOut; }); state.blocks[c]=b; changed=true; if(c===sel) selChanged=true; } }
+      else if(it.type==="sampling"){ if((it.u||0)>(state.sampling.u||0)){ const rows=(raw.rows||[]).map(s=>Object.assign(blankSRow(),s)); while(rows.length<MINS) rows.push(blankSRow()); state.sampling={u:it.u,rows}; changed=true; sampChanged=true; } }
       else if(it.type==="event"){ const le=state.events.find(x=>x.id===it.ref); const ev=Object.assign({id:it.ref,start:"",end:"",person:"",content:"",action:""},raw,{u:it.u});
         if(!le){ state.events.push(ev); changed=true; evChanged=true; } else if((it.u||0)>(le.u||0)){ Object.assign(le,ev); changed=true; evChanged=true; } } });
-    if(changed){ ensureRows(); save(); renderChips(); renderTable(); const act=document.activeElement, inside=s=>act&&act.closest&&act.closest(s);
-      if(selChanged&&!inside("#entryCard")) renderEntry(); if(evChanged&&!inside("#events")) renderEvents(); toast("他の端末の入力を読み込みました"); }
-    status();
-  }
-  async function loadMaster(force){
-    if(!on()) return "スプレッドシートが未設定のため、マスターを読み込めません";
-    if(navigator.onLine===false) return "オフラインです（前回読み込んだマスターを使います）";
-    if(!force && MASTER.at && Date.now()-MASTER.at<10*60*1000) return "";
-    try{ const j=await call({action:"master",token:cfg.token}); if(!(j.rows||[]).length&&MIDX.length) return "スプレッドシートの品番マスターが空です（この端末のマスターを使います）"; MASTER={rows:j.rows||[],at:Date.now()}; LS.set(APP+":master",MASTER); buildIdx(); renderMasterStat();
-      return `品番マスターを読み込みました（${MIDX.length}件）`; }
-    catch(e){ return "マスターを読み込めませんでした: "+errHint(e); }
-  }
+    if(changed){ ensureAll(); save(); renderCharges(); renderTable();
+      const act=document.activeElement, inside=s=>act&&act.closest&&act.closest(s);
+      if(selChanged&&!inside("#entryCard")&&!$("dlgPad").open) renderRows(); if(sampChanged&&!inside("#sampling")) renderSampling(); if(evChanged&&!inside("#events")) renderEvents();
+      if(!VIEW) toast("他の端末の入力を読み込みました"); }
+    status(); }
   function status(){ const b=$("syncStat"); if(!b) return; if(!on()){ b.hidden=true; return; } b.hidden=false; const n=q.length;
     if(navigator.onLine===false){ b.className="sync off"; b.textContent=n?`オフライン (未送信 ${n}件)`:"オフライン"; }
     else if(lastErr){ b.className="sync err"; b.textContent=n?`送信エラー (未送信 ${n}件)`:"接続エラー"; }
@@ -1088,139 +977,37 @@ const Sync=(function(){
   function setCfg(url,token){ const o={}; if(url) o.syncUrl=url; if(token) o.token=token; LS.set(APP+":cfg",o); cfg=Object.assign({},base,o); status(); }
   async function list(month){ return call({action:"list",token:cfg.token,month}); }
   window.addEventListener("online",()=>{ flush().then(pull); }); window.addEventListener("offline",status);
-  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") flush().then(pull).then(()=>loadMaster(false)); });
-  setInterval(()=>{ if(document.visibilityState==="visible") flush().then(pull).then(()=>loadMaster(false)); },45000);  // マスターは10分ごとに読み直す
-  function errHint(e){ const m=String(e&&e.message||e);
-    if(/unknown action|bad json/.test(m)) return m+"（Apps Script が古い版です。新しい Code を貼って「新しいバージョン」でデプロイしてください）";
-    if(/合言葉/.test(m)) return m+"（config.js の token と Code の TOKEN を同じにしてください）";
-    if(/Failed to fetch|NetworkError|Load failed/.test(m)) return m+"（送信先URLに接続できません。config.js の syncUrl と、デプロイのアクセス「全員」を確認してください）";
-    if(/Unexpected token|JSON/.test(m)) return m+"（Apps Script でエラーが出ています。デプロイと許可を確認してください）";
-    return m; }
-  async function putMaster(rows,pin){ if(!on()) throw new Error("スプレッドシートが未設定です"); return call(null,{token:cfg.token,action:"setMaster",pin,rows}); }
-  return {queue,flush,pull,status,test,setCfg,getCfg:()=>cfg,list,loadMaster,putMaster,errHint,on,pendingCount:()=>q.length};
+  document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible"){ flush().then(pull); Link.load(false); } });
+  setInterval(()=>{ if(document.visibilityState==="visible"){ flush().then(pull); Link.load(false); } },45000);
+  return {queue,flush,pull,status,test,setCfg,getCfg:()=>cfg,list,pendingCount:()=>q.length};
 })();
-$("syncStat").onclick=async()=>{ await Sync.flush(); await Sync.pull(); toast(Sync.pendingCount()?"未送信のデータがあります":"最新の状態です"); };
-$("btnCfgSave").onclick=()=>{ Sync.setCfg($("cfgUrl").value.trim(),$("cfgToken").value.trim()); $("cfgInfo").textContent="保存しました"; Sync.pull(); Sync.loadMaster(true).then(renderMasterStat); };
+$("syncStat").onclick=async()=>{ await Sync.flush(); await Sync.pull(); await Link.load(true); toast(Sync.pendingCount()?"未送信のデータがあります。電波の良い場所で再度お試しください":"最新の状態です"); };
+$("btnCfgSave").onclick=()=>{ Sync.setCfg($("cfgUrl").value.trim(),$("cfgToken").value.trim()); $("cfgInfo").textContent="保存しました"; Sync.pull(); };
 $("btnCfgTest").onclick=async()=>{ $("cfgInfo").textContent="確認中…"; $("cfgInfo").textContent=await Sync.test(); };
-// ---- マスターExcelの読み込み (ブラウザ内でxlsxを解析) ----
-async function unzipXlsx(buf){
-  const dv=new DataView(buf), u8=new Uint8Array(buf), dec=new TextDecoder();
-  let eocd=-1; for(let i=u8.length-22;i>=Math.max(0,u8.length-70000);i--){ if(dv.getUint32(i,true)===0x06054b50){ eocd=i; break; } }
-  if(eocd<0) throw new Error("Excelファイル(.xlsx)を選んでください");
-  const n=dv.getUint16(eocd+10,true); let p=dv.getUint32(eocd+16,true); const files={};
-  for(let k=0;k<n;k++){ const method=dv.getUint16(p+10,true), csize=dv.getUint32(p+20,true), nl=dv.getUint16(p+28,true), el=dv.getUint16(p+30,true), cl=dv.getUint16(p+32,true), off=dv.getUint32(p+42,true);
-    const name=dec.decode(u8.subarray(p+46,p+46+nl)); files[name]={method,csize,off}; p+=46+nl+el+cl; }
-  async function read(name){ const f=files[name]; if(!f) return null; const ln=dv.getUint16(f.off+26,true), le=dv.getUint16(f.off+28,true), st=f.off+30+ln+le, data=u8.subarray(st,st+f.csize);
-    if(f.method===0) return dec.decode(data);
-    const ds=new Blob([data]).stream().pipeThrough(new DecompressionStream("deflate-raw")); return await new Response(ds).text(); }
-  return {read,names:Object.keys(files)};
-}
-// ふりがな(rPh)は除いて文字だけを取り出す
-function siText(si){ return [...si.getElementsByTagName("t")].filter(t=>{ let p=t.parentNode; while(p&&p!==si){ if(p.localName==="rPh") return false; p=p.parentNode; } return true; }).map(t=>t.textContent).join(""); }
-function colIdx(ref){ const m=/^([A-Z]+)/.exec(ref); let c=0; for(const ch of m[1]) c=c*26+ch.charCodeAt(0)-64; return c-1; }
-async function readFirstSheet(file){
-  const z=await unzipXlsx(await file.arrayBuffer()), P=new DOMParser();
-  const wb=P.parseFromString(await z.read("xl/workbook.xml"),"application/xml"), rels=P.parseFromString(await z.read("xl/_rels/workbook.xml.rels"),"application/xml");
-  const first=wb.getElementsByTagName("sheet")[0], rid=first.getAttribute("r:id")||first.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships","id");
-  let target=[...rels.getElementsByTagName("Relationship")].find(x=>x.getAttribute("Id")===rid).getAttribute("Target"); target=target.replace(/^\/?xl\//,"").replace(/^\//,""); 
-  const ssx=await z.read("xl/sharedStrings.xml"); const ss=ssx?[...P.parseFromString(ssx,"application/xml").getElementsByTagName("si")].map(siText):[];
-  const sh=P.parseFromString(await z.read("xl/"+target),"application/xml"), rows=[];
-  [...sh.getElementsByTagName("row")].forEach(rw=>{ const r=+rw.getAttribute("r")-1, arr=rows[r]=[];
-    [...rw.getElementsByTagName("c")].forEach(c=>{ const t=c.getAttribute("t"), v=c.getElementsByTagName("v")[0]; let val="";
-      if(t==="s") val=v?ss[+v.textContent]:""; else if(t==="inlineStr") val=siText(c); else val=v?v.textContent:"";
-      arr[colIdx(c.getAttribute("r"))]=String(val).trim(); }); });
-  return {name:first.getAttribute("name"),rows};
-}
-const MCOLS=[["hin",/品番/],["name",/品名/],["temp",/注湯温度/],["mat",/材質/],["add",/添加材/],["unit",/単重/],["koma",/駒数/],["mt",/モールド厚/],["check",/確認/],["tana",/棚/],["mold",/金型/],["sq",/スクイズ圧/]];
-function toMasterRows(grid){
-  const hr=grid.findIndex(r=>r&&r.some(v=>/^品番$/.test(v||""))); if(hr<0) throw new Error("「品番」という見出しが見つかりません");
-  const head=grid[hr], map={}; head.forEach((h,i)=>{ if(!h) return; const c=MCOLS.find(([k,re])=>re.test(h)&&map[k]==null); if(c) map[c[0]]=i; });
-  const seen=new Set(), out=[];
-  grid.slice(hr+1).forEach(r=>{ if(!r) return; const o={}; MCOLS.forEach(([k])=>o[k]=map[k]!=null?(r[map[k]]||""):"");
-    if(!o.hin) return; const n=normHin(o.hin); if(seen.has(n)) return; seen.add(n);
-    if(/^\d+\.\d{6,}$/.test(o.unit)) o.unit=String(Math.round(+o.unit*1000)/1000);
-    if(o.koma!==""&&isNaN(+o.koma)) o.koma="";
-    out.push(o); });
-  return out;
-}
-$("btnMasterImport").onclick=async()=>{
-  const info=$("mImpInfo"), f=$("mFile").files[0];
-  if($("mPin").value!==String(CFG.adminPin||"0000")){ info.textContent="管理者パスワードが違います"; return; }
-  if(!f){ info.textContent="Excelファイルを選んでください"; return; }
-  if(typeof DecompressionStream==="undefined"){ info.textContent="このブラウザでは読み込めません。パソコンの Chrome か Edge（最新版）で開いてください"; return; }
-  let step="Excelの読み取り";
-  try{ info.textContent="読み込み中…"; const sh=await readFirstSheet(f); const rows=toMasterRows(sh.rows);
-    if(!rows.length) throw new Error("品番が1件もありません");
-    if(!await askConfirm(`「${sh.name}」から ${rows.length}件の品番を読み込みました。\n品番マスターを置き換えて全端末に反映しますか？`)){ info.textContent="中止しました"; return; }
-    MASTER={rows,at:Date.now()}; LS.set(APP+":master",MASTER); buildIdx(); renderMasterStat();
-    if(!Sync.on()){ info.textContent=`この端末に ${rows.length}件 読み込みました。※スプレッドシート連携(config.js の syncUrl)が未設定のため、他の端末には反映されていません`; return; }
-    step="スプレッドシートへの送信"; info.textContent="送信中…"; await Sync.putMaster(rows,$("mPin").value);
-    MASTER={rows,at:Date.now()}; LS.set(APP+":master",MASTER); buildIdx(); renderMasterStat();
-    info.textContent=`品番マスターを更新しました（${rows.length}件）`; toast("品番マスターを更新しました"); $("mPin").value="";
-  }catch(e){ let msg=`読み込めませんでした（${step}）: `+Sync.errHint(e);
-    if(step!=="Excelの読み取り"&&/Failed to fetch|NetworkError|Load failed/.test(String(e&&e.message||e))){ const ping=await Sync.test(); msg+=`\n【接続テスト】${ping}`+(/接続OK/.test(ping)?"\n→ 接続はできています。Apps Script を新しい Code に貼り替えて「新しいバージョン」でデプロイし直してください。":""); }
-    info.textContent=msg; info.style.whiteSpace="pre-line"; }
-};
+$("btnZkSave").onclick=async()=>{ Link.setCfg($("zkUrl").value.trim(),$("zkToken").value.trim()); $("zkInfo").textContent="読み込み中…"; await Link.load(true); $("zkInfo").textContent=Link.status().html.replace(/<[^>]+>/g,""); };
 
 // ---- 作業者の名前（全端末共通：造型日報のスプレッドシートに保存）----
 // 使う側で CREW_URL() CREW_TOKEN() CREW_CHANGED() を用意する
 const Crew=(function(){
-  let S=LS.get("crew:shared",null);   // 造型日報と注湯日報で同じ名前を使う
+  const K=(typeof CREW_KEY!=="undefined")?CREW_KEY:"crew:shared";   // 造型日報と注湯日報で同じ名前を使う（ショット日報は別の名前）
+  let S=LS.get(K,null);
   function list(){ return (S&&S.list&&S.list.length)?S.list:null; }
   async function pull(){ const u=CREW_URL(); if(!u) return;
     try{ const r=await fetch(u+(u.includes("?")?"&":"?")+new URLSearchParams({action:"workers",token:CREW_TOKEN()}),{redirect:"follow"}); const j=await r.json();
-      if(j.ok&&j.list&&j.list.length&&JSON.stringify(j.list)!==JSON.stringify(list())){ S={list:j.list,u:j.u||Date.now()}; LS.set("crew:shared",S); CREW_CHANGED(); } }catch(e){} }
+      if(j.ok&&j.list&&j.list.length&&JSON.stringify(j.list)!==JSON.stringify(list())){ S={list:j.list,u:j.u||Date.now()}; LS.set(K,S); CREW_CHANGED(); } }catch(e){} }
   async function add(name){ name=String(name||"").trim(); if(!name) return; const base=list()||WORKERS0.slice(); if(base.includes(name)) return;
-    S={list:[...base,name],u:Date.now()}; LS.set("crew:shared",S); CREW_CHANGED(); const u=CREW_URL(); if(!u) return;
+    S={list:[...base,name],u:Date.now()}; LS.set(K,S); CREW_CHANGED(); const u=CREW_URL(); if(!u) return;
     try{ await fetch(u,{method:"POST",body:JSON.stringify({token:CREW_TOKEN(),action:"setWorkers",list:S.list,u:S.u}),redirect:"follow"}); await pull(); }catch(e){} }
   setInterval(()=>{ if(document.visibilityState==="visible") pull(); },60000);
   return {list,pull,add};
 })();
 
-// ---- 製品歩留まり（1日・1号機と2号機の合計）----
-// 製品歩留まり(%) = 造型の生産重量（全号機・未注湯を除く） ÷ 溶解の出湯量（出湯時刻が入ったチャージの配合合計） × 100
-// 溶解の配合合計 = 銑鉄＋鋼鉄＋ダライ粉＋戻り材＋加炭材＋シリコン＋スクラップ追加
-var Yield=(function(){
-  const MIXK=["sen","kou","dar","mod","kat","sil","addSc"];
-  let cur={key:""};
-  async function getJ(base,params){ const u=base+(base.includes("?")?"&":"?")+new URLSearchParams(params);
-    const j=await (await fetch(u,{redirect:"follow"})).json(); if(!j.ok) throw new Error(j.error||"error"); return j; }
-  function rowsOf(j){ const rows=[]; (j.items||[]).forEach(it=>{ if(it.type==="row") rows[+it.ref]=it.raw||{}; }); return rows; }
-  async function refresh(){
-    const d=state.date, e=state.equip, key=d+"|"+e, res={key,other:null,melt:null,err:""};
-    if(navigator.onLine===false){ return; }
-    try{
-      const cfg=Sync.getCfg();
-      if(cfg.syncUrl){ let kg=0;
-        for(const o of EQUIPS.filter(x=>x!==e)){ const j=await getJ(cfg.syncUrl,{action:"load",token:cfg.token,date:d,equip:o});
-          rowsOf(j).forEach(r=>{ if(!r) return; const rr=normRow(r); liveItems(rr).forEach(it=>{ kg+=weightOf(rr,it)||0; }); }); }
-        res.other=kg; }
-      if(CFG.yokaiUrl){ const j=await getJ(CFG.yokaiUrl,{action:"load",token:CFG.yokaiToken||"OWHKxlWeao3gjTQS",date:d,equip:"溶解"});
-        let kg=0,n=0; rowsOf(j).forEach(r=>{ if(!r||!r.tap) return; const t=MIXK.reduce((a,k)=>a+(num(r[k])||0),0); if(t>0){ kg+=t; n++; } });
-        res.melt={kg,n}; }
-      else res.err="溶解日報の場所（config.js の yokaiUrl）が未設定です";
-    }catch(x){ res.err="読み込めませんでした（"+String(x.message||x)+"）"; }
-    if(state.date+"|"+state.equip===key) cur=res; render(); }
-  function val(){ if(cur.key!==state.date+"|"+state.equip||!cur.melt) return null;
-    const own=dayKg(), other=cur.other||0, prod=own+other, m=cur.melt.kg;
-    return {own,other,prod,melt:m,n:cur.melt.n,pct:m>0?Math.round(prod/m*1000)/10:null}; }
-  function render(){ const p=$("yieldPct"), nt=$("yieldNote"); if(!p||!nt) return; const box=p.closest(".yieldbox"), v=val();
-    box.classList.remove("over");
-    if(!v){ p.textContent="－"; nt.textContent=cur.key===state.date+"|"+state.equip&&cur.err?cur.err:"溶解日報を読み込み中…"; return; }
-    if(v.pct==null){ p.textContent="－"; nt.textContent="溶解日報にこの日の出湯（出湯時刻の入ったチャージ）がまだありません"; return; }
-    p.textContent=v.pct.toFixed(1);
-    const oe=EQUIPS.filter(x=>x!==state.equip).join("・");
-    nt.innerHTML=`生産 <b>${fmtT(v.prod)} t</b>（${esc(state.equip)} ${fmtT(v.own)} t ＋ ${esc(oe)} ${fmtT(v.other)} t）<br>÷ 溶解（出湯済み ${v.n} チャージ） <b>${fmtT(v.melt)} t</b>`
-      +(v.pct>100?`<br><b style="color:#d50000">⚠ 100%を超えています。溶解日報の配合・出湯時刻の入力漏れを確認してください</b>`:"");
-    if(v.pct>100) box.classList.add("over"); }
-  return {refresh,val,render};
-})();
 // ---- 溶解工程でいま溶かしている材質（溶解日報から読む）材質まちがい防止 ----
 // 使う側で MELT_ROLE（"mold"=造型 / "pour"=注湯）と meltMine()（この画面の材質）を用意する
 const Melt=(function(){
   const url=()=>CFG.yokaiUrl||"", token=()=>CFG.yokaiToken||"OWHKxlWeao3gjTQS";
   const ML={FC200:"FC200",FC250:"FC250",otherH:"その他H",otherL:"その他L",other:"その他"};
-  const MC={"FC200":"m-FC200","FC250":"m-FC250","その他H":"m-otherH","その他L":"m-otherL"};
+  const MC={"FC200":"m-FC200","FC250":"m-FC250","その他H":"m-otherH","その他L":"m-otherL","その他SiL":"m-SiL","1204":"m-1204"};
   let info=null, at=0, err="", busy=false;
   const ymd=d=>new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
   function yd(){ const d=new Date(); if(d.getHours()<8) d.setDate(d.getDate()-1); return ymd(d); }   // 溶解日報は朝8時で日付が切りかわる
@@ -1237,7 +1024,9 @@ const Melt=(function(){
       rows.forEach((r,i)=>{ if(r&&r.tap){ pour={no:i+1,mat:lab(r.mat||r.plan),t:r.tap}; lastTap=Math.max(lastTap,i); } });
       const D=yd(), [yy,mo,dd]=D.split("-").map(Number), now=Date.now();
       const stAt=v=>{ const m=/^(\d{1,2}):(\d{2})/.exec(v||""); if(!m) return null; const h=+m[1]; return new Date(yy,mo-1,dd+(h<8?1:0),h,+m[2]).getTime(); };
-      for(let i=lastTap+1;i<rows.length;i++){ const r=rows[i]; if(!r||r.tap) continue; const t=stAt(r.st); if(t!=null&&t<=now+60000){ melt={no:i+1,mat:lab(r.mat||r.plan),t:r.st,plan:!r.mat&&!!r.plan}; break; } }
+      // 自動で入った開始時刻（前の出湯＋5分）だけのチャージは、開始から2時間までを溶解中とみなす（その日の最後の出湯のあとに残る自動の開始時刻で「溶解中」にしない）
+      const busyR=r=>["sen","kou","dar","drM","kat","sil","addC","addSi","addSc","ce","c","si","ten","temp"].some(k=>(r[k]||"")!=="");
+      for(let i=lastTap+1;i<rows.length;i++){ const r=rows[i]; if(!r||r.tap) continue; const t=stAt(r.st); if(t!=null&&t<=now+60000&&(!r.stAuto||busyR(r)||now-t<2*3600e3)){ melt={no:i+1,mat:lab(r.mat||r.plan),t:r.st,plan:!r.mat&&!!r.plan}; break; } }
       // 開始時刻が入っていないとき：最後の出湯の次のチャージに、材質以外の入力（原材料など）が始まっていれば溶解中とみなす
       if(!melt){ const r=rows[lastTap+1]; if(r&&!r.tap&&!r.st&&["sen","kou","dar","drM","kat","sil","addC","addSi","addSc","ce","c","si","ten","temp","worker"].some(k=>(r[k]||"")!=="")) melt={no:lastTap+2,mat:lab(r.mat||r.plan),t:"",plan:!r.mat&&!!r.plan}; }
       const last=melt?melt.no-1:lastTap;
@@ -1249,7 +1038,7 @@ const Melt=(function(){
   function same(a,b){ a=norm(a); b=norm(b); if(!a||!b) return true; return a===b||a.startsWith(b)||b.startsWith(a); }
   const chip=m=>`<b class="mchip ${MC[m]||""}">${esc(m||"－")}</b>`;
   function render(){ const box=$("meltBar"); if(!box) return;
-    if(!url()||!state||state.date!==todayStr()){ box.hidden=true; return; } box.hidden=false;
+    if(!url()||!state||(state.date!==todayStr()&&state.date!==yd())){ box.hidden=true; return; } box.hidden=false;
     if(!info){ box.className="meltbar"; box.innerHTML=err?`溶解日報を読み込めませんでした（${esc(err)}）`:"溶解日報を読み込み中…"; return; }
     const {melt,pour,next}=info, P=[];
     const sMelt=melt?`<span class="mi">🔥 溶解中 <small>Sedang dilebur</small> No.${melt.no} ${chip(melt.mat)}${melt.plan?"<small>(予定)</small>":""}${melt.t?` <small>${esc(melt.t)}〜</small>`:""}</span>`:`<span class="mi">🔥 溶解中：なし</span>`;
@@ -1272,19 +1061,19 @@ const Melt=(function(){
   return {load,render,on:()=>!!url()};
 })();
 
-// ---- 溶解中の材質・作業者名の共有（造型日報）----
-const MELT_ROLE="mold";
-function meltMine(){ for(let i=state.rows.length-1;i>=0;i--){ const it=(state.rows[i].items||[]).find(x=>x.hin&&x.mat); if(it) return {label:"造型中 "+it.hin,mat:it.mat}; } return null; }
-function CREW_URL(){ return Sync.getCfg().syncUrl||""; }
-function CREW_TOKEN(){ return Sync.getCfg().token||""; }
-function CREW_CHANGED(){ renderWorkers(); if(!wAdding) renderWorkerSel(); }
+// ---- 溶解中の材質・作業者名の共有（注湯日報）----
+const MELT_ROLE="pour";
+function meltMine(){ for(let c=state.blocks.length-1;c>=0;c--){ const b=state.blocks[c]; if(!blockHas(b)&&!b.mat) continue; let m=b.mat; if(!m){ const r=[...b.rows].reverse().find(x=>rowHas(x)&&x.mat); m=r&&r.mat; } return m?{label:"注湯中 チャージ"+(c+1),mat:m}:null; } return null; }
+function CREW_URL(){ return Link.cfg().url||""; }
+function CREW_TOKEN(){ return Link.cfg().token||""; }
+function CREW_CHANGED(){ renderWorkers(); const act=document.activeElement; if(!(act&&act.closest&&act.closest("#rows"))) renderRows(); }
 // ---- PWA ----
 (function(){
   const standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
   const httpOk = /^https?:$/.test(location.protocol);
   let deferred=null;
-  if(httpOk && !standalone) $("btnInstall").hidden=VIEW;
-  window.addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); deferred=e; $("btnInstall").hidden=VIEW; });
+  if(httpOk && !standalone) $("btnInstall").hidden=false;
+  window.addEventListener("beforeinstallprompt",e=>{ e.preventDefault(); deferred=e; $("btnInstall").hidden=false; });
   window.addEventListener("appinstalled",()=>{ $("btnInstall").hidden=true; toast("ホーム画面に追加しました"); });
   $("btnInstall").onclick=async()=>{
     if(deferred){ deferred.prompt(); try{ await deferred.userChoice; }catch(e){} deferred=null; }
@@ -1300,22 +1089,79 @@ function CREW_CHANGED(){ renderWorkers(); if(!wAdding) renderWorkerSel(); }
 })();
 
 
+// ---- v15：溶解の最終チャージが注湯で終わるまで、次の日の日報へ移れないようにする ----
+// 溶解日報（その日＝朝8時まで）の出湯済み＋溶解中のチャージ数と、注湯日報（同じ日・全号機）のチャージ数を比べる
+const Gate=(function(){
+  const yUrl=()=>CFG.yokaiUrl||"", yTok=()=>CFG.yokaiToken||"OWHKxlWeao3gjTQS"; const C={}, OK={};
+  async function getJ(base,params){ const u=base+(base.includes("?")?"&":"?")+new URLSearchParams(params); const j=await (await fetch(u,{redirect:"follow"})).json(); if(!j.ok) throw new Error(j.error||"error"); return j; }
+  // v21：材質だけ先に入れたチャージは数えない。出湯済み・開始時刻が今までに来ている・原材料などの入力が始まっているチャージを数える
+  let gDate="";
+  //   v22：自動で入った開始時刻（前の出湯＋5分）だけ・作業者だけのチャージは数えない（その日の最後の出湯のあとに自動で開始時刻が入るため）
+  const started=r=>{ if(r.tap) return true; if(["sen","kou","dar","drM","kat","sil","addC","addSi","addSc","ce","c","si","ten","temp"].some(k=>(r[k]||"")!=="")) return true;
+    const m=/^(\d{1,2}):(\d{2})/.exec(r.st||""); if(!m||!gDate||r.stAuto) return false; const [y,mo,d]=gDate.split("-").map(Number), h=+m[1];
+    return new Date(y,mo-1,d+(h<8?1:0),h,+m[2]).getTime()<=Date.now()+60000; };
+  const nBlocks=blocks=>(blocks||[]).filter(b=>b&&(b.rows||[]).some(x=>x&&x.time)).length;
+  async function check(date,equip){ const k=date+"|"+equip;
+    try{ if(!yUrl()) return (C[k]={at:Date.now(),pending:0});
+      const mine=nBlocks(state&&state.date===date&&state.equip===equip?state.blocks:(LS.get(APP+":day:"+date+"|"+equip,{}).blocks));
+      if(!mine) return (C[k]={at:Date.now(),pending:0});   // この号機はこの日に注湯していない
+      gDate=date; const yj=await getJ(yUrl(),{action:"load",token:yTok(),date,equip:"溶解"}); const rows=[]; (yj.items||[]).forEach(it=>{ if(it.type==="row") rows[+it.ref]=it.raw||{}; });
+      let exp=0, lastNo=0, lastTap=""; rows.forEach((r,i)=>{ if(r&&(r.tap||started(r))){ exp++; lastNo=i+1; lastTap=r.tap||""; } });
+      let others=0; const c=Sync.getCfg();
+      for(const e of EQUIPS){ if(e===equip) continue; let n=nBlocks(LS.get(APP+":day:"+date+"|"+e,{}).blocks);
+        if(c&&c.syncUrl){ try{ const j=await getJ(c.syncUrl,{action:"load",token:c.token,date,equip:e}); n=Math.max(n,(j.items||[]).filter(it=>it.type==="block"&&((it.raw||{}).rows||[]).some(x=>x&&x.time)).length); }catch(x){} }
+        others+=n; }
+      const poured=mine+others; return (C[k]={at:Date.now(),exp,poured,pending:Math.max(0,exp-poured),lastNo,lastTap}); }
+    catch(e){ return (C[k]={at:Date.now(),pending:0,err:String(e.message||e)}); } }   // 溶解日報が読めないときは止めない
+  function override(){ const k=state.date+"|"+state.equip; const pin=prompt("溶解日報のチャージ数がまちがっているときだけ使います。\n管理者パスワードを入れてください");
+    if(pin==null) return; if(pin!==String(CFG.adminPin||"0726")){ toast("パスワードがちがいます"); return; } OK[k]=true; toast("管理者の確認で、当日の日報へ移れるようにしました"); renderNight(); }
+  return {check,cached:(d,e)=>C[d+"|"+e],isOk:(d,e)=>!!OK[d+"|"+e],override};
+})();
+// 先の日付へ移るとき：いまの日報（前の日）が溶解の最終チャージを注湯し終わっていなければ止める
+async function canLeave(to){ if(VIEW||!state||!to||to<=state.date) return true; if(Gate.isOk(state.date,state.equip)) return true;
+  if(state.date!==prevDay(todayStr())) return true;
+  const g=await Gate.check(state.date,state.equip); if(!(g.pending>0)) return true;
+  toast(`溶解の最終チャージ No.${g.lastNo} の注湯がまだです（溶解 ${g.exp}／注湯 ${g.poured} チャージ）。終わるまで移れません`); renderNight(); return false; }
+// アプリを開いたとき：前の日の溶解の最終チャージがまだ注湯されていなければ、前の日の日報を開く
+async function gateOnOpen(){ if(VIEW) return; const t=todayStr(), p=prevDay(t); if(state.date!==t||nBlocksNow()) return;
+  const g=await Gate.check(p,state.equip); if(state.date!==t||nBlocksNow()||!(g.pending>0)) return;
+  load(p,state.equip); sel=firstOpen(); renderAll(); Sync.pull(); Link.load(true); renderNight(); toast("前の日の溶解の最終チャージがまだ注湯されていないので、前の日の日報を開きました"); }
+function nBlocksNow(){ return state.blocks.some(b=>b.rows.some(x=>x.time)); }
+
+// ---- 夜勤の日報を朝まで続けているときの帯 ----
+function renderNight(){ const bar=$("nightBar"); if(!bar) return; const t=todayStr(), h=new Date().getHours();
+  // v15：溶解の最終チャージを注湯し終わるまで、当日の日報へは移れない
+  if(!VIEW&&state.date===prevDay(t)){ const g=Gate.cached(state.date,state.equip); if(!g||Date.now()-g.at>30000) Gate.check(state.date,state.equip).then(()=>renderNight());
+    if(g&&g.pending>0&&!Gate.isOk(state.date,state.equip)){ const md=d=>{ const [,m,dd]=d.split("-"); return `${+m}/${+dd}`; }; bar.hidden=false;
+      bar.innerHTML=`<span class="ntx">🔒 溶解の最終 No.${g.lastNo}（${g.lastTap?`出湯 ${esc(g.lastTap)}`:"溶解中"}）の注湯がまだです　溶解 ${g.exp}／注湯 ${g.poured} ch <span class="id" style="color:#d1c4e9">Selesaikan charge terakhir dulu</span></span>`+
+        `<button id="btnToToday" disabled style="opacity:.5">当日（${md(t)}）の日報へ（あと ${g.pending} チャージ）</button><button id="gateOverride" style="background:transparent;color:#d1c4e9;border:1px solid #9575cd;font-size:12px;min-height:34px">溶解日報がまちがっているとき（管理者）</button>`; return; } }
+  if(state.date!==prevDay(t)||h<DAY_START||h>=12){ bar.hidden=true; return; } const li=lastBlockInfo(state); if(!li||!li.night){ bar.hidden=true; return; }
+  const md=d=>{ const [,m,dd]=d.split("-"); return `${+m}/${+dd}`; };
+  { const B=state.blocks, tm=x=>{ const m=/^(\d{1,2}):(\d{2})/.exec((x&&x.time)||""); return m?+m[1]*60+(+m[2]):null; };
+    let lastNight=-1, lastUsed=-1; B.forEach((b,i)=>{ const ts=b.rows.map(tm).filter(v=>v!=null); if(ts.length){ lastUsed=i; if(ts.some(v=>v<DAY_START*60)) lastNight=i; } });
+    // v16：溶解日報（同じ日）のチャージ数まで注湯しているだけなら、朝のチャージも前の日の分なので出さない
+    const g0=Gate.cached(state.date,state.equip), inMelt=g0&&g0.exp!=null&&g0.poured<=g0.exp;
+    if(lastUsed>lastNight&&lastNight>=0&&!inMelt){ bar.hidden=false; bar.innerHTML=`⚠ ${lastUsed+1}チャージ目は朝からの新しいチャージです。日勤のチャージは当日（${md(t)}）の日報に入れてください <span class="id" style="color:#d1c4e9">Masukkan ke laporan hari ini</span><button id="btnToToday">当日（${md(t)}）の日報へ</button>`; return; } }
+  { const g1=Gate.cached(state.date,state.equip); if(g1&&g1.exp&&g1.poured>=g1.exp){ bar.hidden=false;
+      bar.innerHTML=`✅ 溶解 ${g1.exp} チャージ ／ 注湯 ${g1.poured} チャージ。${md(state.date)} の注湯はすべて終わりました <span class="id" style="color:#d1c4e9">Selesai</span><button id="btnToToday">当日（${md(t)}）の日報へ</button>`; return; } }
+  bar.hidden=false; bar.innerHTML=`🌙 夜勤（${md(state.date)}）の日報です　${li.no}チャージ目 注湯中 <span class="id" style="color:#d1c4e9">Laporan shift malam</span><button id="btnToToday">注湯が終わったら → 当日（${md(t)}）の日報へ</button>`; }
+document.addEventListener("click",async e=>{ if(e.target.closest&&e.target.closest("#gateOverride")){ Gate.override(); return; }
+  if(e.target.closest&&e.target.closest("#btnToToday")){ try{ await Sync.flush(); }catch(x){} if(!(await canLeave(todayStr()))) return; load(todayStr(),state.equip); sel=firstOpen(); renderAll(); Sync.pull(); Link.load(true); renderNight(); window.scrollTo({top:0,behavior:"smooth"}); } });
+setInterval(renderNight,30000);
 // ---- init ----
 { const last=LS.get(APP+":last",null); const t=todayStr(); const qp=new URLSearchParams(location.search), qe=qp.get("equip"), qd=qp.get("date");
   if(qe&&EQUIPS.includes(qe)){ load((qd&&/^\d{4}-\d{2}-\d{2}$/.test(qd))?qd:t, qe); try{ history.replaceState(null,"",location.pathname+(VIEW?"?view":"")); }catch(e){} }
-  else load(t,(last&&last.date===t&&last.equip)||defaultEquip()); }
+  else { const eq=(last&&last.equip)||defaultEquip(); const pv=morningPrev(eq); load(pv||t,(last&&(last.date===t||last.date===pv)&&last.equip)||eq); } }
 // ---- もう一つの日報へ切りかえ（同じ号機で開く）----
 { const sw=$("btnSwitch"); const upd=()=>{ $("swEq").textContent=state.equip; };
   sw.addEventListener("click",async e=>{ e.preventDefault(); try{ await Sync.flush(); }catch(x){} const q=new URLSearchParams({equip:state.equip}); if(state.date!==todayStr()) q.set("date",state.date);
     const qv=VIEW?"&view":""; location.href=sw.dataset.to+"?"+q.toString()+qv; });
   upd(); $("equip").addEventListener("change",upd); $("date").addEventListener("change",upd); setInterval(upd,3000); if(/[?&]export=/.test(location.search)) sw.hidden=true; }
-sel=Math.max(0,state.rows.findIndex(r=>!rowHas(r))); if(sel<0) sel=0;
+sel=firstOpen();
 renderAll();
-if(VIEW){ $("viewBadge").hidden=false; document.title="造型日報（閲覧用）"; document.querySelectorAll("#entryCard input,.card input").forEach(el=>el.readOnly=true); }
-Sync.status(); Sync.flush().then(()=>Sync.pull()); Sync.loadMaster(false); Melt.load(); Crew.pull();
-if(!/[?&]export=/.test(location.search)){ Yield.refresh(); $("date").addEventListener("change",()=>Yield.refresh()); $("equip").addEventListener("change",()=>Yield.refresh());
-  setInterval(()=>{ if(document.visibilityState==="visible") Yield.refresh(); },60000); document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") Yield.refresh(); }); }
-const EXP={csv:()=>csvRows(), master:async()=>{ await Sync.loadMaster(true); await SysM.load(); }, load:(d,q)=>load(d,q), empty:()=>!state.rows.some(rowHas)&&!liveEvents().length, name:()=>"造型日報_"+state.equip.replace(/[\\/:*?"<>|（）() ]/g,"")+"_"+state.date.replace(/-/g,"")+".xlsx"};
+if(VIEW){ $("viewBadge").hidden=false; document.title="注湯日報（閲覧用）"; document.querySelectorAll("#recordCheck,#c_mangan,#c_ryuka").forEach(el=>el.readOnly=true); }
+Sync.status(); Sync.flush().then(()=>Sync.pull()); Link.load(true); Melt.load(); Crew.pull(); gateOnOpen();
+const EXP={csv:()=>dataRows(), load:(d,q)=>load(d,q), empty:()=>!state.blocks.some(blockHas)&&!samplingRows()[1]&&!liveEvents().length, name:()=>"注湯日報_"+state.equip+"_"+state.date.replace(/-/g,"")+".xlsx"};
 // ---- 自動Excel出力（URL末尾に ?export=開始日..終了日 を付けて開くと、その期間の日報Excelを作って画面に埋め込む）----
 (async function(){
   const m=/[?&]export=([^&#]*)/.exec(location.search); if(!m) return;
@@ -1336,7 +1182,6 @@ const EXP={csv:()=>csvRows(), master:async()=>{ await Sync.loadMaster(true); awa
       try{ EXP.load(x.date,x.equip); await Sync.pull();
         const sb=document.getElementById("syncStat"); if(sb&&/\berr\b/.test(sb.className)) throw new Error("スプレッドシートから読み込めませんでした");
         if(EXP.empty&&EXP.empty()) continue;
-        if(Yield) await Yield.refresh();
         res.files.push({date:x.date,name:EXP.name(),b64:await b64(buildXlsx())});
         if(EXP.csv){ const q=v=>{ v=v==null?"":String(v); return /[",\r\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
           const txt="\ufeff"+EXP.csv().map(r=>r.map(q).join(",")).join("\r\n")+"\r\n";

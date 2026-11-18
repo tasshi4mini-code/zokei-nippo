@@ -1,6 +1,6 @@
-// 造型日報 Service Worker
+// 注湯日報 Service Worker
 // アプリを更新したら VERSION を変えてください(自動で新しい版に切り替わります)
-const VERSION = "zokei-nippo-v28";
+const VERSION = "chuto2-nippo-v22";
 const FILES = ["./", "./index.html", "./manifest.webmanifest", "./config.js", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
 self.addEventListener("install", e => {
@@ -15,7 +15,7 @@ self.addEventListener("fetch", e => {
   // 画面(HTML)は「ネット優先・つながらなければ保存版」: 電波があれば常に最新版
   if (req.mode === "navigate" || req.url.endsWith("/config.js")) {
     e.respondWith(
-      fetch(req.url.split("#")[0], {cache: "no-store"}).then(res => { const cp = res.clone(); const key = req.mode === "navigate" ? "./index.html" : req; caches.open(VERSION).then(c => c.put(key, cp)); return res; })
+      fetch(req).then(res => { const cp = res.clone(); const key = req.mode === "navigate" ? "./index.html" : req; caches.open(VERSION).then(c => c.put(key, cp)); return res; })
         .catch(() => caches.match(req.mode === "navigate" ? "./index.html" : req).then(r => r || caches.match("./")))
     );
     return;
