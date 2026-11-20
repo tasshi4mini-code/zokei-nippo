@@ -137,6 +137,8 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
   table{min-width:0;font-size:10px}
   @page{size:A4 landscape;margin:8mm}
 }
+#entryCard.jumpflash{animation:jumpfl 1s ease-in-out 3;outline:4px solid #ff9800;outline-offset:2px}
+@keyframes jumpfl{50%{outline-color:transparent}}
 </style>
 <style>
 header.top{background:#1d4e5c}
@@ -487,6 +489,7 @@ input.unlock{background:#fff3e0;border-color:#e65100;color:#e65100;font-weight:b
 <div id="toast"></div>
 <script src="config.js"></script>
 <script>
+window.__jumpQ=location.search;   // 整合性チェックからとんできたときの ?jump=（あとでアドレスを消す処理より先に覚えておく）
 (function(){
 "use strict";
 const APP="zokei", MINR=20, ADDR=5, MAXIT=3;
@@ -1349,6 +1352,12 @@ const EXP={csv:()=>csvRows(), master:async()=>{ await Sync.loadMaster(true); awa
   res.files.forEach(f=>{ const p=document.createElement("pre"); p.className="xf"; p.setAttribute("data-d",f.date); p.setAttribute("data-n",u8(f.name)); p.textContent=f.b64; box.appendChild(p); });
   box.id="exportResult"; box.setAttribute("data-ok",res.ok?"1":"0"); box.setAttribute("data-err",u8(res.errors.join("\n"))); document.body.appendChild(box); document.title="EXPORT_DONE";
 })();
+// ---- 管理者画面の「整合性チェック」からとんできたとき：?jump=日付|号機|行 で、その日報のその行を開く ----
+(function(){ const m=/[?&]jump=([^&#]*)/.exec(window.__jumpQ||location.search); if(!m) return; const [d,e,r]=decodeURIComponent(m[1]).split("|"); if(!/^\d{4}-\d{2}-\d{2}$/.test(d||"")) return;
+  setTimeout(()=>{ try{ load(d,e||state.equip); try{ if(typeof autoSel!=="undefined") autoSel=false; }catch(_x){} const n=+(r||0); if(n>0&&state.rows&&n<=state.rows.length) sel=n-1;
+      renderAll(); Sync.pull(); const ec=document.getElementById("entryCard"); if(ec){ ec.scrollIntoView({block:"start"}); ec.classList.add("jumpflash"); setTimeout(()=>ec.classList.remove("jumpflash"),3000); }
+      toast(`${+d.slice(5,7)}/${+d.slice(8)} ${e||""} ${n?"No."+n+" ":""}を開きました（整合性チェックから）`);
+      try{ history.replaceState(null,"",location.pathname+(VIEW?"?view":"")); }catch(_x){} }catch(x){ console.warn("jump",x); } },400); })();
 })();
 </script>
 <!-- ===== 後日の変更の通知：前の日の日報を、翌朝 7:30（毎朝の自動出力）より後に変えたら、変更前→変更後を管理者画面に知らせる ===== -->
