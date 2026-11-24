@@ -1356,10 +1356,191 @@ const EXP={csv:()=>csvRows(), master:async()=>{ await Sync.loadMaster(true); awa
 (function(){ const m=/[?&]jump=([^&#]*)/.exec(window.__jumpQ||location.search); if(!m) return; const [d,e,r]=decodeURIComponent(m[1]).split("|"); if(!/^\d{4}-\d{2}-\d{2}$/.test(d||"")) return;
   setTimeout(()=>{ try{ load(d,e||state.equip); try{ if(typeof autoSel!=="undefined") autoSel=false; }catch(_x){} const n=+(r||0); if(n>0&&state.rows&&n<=state.rows.length) sel=n-1;
       renderAll(); Sync.pull(); const ec=document.getElementById("entryCard"); if(ec){ ec.scrollIntoView({block:"start"}); ec.classList.add("jumpflash"); setTimeout(()=>ec.classList.remove("jumpflash"),3000); }
-      toast(`${+d.slice(5,7)}/${+d.slice(8)} ${e||""} ${n?"No."+n+" ":""}を開きました（整合性チェックから）`);
+      toast(`${+d.slice(5,7)}/${+d.slice(8)} ${e||""} ${n?"No."+n+" ":""}を開きました`);
       try{ history.replaceState(null,"",location.pathname+(VIEW?"?view":"")); }catch(_x){} }catch(x){ console.warn("jump",x); } },400); })();
+window.__hsHin=()=>{ try{ if(state.blocks){ const b=state.blocks[sel]; const r=b&&(b.rows||[]).find(x=>x&&x.hin); return r?r.hin:""; } const r=state.rows&&state.rows[sel]; return r?(r.hin||(r.items&&r.items[0]&&r.items[0].hin)||""):""; }catch(e){ return ""; } };   // 品番履歴を開いたときに、いま選んでいる行の品番を入れておく
 })();
 </script>
+<!-- ===== 品番履歴（造型・注湯・ショット・検査の日報から、品番の履歴を工程ごとに出す。期間・ロット・号機などで絞り込み）===== -->
+<style>
+#hsOv{position:fixed;inset:0;background:#eef1f6;display:none;flex-direction:column;z-index:9999;font-family:Meiryo,"Hiragino Sans",sans-serif;color:#1d2330}
+#hsOv.on{display:flex}
+#hsOv *{box-sizing:border-box}
+#hsOv .hh{background:#00796b;color:#fff;padding:8px 16px;display:flex;align-items:center;gap:10px}
+#hsOv .hh b{font-size:19px}#hsOv .hh small{opacity:.9}#hsOv .hh .sp{flex:1}
+#hsOv .hh button{min-height:40px;border-radius:8px;border:1px solid #fff;background:transparent;color:#fff;font-weight:bold;padding:0 14px;font-family:inherit;font-size:15px}
+#hsOv .hb{flex:1;overflow-y:auto;padding:12px 16px 60px;-webkit-overflow-scrolling:touch}
+#hsOv .hcard{background:#fff;border-radius:12px;padding:12px 14px;margin:0 auto 12px;max-width:1180px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+#hsOv .hf{display:flex;flex-direction:column;gap:3px;font-size:13px;color:#5d6778}
+#hsOv .hf small{font-size:11px}
+#hsOv input,#hsOv select{font-size:17px;min-height:46px;border:2px solid #b0bec5;border-radius:8px;padding:0 10px;font-family:inherit;color:#1d2330;background:#fff;width:100%}
+#hsOv .q1{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:end}
+#hsOv #hsHin{font-size:22px;font-weight:bold;text-transform:uppercase;border-color:#00796b}
+#hsOv .go{min-height:50px;font-size:18px;font-weight:bold;border-radius:10px;border:0;background:#00796b;color:#fff;padding:0 24px;font-family:inherit}
+#hsOv .flt{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:10px;align-items:end}
+#hsOv .quick{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+#hsOv .quick button{min-height:36px;border-radius:99px;border:1px solid #80cbc4;background:#e0f2f1;color:#004d40;padding:0 14px;font-family:inherit;font-size:14px}
+#hsOv .quick button.on{background:#00796b;color:#fff;border-color:#00796b}
+#hsOv .clr{min-height:46px;border-radius:8px;border:1px solid #b0bec5;background:#fff;font-family:inherit;font-size:15px}
+#hsOv .hint{font-size:12px;color:#5d6778;margin-top:6px}
+#hsOv .tabs{display:flex;gap:8px;max-width:1180px;margin:0 auto}
+#hsOv .tabs button{flex:1;min-height:58px;border-radius:12px 12px 0 0;border:0;background:#cfd8dc;color:#455a64;font-size:18px;font-weight:bold;font-family:inherit;position:relative}
+#hsOv .tabs button small{display:block;font-size:12px;font-weight:normal}
+#hsOv .tabs button .n{position:absolute;top:6px;right:10px;background:#fff;color:#263238;border-radius:99px;font-size:12px;padding:1px 8px}
+#hsOv .tabs button.on[data-p="z"]{background:#1d4e5c;color:#fff}#hsOv .tabs button.on[data-p="c"]{background:#5c1f16;color:#fff}#hsOv .tabs button.on[data-p="s"]{background:#37474f;color:#fff}#hsOv .tabs button.on[data-p="k"]{background:#3d3a8c;color:#fff}
+#hsOv .panel{background:#fff;border-radius:0 0 12px 12px;padding:12px 14px;max-width:1180px;margin:0 auto 12px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-top:5px solid #3d3a8c}
+#hsOv .panel.z{border-top-color:#1d4e5c}#hsOv .panel.c{border-top-color:#5c1f16}#hsOv .panel.s{border-top-color:#37474f}
+#hsOv .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:10px}
+#hsOv .tile{border:1px solid #d5dbe4;border-radius:10px;padding:8px 12px}
+#hsOv .tile .l{font-size:12px;color:#5d6778}#hsOv .tile .v{font-size:24px;font-weight:bold}#hsOv .tile .s{font-size:12px;color:#5d6778}
+#hsOv .tw{overflow-x:auto}
+#hsOv table{width:100%;border-collapse:collapse;font-size:15px;min-width:0}
+#hsOv th{background:#eceff1;padding:7px 8px;border:1px solid #d5dbe4;white-space:nowrap;font-size:13px;cursor:pointer;position:static;color:#1d2330}
+#hsOv td{border:1px solid #d5dbe4;padding:6px 8px;vertical-align:top;background:#fff;color:#1d2330}
+#hsOv td.n{text-align:right;white-space:nowrap}
+#hsOv tr.sum td{background:#e0f2f1;font-weight:bold}
+#hsOv .lot{font-weight:bold;color:#00695c;white-space:nowrap}
+#hsOv .ng{color:#b00020;font-weight:bold}
+#hsOv .sub{font-size:12px;color:#5d6778}
+#hsOv .open{min-height:34px;border-radius:6px;border:1px solid #90a4ae;background:#fff;font-size:13px;font-family:inherit;white-space:nowrap}
+#hsOv .empty{padding:20px;text-align:center;color:#5d6778}
+#hsOv .prog{height:8px;background:#e3e7ee;border-radius:99px;overflow:hidden;margin:8px 0}#hsOv .prog i{display:block;height:100%;background:#00796b}
+#hsOv mark{background:#fff59d;padding:0 2px}
+.hsbtn{background:#ffd54f!important;color:#3a2a00!important;border-color:#ffd54f!important;font-weight:bold}
+@media (max-width:700px){ #hsOv .q1{grid-template-columns:1fr} #hsOv .tabs button{font-size:14px;min-height:52px} #hsOv .tabs button .n{top:2px;right:4px} }
+@media print{ #hsOv{display:none!important} }
+</style>
+<div id="hsOv">
+  <div class="hh"><b>🔍 品番履歴</b><small>Riwayat nomor produk</small><span class="sp"></span><button type="button" id="hsClose">閉じる ✕</button></div>
+  <div class="hb">
+    <div class="hcard">
+      <div class="q1">
+        <label class="hf">品番 <small>Nomor produk（一部だけでも可）</small><input id="hsHin" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="例 RD2331B"></label>
+        <button type="button" class="go" id="hsGo">検索</button>
+      </div>
+      <div class="flt">
+        <label class="hf">期間（から） <small>Dari</small><input type="date" id="hsFrom"></label>
+        <label class="hf">期間（まで） <small>Sampai</small><input type="date" id="hsTo"></label>
+        <label class="hf">ロット <small>Lot（例 C26-11-8　一部でも可）</small><input id="hsLot" autocomplete="off" autocapitalize="characters" placeholder="例 C26-11-8"></label>
+        <label class="hf">号機・設備・検査員 <small>Mesin / pemeriksa</small><select id="hsWho"><option value="">すべて</option></select></label>
+        <button type="button" class="clr" id="hsClr">絞り込みを消す</button>
+      </div>
+      <div class="quick" id="hsQuick"><button type="button" data-q="7">直近1週間</button><button type="button" data-q="m0">今月</button><button type="button" data-q="m1">先月</button><button type="button" data-q="90">3か月</button><button type="button" data-q="180">6か月</button></div>
+      <div class="hint">ロットで絞ると、造型・注湯は「そのロットの造型日」、ショット・検査は「そのロットを入れた記録」を出します。表の見出しを押すと並べかえできます。</div>
+    </div>
+    <div class="tabs" id="hsTabs">
+      <button type="button" data-p="z">造型<small>Cetakan</small><span class="n" id="hsNz">0</span></button>
+      <button type="button" data-p="c">注湯<small>Penuangan</small><span class="n" id="hsNc">0</span></button>
+      <button type="button" data-p="s">ショット<small>Shot</small><span class="n" id="hsNs">0</span></button>
+      <button type="button" data-p="k">検査<small>Inspeksi</small><span class="n" id="hsNk">0</span></button>
+    </div>
+    <div class="panel" id="hsPanel"></div>
+  </div>
+</div>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id), esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const P={z:{path:"/zokei-nippo/",name:"造型"},c:{path:"/chuto2-nippo/",name:"注湯"},s:{path:"/shot-nippo/",name:"ショット"},k:{path:"/kensa-nippo/",name:"検査"}};
+const ME=/zokei/.test(location.pathname)?"z":/chuto/.test(location.pathname)?"c":/shot/.test(location.pathname)?"s":"k";
+const DEF={kake:"カケ",ware:"割れ",dakon:"ダゴン",yuzakai:"湯境",suna:"砂カミ",hike:"ヒケ",hari:"張り気",oshi:"押し込み",yaki:"焼き付き",ikobu:"鋳コブ/バリ",ire:"入れ干し",shima:"島落ち",kata:"型ズレ"};
+const defL=k=>(window.__chgDef&&window.__chgDef[k])||DEF[k]||k;
+const pad=n=>String(n).padStart(2,"0"), ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const md=d=>`${+d.slice(5,7)}/${+d.slice(8)}`, wd=d=>"日月火水木金土"[new Date(d+"T00:00").getDay()], f0=n=>Math.round(n||0).toLocaleString();
+const num=v=>{ if(v===""||v==null) return null; const n=parseFloat(String(v).replace(/[，,]/g,".")); return isNaN(n)?null:n; };
+const norm=h=>String(h||"").normalize("NFKC").toUpperCase().replace(/[\s　]/g,"").replace(/^RD0*(\d)/,"RD$1");
+const lotDate=l=>{ const m=/(\d{2})-(\d{1,2})-(\d{1,2})/.exec(l||""); return m?`20${m[1]}-${pad(m[2])}-${pad(m[3])}`:""; };
+const lotOf=d=>`C${d.slice(2,4)}-${+d.slice(5,7)}-${+d.slice(8)}`;
+let tab=ME, sortK={z:["d",-1],c:["d",-1],s:["d",-1],k:["d",-1]}, DATA={z:[],c:[],s:[],k:[]}, busy=false, seq=0;
+const CFG={}, MON={};   // 設定と、読みこんだ月の日報（工程|月 → [{date,equip,items}]）
+async function cfgOf(p){ if(CFG[p]!==undefined) return CFG[p]; try{ const t=await (await fetch(P[p].path+"config.js",{cache:"no-store"})).text(); const w={}; new Function("window",t)(w); const c=w.SUNA_CONFIG||{}; CFG[p]=c.syncUrl?c:null; }catch(e){ CFG[p]=null; } return CFG[p]; }
+async function getJ(c,params){ const u=c.syncUrl+(c.syncUrl.includes("?")?"&":"?")+new URLSearchParams(Object.assign({token:c.token||""},params)); const j=await (await fetch(u,{redirect:"follow"})).json(); if(!j.ok) throw new Error(j.error||"error"); return j; }
+async function month(p,m,cur){ const key=p+"|"+m, o=MON[key]; if(o&&(Date.now()-o.at<(cur?120000:1800000))) return o.v; const c=await cfgOf(p); if(!c) return [];
+  let v=null; try{ const r=await fetch(c.syncUrl,{method:"POST",body:JSON.stringify({token:c.token,action:"monthData",month:m}),redirect:"follow"}); const j=await r.json();
+      if(j&&j.ok&&j.month===m&&j.days){ v=Object.entries(j.days).map(([k,items])=>{ const i=k.indexOf("|"); return {date:k.slice(0,i),equip:k.slice(i+1),items:items||[]}; }); } }catch(e){}
+  if(!v){ v=[]; try{ const L=(await getJ(c,{action:"list",month:m})).days||[]; let i=0;   // 月まとめが使えないときは1日ずつ
+      await Promise.all(Array.from({length:5},async()=>{ while(i<L.length){ const d=L[i++]; if(String(d.date).slice(0,7)!==m) continue; try{ const j=await getJ(c,{action:"load",date:d.date,equip:d.equip||""}); v.push({date:d.date,equip:d.equip||"",items:j.items||[]}); }catch(e){} } })); }catch(e){} }
+  MON[key]={at:Date.now(),v}; return v; }
+// 日報 → 1行ずつの記録
+function parse(p,days){ const out=[];
+  days.forEach(x=>{ const d=x.date, eq=x.equip;
+    if(p==="z") x.items.forEach(it=>{ if(it.type!=="row") return; const r=it.raw||{}; (r.items||[]).forEach((v,k)=>{ if(!v||!v.hin) return; const fr=num(k>0&&v.tot!==""&&v.tot!=null?v.tot:r.total)||0, q=num((r.qtyOut||[])[k]);
+        out.push({d,eq,no:+it.ref+1,hin:v.hin,name:v.name||"",t:(r.st||"")+(r.en?"〜"+r.en:""),ts:r.st||"",fr,q:q!=null?q:(num(v.koma)||0)*Math.max(0,fr-(num(r.unp)||0)),sq:r.sq||"",w:r.worker||"",test:!!v.test}); }); });
+    if(p==="c") x.items.forEach(it=>{ if(it.type!=="block") return; const b=it.raw||{}; (b.rows||[]).forEach(r=>{ if(!r||!r.time||!r.hin) return; const t=num(r.temp), fin=r.rrjudge||r.rejudge||r.judge||"", re=num(r.rrtemp)!=null?num(r.rrtemp):num(r.retemp);
+        out.push({d,eq,no:+it.ref+1,ch:+it.ref+1,hin:r.hin,t:r.time,ts:r.time,temp:t,spec:r.spec||"",j:r.judge||"",re,fin,w:r.worker||""}); }); });
+    if(p==="s") x.items.forEach(it=>{ if(it.type!=="row") return; const r=it.raw||{}; if(!r.hin) return; const t1=num(r.t1)||0,t2=num(r.t2)||0,t3=num(r.t3)||0;
+        out.push({d,eq,no:+it.ref+1,hin:r.hin,t:r.st||"",ts:r.st||"",lot:r.lot||"",pal:r.pal||"",t1,t2,t3,tm:t1+t2+t3,w:r.worker||""}); });
+    if(p==="k") x.items.forEach(it=>{ if(it.type!=="row") return; const r=it.raw||{}; if(!r.hin||r.contFrom) return;
+        const ngOf=o=>Object.keys(o||{}).reduce((a,k)=>a+(num(o[k])||0),0), det=o=>Object.keys(o||{}).filter(k=>num(o[k])).map(k=>`${defL(k)}${num(o[k])}`).join("・");
+        const L=r.lot2?[[r.lot1||r.lot,num(r.t1)||0,r.d1||{}],[r.lot2,num(r.t2)||0,r.d2||{}]]:[[r.lot1||r.lot,num(r.total)||0,r.d||{}]];
+        L.forEach(([l,g,dd])=>{ const ng=ngOf(dd), ok=r.bari?0:g; out.push({d,eq,no:+it.ref+1,hin:r.hin,t:(r.st||"")+(r.en?"〜"+r.en:"〜"),ts:r.st||"",lot:l||"",ok,ng,rate:ok+ng?ng/(ok+ng)*100:0,det:det(dd),bari:!!r.bari}); }); }); });
+  return out; }
+function months(f,t){ const a=f?new Date(f+"T00:00"):new Date(new Date().getFullYear(),new Date().getMonth()-5,1), b=t?new Date(t+"T00:00"):new Date(), L=[];
+  for(let d=new Date(a.getFullYear(),a.getMonth(),1);d<=b&&L.length<13;d.setMonth(d.getMonth()+1)) L.push(`${d.getFullYear()}-${pad(d.getMonth()+1)}`); return L; }
+async function search(){ const h=norm($("hsHin").value); if(h.length<3){ render(); return; } const my=++seq, M=months($("hsFrom").value,$("hsTo").value), cm=ymd(new Date()).slice(0,7);
+  const ks=["z","c","s","k"], tot=ks.length*M.length; let done=0; busy=true;
+  const prog=()=>{ if(my===seq) $("hsPanel").innerHTML=`<div class="empty">日報を読みこんでいます… ${done} / ${tot}<div class="prog"><i style="width:${Math.round(done/tot*100)}%"></i></div><span class="sub">はじめて読む月は少し時間がかかります（2回目からは速くなります）</span></div>`; };
+  prog(); const R={z:[],c:[],s:[],k:[]};
+  await Promise.all(ks.map(async p=>{ for(const m of M){ try{ R[p].push(...parse(p,await month(p,m,m===cm))); }catch(e){} done++; prog(); } }));
+  if(my!==seq) return; busy=false; DATA=R; whoList(); render(); }
+function filtered(){ const h=norm($("hsHin").value), f=$("hsFrom").value, t=$("hsTo").value, lot=$("hsLot").value.trim().toUpperCase(), who=$("hsWho").value;
+  const ok=x=>h.length>=3&&norm(x.hin).includes(h)&&(!f||x.d>=f)&&(!t||x.d<=t), okW=(x,p)=>!who||p!==tab||x.eq===who;
+  const lz=x=>!lot||lotOf(x.d).toUpperCase().includes(lot), ll=x=>!lot||String(x.lot).toUpperCase().includes(lot);
+  return {z:DATA.z.filter(x=>ok(x)&&okW(x,"z")&&lz(x)),c:DATA.c.filter(x=>ok(x)&&okW(x,"c")&&lz(x)),s:DATA.s.filter(x=>ok(x)&&okW(x,"s")&&ll(x)),k:DATA.k.filter(x=>ok(x)&&okW(x,"k")&&ll(x))}; }
+function whoList(){ const v=$("hsWho").value, h=norm($("hsHin").value), all=[...new Set(DATA[tab].filter(x=>!h||norm(x.hin).includes(h)).map(x=>x.eq))].sort();
+  $("hsWho").innerHTML=`<option value="">すべて</option>`+all.map(x=>`<option${x===v?" selected":""}>${esc(x)}</option>`).join(""); if(!all.includes(v)) $("hsWho").value=""; }
+function sortL(L,p){ const [k,dir]=sortK[p]; return [...L].sort((a,b)=>{ const x=a[k],y=b[k]; const c=(typeof x==="number"||typeof y==="number")?((x??-1e9)-(y??-1e9)):String(x??"").localeCompare(String(y??""));
+  return c*dir||(b.d+String(b.ts).padStart(5,"0")).localeCompare(a.d+String(a.ts).padStart(5,"0")); }); }
+const th=(p,k,l)=>{ const s=sortK[p]; return `<th data-s="${k}">${l}${s[0]===k?(s[1]>0?" ▲":" ▼"):""}</th>`; };
+const hl=s=>{ const q=$("hsLot").value.trim(); if(!q) return esc(s); const i=String(s).toUpperCase().indexOf(q.toUpperCase()); return i<0?esc(s):esc(String(s).slice(0,i))+"<mark>"+esc(String(s).slice(i,i+q.length))+"</mark>"+esc(String(s).slice(i+q.length)); };
+const openBtn=(p,x)=>`<button type="button" class="open" data-j="${p}|${x.d}|${esc(x.eq)}|${x.no||""}">日報を開く</button>`;
+function render(){ const P0=$("hsPanel"); document.querySelectorAll("#hsTabs button").forEach(b=>b.classList.toggle("on",b.dataset.p===tab)); P0.className="panel "+tab;
+  if(busy) return; const R=filtered(); ["z","c","s","k"].forEach(p=>$("hsN"+p).textContent=R[p].length);
+  if(norm($("hsHin").value).length<3){ P0.innerHTML=`<div class="empty">品番を3文字以上入れて「検索」を押してください</div>`; return; }
+  const L=sortL(R[tab],tab); if(!L.length){ P0.innerHTML=`<div class="empty">この条件の記録はありません（期間を広げると見つかることがあります）</div>`; return; }
+  const ds=L.map(x=>x.d).sort(), days=new Set(ds).size, rng=`${md(ds[0])}〜${md(ds[ds.length-1])}`, dl=x=>`<b>${md(x.d)}</b>(${wd(x.d)})`; let h="";
+  if(tab==="z"){ const fr=L.reduce((a,x)=>a+x.fr,0), q=L.reduce((a,x)=>a+x.q,0), sqH=L.filter(x=>x.sq==="高").length, sqL=L.filter(x=>x.sq==="低").length;
+    h=`<div class="tiles"><div class="tile"><div class="l">生産個数</div><div class="v">${f0(q)} 個</div><div class="s">${L.length} 件・${days} 日（${rng}）</div></div><div class="tile"><div class="l">造型枠数</div><div class="v">${f0(fr)} 枠</div></div><div class="tile"><div class="l">スクイズ圧</div><div class="v" style="font-size:20px">高 ${sqH} 件・低 ${sqL} 件</div>${L.length-sqH-sqL?`<div class="s">未入力 ${L.length-sqH-sqL} 件</div>`:""}</div></div>`+
+      `<div class="tw"><table><thead><tr>${th("z","d","日付・ロット")}${th("z","eq","号機")}${th("z","hin","品番")}${th("z","ts","時刻")}${th("z","fr","枠数")}${th("z","q","生産個数")}${th("z","sq","スクイズ圧")}${th("z","w","作業者")}<th></th></tr></thead><tbody>`+
+      L.map(x=>`<tr><td>${dl(x)} <span class="lot">${hl(lotOf(x.d))}</span></td><td>${esc(x.eq)}</td><td>${esc(x.hin)}${x.test?" <span class='sub'>(テスト)</span>":""}<div class="sub">${esc(x.name)}</div></td><td style="white-space:nowrap">${esc(x.t)}</td><td class="n">${f0(x.fr)}</td><td class="n"><b>${f0(x.q)}</b></td><td style="text-align:center">${esc(x.sq)}</td><td>${esc(x.w)}</td><td>${openBtn("z",x)}</td></tr>`).join("")+
+      `<tr class="sum"><td colspan="4">合計（${L.length} 件）</td><td class="n">${f0(fr)}</td><td class="n">${f0(q)}</td><td colspan="3"></td></tr></tbody></table></div>`; }
+  else if(tab==="c"){ const ts=L.map(x=>x.temp).filter(v=>v!=null), avg=ts.length?ts.reduce((a,v)=>a+v,0)/ts.length:null, ng=L.filter(x=>x.j==="×").length, ngR=L.filter(x=>x.j==="×"&&x.re==null).length;
+    h=`<div class="tiles"><div class="tile"><div class="l">注湯（温度の記録）</div><div class="v">${L.length} 回</div><div class="s">${days} 日（${rng}）</div></div><div class="tile"><div class="l">注湯温度</div><div class="v">${avg!=null?`平均 ${avg.toFixed(0)} ℃`:"－"}</div><div class="s">${ts.length?`最低 ${Math.min(...ts)} ℃ 〜 最高 ${Math.max(...ts)} ℃`:""}</div></div><div class="tile"><div class="l">規格外（×）</div><div class="v ${ng?"ng":""}">${ng} 回</div><div class="s">${ng?`うち再測定なし ${ngR} 回`:"すべて規格内"}</div></div></div>`+
+      `<div class="tw"><table><thead><tr>${th("c","d","日付・ロット")}${th("c","eq","号機")}${th("c","ch","チャージ")}${th("c","ts","時刻")}${th("c","hin","品番")}${th("c","temp","注湯温度（℃）")}<th>規格（℃）</th>${th("c","j","判定")}${th("c","re","再測定（℃）")}${th("c","w","作業者")}<th></th></tr></thead><tbody>`+
+      L.map(x=>`<tr><td>${dl(x)} <span class="lot">${hl(lotOf(x.d))}</span></td><td>${esc(x.eq)}</td><td class="n">${x.ch}</td><td>${esc(x.t)}</td><td>${esc(x.hin)}</td><td class="n ${x.j==="×"?"ng":""}" style="font-size:17px"><b>${x.temp??""}</b></td><td class="sub" style="white-space:nowrap">${esc(x.spec)}</td><td style="text-align:center" class="${x.j==="×"?"ng":""}">${esc(x.j)}</td><td class="n">${x.re!=null?`${x.re}${x.fin&&x.fin!==x.j?`（${esc(x.fin)}）`:""}`:(x.j==="×"?'<span class="ng">なし</span>':"")}</td><td>${esc(x.w)}</td><td>${openBtn("c",x)}</td></tr>`).join("")+`</tbody></table></div>`; }
+  else if(tab==="s"){ const tm=L.reduce((a,x)=>a+x.tm,0), re=L.filter(x=>x.t2).length, lots=new Set(L.map(x=>x.lot).filter(Boolean)).size;
+    h=`<div class="tiles"><div class="tile"><div class="l">ショット</div><div class="v">${L.length} 件</div><div class="s">${days} 日（${rng}）</div></div><div class="tile"><div class="l">投射時間の合計</div><div class="v">${f0(tm)} 分</div><div class="s">${tm>=60?`${Math.floor(tm/60)}時間${Math.round(tm%60)}分・`:""}1件平均 ${(tm/L.length).toFixed(1)} 分</div></div><div class="tile"><div class="l">再ショットあり</div><div class="v">${re} 件</div><div class="s">ロット数 ${lots}</div></div></div>`+
+      `<div class="tw"><table><thead><tr>${th("s","d","日付")}${th("s","eq","設備")}${th("s","hin","品番")}${th("s","ts","時刻")}${th("s","lot","ロット（造型日）")}${th("s","pal","パレット")}${th("s","t1","初（分）")}${th("s","t2","再（分）")}${th("s","t3","再々（分）")}${th("s","tm","投射時間 合計（分）")}${th("s","w","作業者")}<th></th></tr></thead><tbody>`+
+      L.map(x=>`<tr><td>${dl(x)}</td><td>${esc(x.eq)}</td><td>${esc(x.hin)}</td><td>${esc(x.t)}</td><td>${x.lot?`<span class="lot">${hl(x.lot)}</span>${lotDate(x.lot)?` <span class="sub">造型 ${md(lotDate(x.lot))}</span>`:""}`:"－"}</td><td class="n">${esc(x.pal)}</td><td class="n">${x.t1||""}</td><td class="n">${x.t2||""}</td><td class="n">${x.t3||""}</td><td class="n"><b>${x.tm||""}</b></td><td>${esc(x.w)}</td><td>${openBtn("s",x)}</td></tr>`).join("")+
+      `<tr class="sum"><td colspan="6">合計（${L.length} 件）</td><td class="n">${f0(L.reduce((a,x)=>a+x.t1,0))}</td><td class="n">${L.reduce((a,x)=>a+x.t2,0)?f0(L.reduce((a,x)=>a+x.t2,0)):""}</td><td class="n">${L.reduce((a,x)=>a+x.t3,0)?f0(L.reduce((a,x)=>a+x.t3,0)):""}</td><td class="n">${f0(tm)}</td><td colspan="2"></td></tr></tbody></table></div>`; }
+  else { const ok=L.reduce((a,x)=>a+x.ok,0), ng=L.reduce((a,x)=>a+x.ng,0), det={}; L.forEach(x=>String(x.det).split("・").forEach(s=>{ const m=/^(.*?)(\d+(?:\.\d+)?)$/.exec(s); if(m) det[m[1]]=(det[m[1]]||0)+(+m[2]); })); const top=Object.entries(det).sort((a,b)=>b[1]-a[1]);
+    h=`<div class="tiles"><div class="tile"><div class="l">検査数（良品＋不良）</div><div class="v">${f0(ok+ng)} 個</div><div class="s">${L.length} 件・${days} 日（${rng}）</div></div><div class="tile"><div class="l">不良</div><div class="v ${ng?"ng":""}">${f0(ng)} 個</div><div class="s">不良率 ${ok+ng?(ng/(ok+ng)*100).toFixed(2):"0.00"}%</div></div><div class="tile"><div class="l">多い不良</div><div class="v" style="font-size:18px">${top.slice(0,2).map(([k,v])=>`${esc(k)} ${v}`).join("・")||"－"}</div></div></div>`+
+      `<div class="tw"><table><thead><tr>${th("k","d","日付")}${th("k","eq","検査員")}${th("k","hin","品番")}${th("k","ts","時刻")}${th("k","lot","ロット（造型日）")}${th("k","ok","良品")}${th("k","ng","不良")}${th("k","rate","不良率")}<th>不良の内訳</th><th></th></tr></thead><tbody>`+
+      L.map(x=>`<tr><td>${dl(x)}</td><td>${esc(x.eq)}</td><td>${esc(x.hin)}</td><td style="white-space:nowrap">${esc(x.t)}</td><td>${x.lot?`<span class="lot">${hl(x.lot)}</span>${lotDate(x.lot)?` <span class="sub">造型 ${md(lotDate(x.lot))}</span>`:""}`:"－"}</td><td class="n">${x.bari?'<span class="sub">バリ取り</span>':f0(x.ok)}</td><td class="n ${x.ng?"ng":""}">${x.ng||""}</td><td class="n">${x.ok+x.ng?x.rate.toFixed(2)+"%":""}</td><td class="sub">${esc(x.det)}</td><td>${openBtn("k",x)}</td></tr>`).join("")+
+      `<tr class="sum"><td colspan="5">合計（${L.length} 件）</td><td class="n">${f0(ok)}</td><td class="n">${f0(ng)}</td><td class="n">${ok+ng?(ng/(ok+ng)*100).toFixed(2):"0.00"}%</td><td colspan="2"></td></tr></tbody></table></div>`; }
+  P0.innerHTML=h;
+  P0.querySelectorAll("th[data-s]").forEach(e=>e.onclick=()=>{ const s=sortK[tab], k=e.dataset.s; sortK[tab]=[k,s[0]===k?-s[1]:(k==="d"||k==="ts"?-1:1)]; render(); });
+  P0.querySelectorAll("[data-j]").forEach(b=>b.onclick=()=>{ const [p,d,e,n]=b.dataset.j.split("|"); location.href=P[p].path+"?jump="+encodeURIComponent([d,e,n].join("|")); }); }
+function setQuick(q){ document.querySelectorAll("#hsQuick button").forEach(b=>b.classList.toggle("on",b.dataset.q===q)); const T=new Date();
+  if(q==="m0"){ $("hsFrom").value=ymd(new Date(T.getFullYear(),T.getMonth(),1)); $("hsTo").value=ymd(T); }
+  else if(q==="m1"){ $("hsFrom").value=ymd(new Date(T.getFullYear(),T.getMonth()-1,1)); $("hsTo").value=ymd(new Date(T.getFullYear(),T.getMonth(),0)); }
+  else { const d=new Date(T); d.setDate(d.getDate()-(+q)); $("hsFrom").value=ymd(d); $("hsTo").value=ymd(T); } }
+function openHs(){ $("hsOv").classList.add("on"); if(!$("hsFrom").value){ setQuick("m0"); }
+  if(!$("hsHin").value){ try{ const h=window.__hsHin&&window.__hsHin(); if(h) $("hsHin").value=h; }catch(e){} }
+  tab=tab||ME; render(); if(norm($("hsHin").value).length>=3) search(); else setTimeout(()=>$("hsHin").focus(),100); }
+// ヘッダーに「🔍 品番履歴」ボタン
+{ const bl=$("btnList"); if(bl){ const b=document.createElement("button"); b.className=(bl.className||"")+" hsbtn"; b.id="btnHs"; b.type="button"; b.textContent="🔍 品番履歴"; b.onclick=openHs; bl.parentNode.insertBefore(b,bl); } }
+$("hsClose").onclick=()=>$("hsOv").classList.remove("on");
+$("hsGo").onclick=search; $("hsHin").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); search(); } });
+["hsFrom","hsTo"].forEach(id=>$(id).addEventListener("change",()=>{ document.querySelectorAll("#hsQuick button").forEach(b=>b.classList.remove("on")); search(); }));
+$("hsLot").addEventListener("input",render); $("hsWho").addEventListener("change",render);
+$("hsQuick").addEventListener("click",e=>{ const b=e.target.closest("[data-q]"); if(b){ setQuick(b.dataset.q); search(); } });
+$("hsTabs").addEventListener("click",e=>{ const b=e.target.closest("[data-p]"); if(b){ tab=b.dataset.p; whoList(); render(); } });
+$("hsClr").onclick=()=>{ $("hsLot").value=""; $("hsWho").value=""; setQuick("m0"); search(); };
+window.__hs={open:openHs,search,parse};
+})();
+</script>
+
 <!-- ===== 後日の変更の通知：前の日の日報を、翌朝 7:30（毎朝の自動出力）より後に変えたら、変更前→変更後を管理者画面に知らせる ===== -->
 <script>
 (function(){
