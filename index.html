@@ -139,6 +139,12 @@ dialog::backdrop{background:rgba(0,0,0,.45)}
 }
 #entryCard.jumpflash{animation:jumpfl 1s ease-in-out 3;outline:4px solid #ff9800;outline-offset:2px}
 @keyframes jumpfl{50%{outline-color:transparent}}
+.evbtns{display:flex;gap:10px;flex-wrap:wrap}
+#btnKosho{background:#c62828;color:#fff;border-color:#c62828;font-weight:bold}
+#btnKosho .id{color:#ffcdd2}
+.ev.kosho{border:2px solid #c62828;background:#fff5f5}
+.evtag{grid-column:1/-1;display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-weight:bold;font-size:14px}
+.evtag .tg{color:#fff;border-radius:6px;padding:2px 10px;background:#c62828}
 </style>
 <style>
 header.top{background:#1d4e5c}
@@ -408,7 +414,7 @@ input.unlock{background:#fff3e0;border-color:#e65100;color:#e65100;font-weight:b
   <section class="card">
     <h2>異常/変化点履歴 <span class="id">Riwayat kelainan / titik perubahan</span></h2>
     <div id="events"></div>
-    <button id="btnAddEv">＋ 異常/変化点を追加 <span class="id">Tambah</span></button>
+    <div class="evbtns no-print"><button id="btnAddEv">＋ 異常/変化点を追加 <span class="id">Tambah</span></button><button id="btnKosho">⚙ 機械故障 <span class="id">Kerusakan mesin</span></button></div>
   </section>
   <p class="small" style="text-align:center">入力内容は自動で保存・共有されます。<span class="id">Data disimpan dan dibagikan otomatis.</span></p>
 </main>
@@ -638,7 +644,8 @@ function renderTable(){
 function renderEvents(){
   if(!liveEvents().length){ $("events").innerHTML='<div class="small" style="margin-bottom:10px">記録なし</div>'; return; }
   $("events").innerHTML=state.events.map((e,i)=>e.del?"":`
-   <div class="ev" data-e="${i}">
+   <div class="ev ${/^【機械故障】/.test(e.content||"")?"kosho":""}" data-e="${i}">
+     ${/^【機械故障】/.test(e.content||"")?`<div class="evtag"><span class="tg">⚙ 機械故障</span><span class="small">どの機械が・どうなったか、処置・復旧時刻を入れてください</span></div>`:""}
      <label class="f">発生時刻 <span class="id">Waktu</span><input type="time" data-ek="start" value="${esc(e.start)}" ${VIEW?"readonly":""}></label>
      <label class="f">〜<input type="time" data-ek="end" value="${esc(e.end)}" ${VIEW?"readonly":""}></label>
      <label class="f wide">異常/変化点内容 <span class="id">Detail kelainan</span><textarea data-ek="content" ${VIEW?"readonly":""}>${esc(e.content)}</textarea></label>
@@ -1359,6 +1366,10 @@ const EXP={csv:()=>csvRows(), master:async()=>{ await Sync.loadMaster(true); awa
       toast(`${+d.slice(5,7)}/${+d.slice(8)} ${e||""} ${n?"No."+n+" ":""}を開きました`);
       try{ history.replaceState(null,"",location.pathname+(VIEW?"?view":"")); }catch(_x){} }catch(x){ console.warn("jump",x); } },400); })();
 window.__hsHin=()=>{ try{ if(state.blocks){ const b=state.blocks[sel]; const r=b&&(b.rows||[]).find(x=>x&&x.hin); return r?r.hin:""; } const r=state.rows&&state.rows[sel]; return r?(r.hin||(r.items&&r.items[0]&&r.items[0].hin)||""):""; }catch(e){ return ""; } };   // 品番履歴を開いたときに、いま選んでいる行の品番を入れておく
+// ---- 機械故障のボタン：「【機械故障】」で始まる異常/変化点を作って、内容を入れてもらう ----
+$("btnKosho").onclick=()=>{ if(VIEW) return; const n=state.events.length; $("btnAddEv").click(); const ev=state.events[state.events.length-1]; if(!ev||state.events.length===n) return;
+  ev.content="【機械故障】"; ev.u=Date.now(); save(); Sync.queue("event",ev.id); renderEvents();
+  const box=document.querySelector(`#events .ev[data-e="${state.events.indexOf(ev)}"]`); if(box){ box.scrollIntoView({block:"center"}); const ta=box.querySelector('[data-ek="content"]'); if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); } } };
 })();
 </script>
 <!-- ===== 品番履歴（造型・注湯・ショット・検査の日報から、品番の履歴を工程ごとに出す。期間・ロット・号機などで絞り込み）===== -->
