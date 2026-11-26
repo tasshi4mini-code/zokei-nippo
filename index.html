@@ -1370,6 +1370,92 @@ window.__hsHin=()=>{ try{ if(state.blocks){ const b=state.blocks[sel]; const r=b
 $("btnKosho").onclick=()=>{ if(VIEW) return; const n=state.events.length; $("btnAddEv").click(); const ev=state.events[state.events.length-1]; if(!ev||state.events.length===n) return;
   ev.content="【機械故障】"; ev.u=Date.now(); save(); Sync.queue("event",ev.id); renderEvents();
   const box=document.querySelector(`#events .ev[data-e="${state.events.indexOf(ev)}"]`); if(box){ box.scrollIntoView({block:"center"}); const ta=box.querySelector('[data-ek="content"]'); if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); } } };
+// ---- v33：製品ごとの歩留まり ----
+//   製品ごとの歩留まり ＝ 1枠の製品重量（単重×駒数）÷ 1枠の鋳込み重量（製品＋湯道・堰・押湯）
+//   鋳込み重量：「設定」で入れた値（恒久）。入っていない品番は、過去の日ごとの「作った品番の枠数」と「溶解の出湯量」から推定（暫定）
+var PY=(function(){
+  const MIXK=["sen","kou","dar","mod","kat","sil","addSc"], DAYS=90;
+  let W={map:{},u:0}, EST=LS.get(APP+":pyEst",null), tab="day", busy=false;
+  const yTok=()=>CFG.yokaiToken||"OWHKxlWeao3gjTQS";
+  async function getJ(base,params){ const u=base+(base.includes("?")?"&":"?")+new URLSearchParams(params); const j=await (await fetch(u,{redirect:"follow"})).json(); if(!j.ok) throw new Error(j.error||"error"); return j; }
+  async function postJ(base,body){ const j=await (await fetch(base,{method:"POST",body:JSON.stringify(body),redirect:"follow"})).json(); if(!j.ok) throw new Error(j.error||"error"); return j; }
+  // 金型ごとのキー（2品番取りは「A＋B」）と、1枠の製品重量
+  function moldOf(r){ const L=liveItems(r).filter(it=>it.hin&&!it.test); if(!L.length) return null; const fr=Math.max(0,(num(r.total)||0)-unpOf(r)); if(!fr) return null;
+    let kg=0, ok=true; L.forEach(it=>{ const w=weightOf(r,it); if(w==null) ok=false; else kg+=w; });
+    return {key:L.map(it=>it.hin).join("＋"), fr, kg, ok, per:ok&&fr?kg/fr:null}; }
+  async function loadW(){ if(!CFG.yokaiUrl) return; try{ const j=await getJ(CFG.yokaiUrl,{action:"load",token:yTok(),date:"_global",equip:"pourw"}); const it=(j.items||[]).find(x=>x.type==="pourw"); if(it&&it.raw) W=Object.assign({map:{}},it.raw); }catch(e){} }
+  async function saveW(){ W.u=Date.now(); await postJ(CFG.yokaiUrl,{token:yTok(),ops:[{type:"pourw",date:"_global",equip:"pourw",ref:"pourw",u:W.u,raw:W}]}); }
+  // ---- 推定（暫定）：日ごとに「出湯量 ≒ Σ 枠数×鋳込み重量」になる鋳込み重量を求める（全体の歩留まりから出した値に寄せながら）----
+  async function monthOf(base,tok,m){ try{ const j=await postJ(base,{token:tok,action:"monthData",month:m}); if(j.month===m&&j.days) return j.days; }catch(e){} return null; }
+  async function estimate(force){ if(!force&&EST&&Date.now()-EST.at<6*3600e3) return EST; const c=Sync.getCfg(); if(!c.syncUrl||!CFG.yokaiUrl) return EST;
+    const now=new Date(), months=[]; for(let i=0;i<4;i++){ const d=new Date(now.getFullYear(),now.getMonth()-i,1); months.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`); }
+    const from=new Date(now); from.setDate(from.getDate()-DAYS); const fromS=from.toISOString().slice(0,10), Z={}, M={};
+    for(const m of months){ const zd=await monthOf(c.syncUrl,c.token,m), yd=await monthOf(CFG.yokaiUrl,yTok(),m);
+      if(zd) Object.entries(zd).forEach(([k,items])=>{ const d=k.split("|")[0]; if(d<fromS) return; (items||[]).forEach(it=>{ if(it.type!=="row") return; const mo=moldOf(normRow(it.raw||{})); if(!mo||!mo.ok) return; const z=Z[d]||(Z[d]={}), o=z[mo.key]||(z[mo.key]={fr:0,kg:0}); o.fr+=mo.fr; o.kg+=mo.kg; }); });
+      if(yd) Object.entries(yd).forEach(([k,items])=>{ const d=k.split("|")[0]; if(d<fromS) return; (items||[]).forEach(it=>{ if(it.type!=="row") return; const r=it.raw||{}; if(!r.tap) return; const t=MIXK.reduce((a,x)=>a+(num(r[x])||0),0); if(t>0) M[d]=(M[d]||0)+t; }); }); }
+    const days=Object.keys(Z).filter(d=>M[d]>0).filter(d=>{ const p=Object.values(Z[d]).reduce((a,o)=>a+o.kg,0), y=p/M[d]; return y>0.25&&y<1; });   // 入力もれの日（歩留まり25%未満・100%以上）は使わない
+    if(days.length<3){ EST={at:Date.now(),map:{},n:days.length}; LS.set(APP+":pyEst",EST); return EST; }
+    const keys=[...new Set(days.flatMap(d=>Object.keys(Z[d])))], per={}, nd={}; keys.forEach(k=>{ let fr=0,kg=0,n=0; days.forEach(d=>{ const o=Z[d][k]; if(o){ fr+=o.fr; kg+=o.kg; n++; } }); per[k]=kg/fr; nd[k]=n; });
+    const Y=days.reduce((a,d)=>a+Object.values(Z[d]).reduce((b,o)=>b+o.kg,0),0)/days.reduce((a,d)=>a+M[d],0);
+    const prior={}, w={}; keys.forEach(k=>{ prior[k]=per[k]/Y; w[k]=prior[k]; });
+    const fd=days.map(d=>Object.values(Z[d]).reduce((a,o)=>a+o.fr,0)).sort((a,b)=>a-b), lam=Math.pow(fd[Math.floor(fd.length/2)]||1,2)*0.5;
+    const res=days.map(d=>M[d]-keys.reduce((a,k)=>a+((Z[d][k]||{}).fr||0)*w[k],0));
+    for(let it=0;it<300;it++){ keys.forEach(k=>{ let num_=lam*prior[k], den=lam; days.forEach((d,i)=>{ const f=(Z[d][k]||{}).fr||0; if(!f) return; num_+=f*(res[i]+f*w[k]); den+=f*f; });
+        const nw=Math.min(per[k]/0.3,Math.max(per[k],num_/den)), dw=nw-w[k]; if(dw){ days.forEach((d,i)=>{ const f=(Z[d][k]||{}).fr||0; if(f) res[i]-=f*dw; }); w[k]=nw; } }); }
+    const map={}; keys.forEach(k=>map[k]={w:Math.round(w[k]*10)/10,days:nd[k],per:per[k]});
+    EST={at:Date.now(),map,n:days.length,Y}; LS.set(APP+":pyEst",EST); return EST; }
+  function wOf(key){ const s=num((W.map||{})[key]); if(s!=null&&s>0) return {w:s,src:"set"}; const e=EST&&EST.map&&EST.map[key]; return e?{w:e.w,src:"est",days:e.days}:null; }
+  // ---- 画面 ----
+  function ensureUI(){ if($("pyOv")) return;
+    const st=document.createElement("style"); st.textContent=`.pybtn{margin-top:6px;min-height:38px;border-radius:8px;border:1px solid #1d4e5c;background:#fff;color:#1d4e5c;font-weight:bold;font-size:14px;width:100%}
+#pyOv{position:fixed;inset:0;background:#eef1f6;z-index:9999;display:none;flex-direction:column;font-family:Meiryo,"Hiragino Sans",sans-serif;color:#1d2330}#pyOv.on{display:flex}
+#pyOv .ph{background:#1d4e5c;color:#fff;padding:8px 16px;display:flex;align-items:center;gap:10px}#pyOv .ph b{font-size:19px}#pyOv .ph .sp{flex:1}
+#pyOv .ph button{min-height:40px;border-radius:8px;border:1px solid #fff;background:transparent;color:#fff;font-weight:bold;padding:0 14px;font-size:15px}
+#pyOv .pb{flex:1;overflow-y:auto;padding:12px 16px 60px}#pyOv .pc{background:#fff;border-radius:12px;padding:12px 14px;margin:0 auto 12px;max-width:1180px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+#pyOv .ptabs{display:flex;gap:8px;max-width:1180px;margin:0 auto 10px}#pyOv .ptabs button{flex:1;min-height:48px;border-radius:10px;border:0;background:#cfd8dc;font-size:16px;font-weight:bold}#pyOv .ptabs button.on{background:#1d4e5c;color:#fff}
+#pyOv table{width:100%;border-collapse:collapse;font-size:15px}#pyOv th{background:#e0f2f1;color:#004d40;padding:6px;border:1px solid #b2dfdb;font-size:13px;white-space:nowrap}#pyOv td{border:1px solid #d5dbe4;padding:5px 8px;background:#fff}
+#pyOv td.n{text-align:right;white-space:nowrap}#pyOv tr.sum td{background:#e0f2f1;font-weight:bold}#pyOv .est{font-size:11px;color:#fff;background:#ef6c00;border-radius:4px;padding:0 5px;margin-left:4px}#pyOv .set{font-size:11px;color:#fff;background:#2e7d32;border-radius:4px;padding:0 5px;margin-left:4px}
+#pyOv .bar{height:12px;background:#e3e7ee;border-radius:6px;overflow:hidden;min-width:80px}#pyOv .bar i{display:block;height:100%;background:#1d4e5c}
+#pyOv .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:10px}#pyOv .tile{border:1px solid #d5dbe4;border-radius:10px;padding:8px 12px}#pyOv .tile .l{font-size:12px;color:#5d6778}#pyOv .tile .v{font-size:26px;font-weight:bold}#pyOv .tile .s{font-size:12px;color:#5d6778}
+#pyOv input{width:110px;font-size:17px;min-height:40px;text-align:right;border:2px solid #b0bec5;border-radius:8px;padding:0 8px}#pyOv .sub{font-size:12px;color:#5d6778}#pyOv .hi{color:#2e7d32;font-weight:bold}#pyOv .lo{color:#b00020;font-weight:bold}`;
+    document.head.appendChild(st);
+    const ov=document.createElement("div"); ov.id="pyOv"; ov.innerHTML=`<div class="ph"><b>製品ごとの歩留まり</b><small>Rendemen per produk</small><span class="sp"></span><button type="button" id="pyClose">閉じる ✕</button></div><div class="pb"><div class="ptabs"><button type="button" data-pt="day">この日の内訳</button><button type="button" data-pt="set">鋳込み重量の設定</button></div><div id="pyBody"></div></div>`;
+    document.body.appendChild(ov);
+    $("pyClose").onclick=()=>ov.classList.remove("on");
+    ov.querySelector(".ptabs").addEventListener("click",e=>{ const b=e.target.closest("[data-pt]"); if(b){ tab=b.dataset.pt; render(); } });
+    const yb=document.querySelector(".yieldbox"); if(yb){ const b=document.createElement("button"); b.type="button"; b.className="pybtn"; b.textContent="製品ごとの歩留まり ▸"; b.onclick=open; yb.appendChild(b); } }
+  async function open(){ ensureUI(); $("pyOv").classList.add("on"); tab="day"; $("pyBody").innerHTML=`<div class="pc">読み込んでいます…（はじめては少し時間がかかります）</div>`; busy=true;
+    try{ await loadW(); await dayRows(); await estimate(false); }catch(e){} busy=false; render(); }
+  let DAYR=null;
+  async function dayRows(){ const c=Sync.getCfg(), out=[]; const add=(rows,eq)=>rows.forEach(r=>{ const mo=moldOf(normRow(r)); if(mo) out.push(Object.assign({eq},mo)); });
+    add(state.rows,state.equip);
+    for(const o of EQUIPS.filter(x=>x!==state.equip)){ try{ const j=await getJ(c.syncUrl,{action:"load",token:c.token,date:state.date,equip:o}); const rows=[]; (j.items||[]).forEach(it=>{ if(it.type==="row") rows[+it.ref]=it.raw||{}; }); add(rows.filter(Boolean),o); }catch(e){} }
+    DAYR={date:state.date,list:out}; }
+  const f1=v=>(Math.round(v*10)/10).toFixed(1), f0=v=>Math.round(v).toLocaleString();
+  function render(){ if(busy) return; document.querySelectorAll("#pyOv [data-pt]").forEach(b=>b.classList.toggle("on",b.dataset.pt===tab)); const B=$("pyBody");
+    if(tab==="day"){ const L=(DAYR&&DAYR.list)||[], g={};
+      L.forEach(x=>{ const o=g[x.key]||(g[x.key]={key:x.key,eq:new Set(),fr:0,kg:0,ok:true}); o.eq.add(x.eq); o.fr+=x.fr; o.kg+=x.kg; if(!x.ok) o.ok=false; });
+      const G=Object.values(g).map(o=>{ const w=wOf(o.key), per=o.fr?o.kg/o.fr:null, used=w?o.fr*w.w:null; return Object.assign(o,{w,per,used,y:used?o.kg/used*100:null}); }).sort((a,b)=>(b.y??-1)-(a.y??-1));
+      const prod=G.reduce((a,o)=>a+o.kg,0), used=G.filter(o=>o.used).reduce((a,o)=>a+o.used,0), prodW=G.filter(o=>o.used).reduce((a,o)=>a+o.kg,0), act=Yield.val(), th=used?prodW/used*100:null, nEst=G.filter(o=>o.w&&o.w.src==="est").length, nNo=G.filter(o=>!o.w).length;
+      B.innerHTML=`<div class="pc"><div class="tiles"><div class="tile"><div class="l">実際の歩留まり（出湯量から）</div><div class="v">${act&&act.pct!=null?act.pct.toFixed(1)+" %":"－"}</div><div class="s">${act?`生産 ${fmtT(act.prod)} t ÷ 溶解 ${fmtT(act.melt)} t`:"溶解日報を読み込めていません"}</div></div>`+
+        `<div class="tile"><div class="l">製品の組み合わせから計算した歩留まり</div><div class="v">${th!=null?f1(th)+" %":"－"}</div><div class="s">鋳込み重量 × 枠数 の合計 ${used?fmtT(used)+" t":"－"}${nEst?`（推定 ${nEst} 品番を含む）`:""}</div></div>`+
+        `<div class="tile"><div class="l">差（実際 − 計算）</div><div class="v ${act&&act.pct!=null&&th!=null?(act.pct-th>=0?"hi":"lo"):""}">${act&&act.pct!=null&&th!=null?(act.pct-th>=0?"+":"")+f1(act.pct-th)+" pt":"－"}</div><div class="s">マイナスが大きい日は、湯の余り・捨て湯・入力もれが多い可能性</div></div></div>`+
+        `<div style="overflow-x:auto"><table><thead><tr><th>金型（品番）</th><th>号機</th><th>枠数（注湯）</th><th>製品重量/枠</th><th>鋳込み重量/枠</th><th>製品重量</th><th>使った湯（計算）</th><th>歩留まり</th><th></th></tr></thead><tbody>`+
+        (G.length?G.map(o=>`<tr><td><b>${esc(o.key)}</b></td><td>${esc([...o.eq].join("・"))}</td><td class="n">${f0(o.fr)}</td><td class="n">${o.per!=null?f1(o.per)+" kg":"－"}</td><td class="n">${o.w?f1(o.w.w)+" kg"+(o.w.src==="set"?'<span class="set">設定</span>':`<span class="est">推定${o.w.days?"・"+o.w.days+"日分":""}</span>`):'<span class="sub">未設定</span>'}</td><td class="n">${f0(o.kg)} kg</td><td class="n">${o.used?f0(o.used)+" kg":"－"}</td><td class="n ${o.y!=null&&th!=null?(o.y>=th?"hi":"lo"):""}" style="font-size:17px">${o.y!=null?f1(o.y)+" %":"－"}</td><td><div class="bar"><i style="width:${o.y?Math.min(100,o.y):0}%"></i></div></td></tr>`).join(""):`<tr><td colspan="9" class="sub">この日の造型の記録がありません</td></tr>`)+
+        `<tr class="sum"><td colspan="2">合計</td><td class="n">${f0(G.reduce((a,o)=>a+o.fr,0))}</td><td></td><td></td><td class="n">${f0(prod)} kg</td><td class="n">${used?f0(used)+" kg":"－"}</td><td class="n">${th!=null?f1(th)+" %":"－"}</td><td></td></tr></tbody></table></div>`+
+        `<div class="sub" style="margin-top:8px">歩留まり ＝ 製品重量 ÷（枠数 × 鋳込み重量）。緑＝この日の計算の歩留まりより高い、赤＝低い。<br>鋳込み重量：<span class="set">設定</span>は「鋳込み重量の設定」で入れた値、<span class="est">推定</span>は過去${DAYS}日の「作った品番の枠数」と「溶解の出湯量」から求めた目安（日数が少ないほどずれやすい）。${nNo?`未設定 ${nNo} 品番は計算に入っていません。`:""}<br>2品番取りの金型は「A＋B」で1つとして計算します。</div></div>`; }
+    else { const E=(EST&&EST.map)||{}, keys=[...new Set(Object.keys(E).concat(Object.keys(W.map||{})).concat(((DAYR&&DAYR.list)||[]).map(x=>x.key)))].sort((a,b)=>((E[b]||{}).days||0)-((E[a]||{}).days||0)||a.localeCompare(b));
+      B.innerHTML=`<div class="pc"><div class="sub" style="margin-bottom:8px">品番（金型）ごとに、1枠に流す湯の重さ（製品＋湯道・堰・押湯）を kg で入れてください。入れた値が「推定」より優先されます。保存すると全部の iPad に反映されます。<br>推定：過去${DAYS}日のうち ${EST?EST.n:0} 日分のデータから計算（${EST?new Date(EST.at).toLocaleString("ja-JP",{month:"numeric",day:"numeric",hour:"numeric",minute:"2-digit"}):"－"}）　<button type="button" id="pyRe" style="min-height:34px">推定を計算し直す</button></div>`+
+        `<div style="overflow-x:auto"><table><thead><tr><th>金型（品番）</th><th>製品重量/枠</th><th>推定の鋳込み重量/枠</th><th>推定の歩留まり</th><th>使った日数</th><th>設定する鋳込み重量/枠（kg）</th><th>設定の歩留まり</th></tr></thead><tbody>`+
+        keys.map(k=>{ const e=E[k], s=num((W.map||{})[k]); return `<tr><td><b>${esc(k)}</b></td><td class="n">${e?f1(e.per)+" kg":"－"}</td><td class="n">${e?f1(e.w)+" kg":"－"}</td><td class="n">${e?f1(e.per/e.w*100)+" %":"－"}</td><td class="n">${e?e.days+" 日":"－"}</td><td><input inputmode="decimal" data-pk="${esc(k)}" value="${s!=null?s:""}" placeholder="${e?f1(e.w):""}"></td><td class="n">${s&&e?f1(e.per/s*100)+" %":""}</td></tr>`; }).join("")+
+        `</tbody></table></div><div style="margin-top:10px;display:flex;gap:10px;align-items:center"><button type="button" id="pySave" style="min-height:48px;padding:0 24px;border-radius:10px;border:0;background:#1d4e5c;color:#fff;font-weight:bold;font-size:17px">保存（全部の iPad に反映）</button><span class="sub" id="pyMsg"></span></div></div>`;
+      $("pyRe").onclick=async()=>{ busy=true; B.innerHTML=`<div class="pc">推定を計算しています…</div>`; try{ await estimate(true); }catch(e){} busy=false; render(); };
+      $("pySave").onclick=async()=>{ if(VIEW) return; const m=Object.assign({},W.map||{}); B.querySelectorAll("[data-pk]").forEach(i=>{ const v=num(i.value); if(v!=null&&v>0) m[i.dataset.pk]=v; else delete m[i.dataset.pk]; });
+        W.map=m; try{ await saveW(); $("pyMsg").textContent="保存しました"; toast("鋳込み重量を保存しました"); }catch(e){ $("pyMsg").textContent="保存できませんでした（"+(e.message||e)+"）"; } }; } }
+  setTimeout(ensureUI,500);
+  return {open,estimate,moldOf};
+})();
+
 })();
 </script>
 <!-- ===== 品番履歴（造型・注湯・ショット・検査の日報から、品番の履歴を工程ごとに出す。期間・ロット・号機などで絞り込み）===== -->
