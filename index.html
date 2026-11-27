@@ -1522,6 +1522,27 @@ var PY=(function(){
 #hsOv .empty{padding:20px;text-align:center;color:#5d6778}
 #hsOv .prog{height:8px;background:#e3e7ee;border-radius:99px;overflow:hidden;margin:8px 0}#hsOv .prog i{display:block;height:100%;background:#00796b}
 #hsOv mark{background:#fff59d;padding:0 2px}
+#hsOv .q1 label{position:relative}
+#hsOv .sugg{position:absolute;left:0;right:0;top:100%;background:#fff;border:2px solid #00796b;border-top:0;border-radius:0 0 10px 10px;z-index:20;max-height:380px;overflow-y:auto;box-shadow:0 6px 16px rgba(0,0,0,.18)}
+#hsOv .sugg[hidden]{display:none}
+#hsOv .sugg div{display:flex;gap:10px;align-items:baseline;padding:10px 12px;border-top:1px solid #e0e4ea;cursor:pointer;font-size:16px;color:#1d2330}
+#hsOv .sugg div:hover,#hsOv .sugg div.on{background:#e0f2f1}
+#hsOv .sugg b{font-size:18px}#hsOv .sugg .nm{flex:1;color:#5d6778;font-size:13px}#hsOv .sugg .ls{font-size:12px;color:#00796b;white-space:nowrap}
+#hsOv .sugg mark{background:#fff59d}
+#hsOv .tile.wide{grid-column:1/-1}
+#hsOv .tile{color:#1d2330;background:#fff}#hsOv .sub{display:block;padding:0;background:none;border:0;flex:none;gap:0}
+#hsOv .temps{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+#hsOv .temps span{display:inline-block;border:1px solid #cfd8dc;border-radius:8px;padding:2px 8px;font-size:17px;font-weight:bold;background:#fafafa}
+#hsOv .temps span small{display:block;font-size:10px;font-weight:normal;color:#5d6778;line-height:1.1}
+#hsOv .temps span.ng{border-color:#d50000;background:#ffebee;color:#b00020}
+#hsOv .tabs button.on[data-p="m"]{background:#4e342e;color:#fff}#hsOv .panel.m{border-top-color:#4e342e}
+#hsOv .m4b{display:inline-block;min-width:40px;text-align:center;color:#fff;border-radius:6px;padding:1px 6px;font-weight:bold;font-size:13px;white-space:nowrap}
+#hsOv .m4-人{background:#1565c0}#hsOv .m4-設備{background:#2e7d32}#hsOv .m4-材料{background:#e65100}#hsOv .m4-方法{background:#6a1b9a}#hsOv .m4-その他{background:#78909c}
+#hsOv tr.run td{background:#e8eef0;font-weight:bold;border-top:3px solid #1d4e5c}
+#hsOv .pz{display:inline-block;color:#fff;border-radius:6px;padding:1px 7px;font-size:12px;font-weight:bold;white-space:nowrap}
+#hsOv .src{font-size:11px;color:#4e342e;border:1px solid #a1887f;border-radius:5px;padding:0 4px;white-space:nowrap}
+#hsOv.inline{position:static;display:flex;z-index:auto;min-height:75vh}
+#hsOv.inline .hh{display:none}#hsOv.inline .hb{overflow:visible}
 .hsbtn{background:#ffd54f!important;color:#3a2a00!important;border-color:#ffd54f!important;font-weight:bold}
 @media (max-width:700px){ #hsOv .q1{grid-template-columns:1fr} #hsOv .tabs button{font-size:14px;min-height:52px} #hsOv .tabs button .n{top:2px;right:4px} }
 @media print{ #hsOv{display:none!important} }
@@ -1531,7 +1552,7 @@ var PY=(function(){
   <div class="hb">
     <div class="hcard">
       <div class="q1">
-        <label class="hf">品番 <small>Nomor produk（一部だけでも可）</small><input id="hsHin" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="例 RD2331B"></label>
+        <label class="hf">品番 <small>Nomor produk（一部だけでも可）</small><input id="hsHin" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="例 RD2331B（入れると候補が出ます）"><div class="sugg" id="hsSugg" hidden></div></label>
         <button type="button" class="go" id="hsGo">検索</button>
       </div>
       <div class="flt">
@@ -1549,6 +1570,7 @@ var PY=(function(){
       <button type="button" data-p="c">注湯<small>Penuangan</small><span class="n" id="hsNc">0</span></button>
       <button type="button" data-p="s">ショット<small>Shot</small><span class="n" id="hsNs">0</span></button>
       <button type="button" data-p="k">検査<small>Inspeksi</small><span class="n" id="hsNk">0</span></button>
+      <button type="button" data-p="m">4M・異常変化点<small>造型の時間中</small><span class="n" id="hsNm">0</span></button>
     </div>
     <div class="panel" id="hsPanel"></div>
   </div>
@@ -1557,8 +1579,10 @@ var PY=(function(){
 (function(){
 "use strict";
 const $=id=>document.getElementById(id), esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const P={z:{path:"/zokei-nippo/",name:"造型"},c:{path:"/chuto2-nippo/",name:"注湯"},s:{path:"/shot-nippo/",name:"ショット"},k:{path:"/kensa-nippo/",name:"検査"}};
-const ME=/zokei/.test(location.pathname)?"z":/chuto/.test(location.pathname)?"c":/shot/.test(location.pathname)?"s":"k";
+const P={z:{path:"/zokei-nippo/",name:"造型"},c:{path:"/chuto2-nippo/",name:"注湯"},s:{path:"/shot-nippo/",name:"ショット"},k:{path:"/kensa-nippo/",name:"検査"},y:{path:"/yokai-nippo/",name:"溶解"},u:{path:"/suna-nippo1/",name:"砂処理"},h:{path:"/henka/",name:"4M変化点"}};
+const PCOL={"造型":"#1d4e5c","注湯":"#5c1f16","溶解":"#7a2e00","砂処理":"#16325c","ショット":"#37474f","検査":"#3d3a8c"};
+const IN_KANRI=/\/kanri/.test(location.pathname);
+const ME=IN_KANRI?"z":/zokei/.test(location.pathname)?"z":/chuto/.test(location.pathname)?"c":/shot/.test(location.pathname)?"s":"k";
 const DEF={kake:"カケ",ware:"割れ",dakon:"ダゴン",yuzakai:"湯境",suna:"砂カミ",hike:"ヒケ",hari:"張り気",oshi:"押し込み",yaki:"焼き付き",ikobu:"鋳コブ/バリ",ire:"入れ干し",shima:"島落ち",kata:"型ズレ"};
 const defL=k=>(window.__chgDef&&window.__chgDef[k])||DEF[k]||k;
 const pad=n=>String(n).padStart(2,"0"), ymd=d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
@@ -1567,21 +1591,21 @@ const num=v=>{ if(v===""||v==null) return null; const n=parseFloat(String(v).rep
 const norm=h=>String(h||"").normalize("NFKC").toUpperCase().replace(/[\s　]/g,"").replace(/^RD0*(\d)/,"RD$1");
 const lotDate=l=>{ const m=/(\d{2})-(\d{1,2})-(\d{1,2})/.exec(l||""); return m?`20${m[1]}-${pad(m[2])}-${pad(m[3])}`:""; };
 const lotOf=d=>`C${d.slice(2,4)}-${+d.slice(5,7)}-${+d.slice(8)}`;
-let tab=ME, sortK={z:["d",-1],c:["d",-1],s:["d",-1],k:["d",-1]}, DATA={z:[],c:[],s:[],k:[]}, busy=false, seq=0;
+let tab=ME, sortK={z:["d",-1],c:["d",-1],s:["d",-1],k:["d",-1],m:["d",-1]}, DATA={z:[],c:[],s:[],k:[]}, EVS=[], H4=[], FIX={}, busy=false, seq=0;
 const CFG={}, MON={};   // 設定と、読みこんだ月の日報（工程|月 → [{date,equip,items}]）
-async function cfgOf(p){ if(CFG[p]!==undefined) return CFG[p]; try{ const t=await (await fetch(P[p].path+"config.js",{cache:"no-store"})).text(); const w={}; new Function("window",t)(w); const c=w.SUNA_CONFIG||{}; CFG[p]=c.syncUrl?c:null; }catch(e){ CFG[p]=null; } return CFG[p]; }
+async function cfgOf(p){ if(CFG[p]!==undefined) return CFG[p]; try{ const t=await (await fetch(P[p].path+"config.js",{cache:"no-store"})).text(); const w={}; new Function("window",t)(w); const c=w.SUNA_CONFIG||w.HENKA_CONFIG||{}; CFG[p]=c.syncUrl?c:null; }catch(e){ CFG[p]=null; } return CFG[p]; }
 async function getJ(c,params){ const u=c.syncUrl+(c.syncUrl.includes("?")?"&":"?")+new URLSearchParams(Object.assign({token:c.token||""},params)); const j=await (await fetch(u,{redirect:"follow"})).json(); if(!j.ok) throw new Error(j.error||"error"); return j; }
 async function month(p,m,cur){ const key=p+"|"+m, o=MON[key]; if(o&&(Date.now()-o.at<(cur?120000:1800000))) return o.v; const c=await cfgOf(p); if(!c) return [];
   let v=null; try{ const r=await fetch(c.syncUrl,{method:"POST",body:JSON.stringify({token:c.token,action:"monthData",month:m}),redirect:"follow"}); const j=await r.json();
       if(j&&j.ok&&j.month===m&&j.days){ v=Object.entries(j.days).map(([k,items])=>{ const i=k.indexOf("|"); return {date:k.slice(0,i),equip:k.slice(i+1),items:items||[]}; }); } }catch(e){}
   if(!v){ v=[]; try{ const L=(await getJ(c,{action:"list",month:m})).days||[]; let i=0;   // 月まとめが使えないときは1日ずつ
-      await Promise.all(Array.from({length:5},async()=>{ while(i<L.length){ const d=L[i++]; if(String(d.date).slice(0,7)!==m) continue; try{ const j=await getJ(c,{action:"load",date:d.date,equip:d.equip||""}); v.push({date:d.date,equip:d.equip||"",items:j.items||[]}); }catch(e){} } })); }catch(e){} }
+      await Promise.all(Array.from({length:5},async()=>{ while(i<L.length){ const d=L[i++]; if(String(d.date).slice(0,7)!==m) continue; try{ const j=await getJ(c,{action:"load",date:d.date,equip:d.equip||""}); v.push({date:d.date,equip:d.equip||"",items:j.items||j}); }catch(e){} } })); }catch(e){} }
   MON[key]={at:Date.now(),v}; return v; }
 // 日報 → 1行ずつの記録
 function parse(p,days){ const out=[];
   days.forEach(x=>{ const d=x.date, eq=x.equip;
     if(p==="z") x.items.forEach(it=>{ if(it.type!=="row") return; const r=it.raw||{}; (r.items||[]).forEach((v,k)=>{ if(!v||!v.hin) return; const fr=num(k>0&&v.tot!==""&&v.tot!=null?v.tot:r.total)||0, q=num((r.qtyOut||[])[k]);
-        out.push({d,eq,no:+it.ref+1,hin:v.hin,name:v.name||"",t:(r.st||"")+(r.en?"〜"+r.en:""),ts:r.st||"",fr,q:q!=null?q:(num(v.koma)||0)*Math.max(0,fr-(num(r.unp)||0)),sq:r.sq||"",w:r.worker||"",test:!!v.test}); }); });
+        out.push({d,eq,no:+it.ref+1,hin:v.hin,name:v.name||"",t:(r.st||"")+(r.en?"〜"+r.en:""),ts:r.st||"",te:r.en||"",fr,q:q!=null?q:(num(v.koma)||0)*Math.max(0,fr-(num(r.unp)||0)),sq:r.sq||"",w:r.worker||"",test:!!v.test}); }); });
     if(p==="c") x.items.forEach(it=>{ if(it.type!=="block") return; const b=it.raw||{}; (b.rows||[]).forEach(r=>{ if(!r||!r.time||!r.hin) return; const t=num(r.temp), fin=r.rrjudge||r.rejudge||r.judge||"", re=num(r.rrtemp)!=null?num(r.rrtemp):num(r.retemp);
         out.push({d,eq,no:+it.ref+1,ch:+it.ref+1,hin:r.hin,t:r.time,ts:r.time,temp:t,spec:r.spec||"",j:r.judge||"",re,fin,w:r.worker||""}); }); });
     if(p==="s") x.items.forEach(it=>{ if(it.type!=="row") return; const r=it.raw||{}; if(!r.hin) return; const t1=num(r.t1)||0,t2=num(r.t2)||0,t3=num(r.t3)||0;
@@ -1596,14 +1620,43 @@ function months(f,t){ const a=f?new Date(f+"T00:00"):new Date(new Date().getFull
 async function search(){ const h=norm($("hsHin").value); if(h.length<3){ render(); return; } const my=++seq, M=months($("hsFrom").value,$("hsTo").value), cm=ymd(new Date()).slice(0,7);
   const ks=["z","c","s","k"], tot=ks.length*M.length; let done=0; busy=true;
   const prog=()=>{ if(my===seq) $("hsPanel").innerHTML=`<div class="empty">日報を読みこんでいます… ${done} / ${tot}<div class="prog"><i style="width:${Math.round(done/tot*100)}%"></i></div><span class="sub">はじめて読む月は少し時間がかかります（2回目からは速くなります）</span></div>`; };
-  prog(); const R={z:[],c:[],s:[],k:[]};
-  await Promise.all(ks.map(async p=>{ for(const m of M){ try{ R[p].push(...parse(p,await month(p,m,m===cm))); }catch(e){} done++; prog(); } }));
-  if(my!==seq) return; busy=false; DATA=R; whoList(); render(); }
+  prog(); const R={z:[],c:[],s:[],k:[]}, EV=[], HH=[]; let F={};
+  await Promise.all([...ks.map(async p=>{ for(const m of M){ try{ const days=await month(p,m,m===cm); R[p].push(...parse(p,days)); if(p==="z"||p==="c") EV.push(...evOf(p,days)); }catch(e){} done++; prog(); } }),
+    ...["y","u"].map(async p=>{ for(const m of M){ try{ EV.push(...evOf(p,await month(p,m,m===cm))); }catch(e){} } }),
+    (async()=>{ for(const m of M){ try{ HH.push(...await h4Month(m,m===cm)); }catch(e){} } })(),
+    (async()=>{ F=await fixLoad(); })()]);
+  if(my!==seq) return; busy=false; DATA=R; EVS=EV; H4=HH; FIX=F; addHins(R); whoList(); render(); }
+// ---- 4M・異常変化点（各工程の日報の「異常・変化点」と、異常・4M変化点管理表）----
+const M4K=["人","設備","材料","方法","その他"];
+const M4_FIX=[[/【機械故障】|機械故障/,"設備"],[/原材料の規格外|銑鉄\s*0\s*kg/,"材料"],[/製造条件/,"方法"]];
+const M4_KW={
+  "設備":["故障","修理","異音","異常音","振動","油漏れ","エア漏れ","漏れ","詰まり","つまり","モーター","モータ","ポンプ","センサ","ブレーカ","停電","電源","エラー","アラーム","ベルト","コンベア","チェーン","シリンダ","バルブ","ホース","ヒーター","ブロワ","集塵","クレーン","ホイスト","炉","取鍋","ラドル","ミキサー","混練機","造型機","ショット機","ブラスト","インペラ","ライナ","台車","定盤","模型","金型","中子型","治具","工具","設備","機械","号機","点検","メンテ","部品交換","摩耗","磨耗","割れた","破損し","焼損","交換","調整中","不具合","動かない","止まった","停止"],
+  "材料":["材料","原材料","副資材","銑鉄","スクラップ","新断","鋼","ダライ","戻り材","加炭","シリコン","フェロ","接種","球状化","材質","成分","炭素","ＣＥ","CE値","新砂","砂の","ベントナイト","澱粉","でんぷん","石炭粉","バインダ","中子","塗型","塗料","ショット玉","ショット球","研削材","ロット違い","入荷","在庫","欠品","規格外","メーカー変更","仕入"],
+  "人":["作業者","応援","交代","交替","新人","新規作業者","休み","欠勤","遅刻","早退","不在","人員","人手","人が","代わり","代理","教育","訓練","初めて","はじめて","不慣れ","ミス","間違","まちがい","忘れ","見落とし","うっかり","体調","ケガ","けが","怪我","実習生","職場復帰","久しぶり"],
+  "方法":["条件","手順","方法","やり方","設定","設定値","変更した","変更する","標準","作業標準","段取","型替","品番切替","切り替え","切替","試作","テスト","トライ","温度","時間","圧","水分","ＣＢ","CB","硬度","注湯速度","配合","投入量","投入順","量を","規格変更","図面","指示","検査方法","基準"]};
+function m4Auto(t){ t=String(t||""); for(const [re,k] of M4_FIX) if(re.test(t)) return k; let best=null, bn=0; for(const k of ["設備","材料","人","方法"]){ const n=M4_KW[k].filter(w=>t.includes(w)).length; if(n>bn){ bn=n; best=k; } } return best||"その他"; }
+function hsh(s){ let h=5381; for(const c of String(s)) h=((h*33)^c.charCodeAt(0))>>>0; return h.toString(36); }
+function evOf(p,days){ const out=[], nm=P[p].name;
+  days.forEach(x=>{ const L=Array.isArray(x.items)?x.items.filter(it=>it.type==="event").map(it=>it.raw||{}):((x.items&&x.items.events)||[]);
+    L.forEach(e=>{ if(!e||e.del||!(e.content||e.action)) return; const eq=(p==="z"||p==="c")?(x.equip||""):"", t=e.start||e.time||"", c=String(e.content||"");
+      const key=[nm,x.date,eq,t,hsh(c)].join("|"); out.push({src:"ev",p:nm,d:x.date,eq,t,e:e.end||"",c,a:String(e.action||""),w:String(e.person||""),key,m4a:m4Auto(c+" "+(e.action||""))}); }); });
+  return out; }
+async function h4Month(m,cur){ const key="h|"+m, o=MON[key]; if(o&&(Date.now()-o.at<(cur?120000:1800000))) return o.v; const c=await cfgOf("h"); if(!c) return [];
+  const j=await getJ(c,{action:"load",date:m,equip:"4M"}); const v=(j.items||[]).filter(it=>it.type==="rec"&&it.raw&&!it.raw.del).map(it=>it.raw); MON[key]={at:Date.now(),v}; return v; }
+async function fixLoad(){ try{ const c=await cfgOf("y"); if(!c) return {}; const j=await getJ(c,{action:"load",date:"_global",equip:"m4"}); const F={}; (j.items||[]).forEach(it=>{ if(it.type==="m4"&&it.raw&&it.raw.m4) F[String(it.ref)]=it.raw.m4; }); return F; }catch(e){ return {}; } }
+const hm=t=>{ const m=/^(\d{1,2}):(\d{2})/.exec(t||""); return m?(+m[1])*60+(+m[2]):null; };
+// 造型の時間（開始〜終了。終了がなければ開始から60分）に重なる 4M・異常変化点
+function m4Runs(Z){ const out=[]; const moved=new Set(H4.map(r=>r.src).filter(Boolean));
+  Z.forEach(x=>{ let a=hm(x.ts), b=hm(x.te); if(a==null) return; if(b==null) b=a+60; if(b<a) b+=1440;
+    const inW=(t,e)=>{ let s=hm(t); if(s==null) return false; let f=hm(e); if(f==null) f=s; if(f<s) f+=1440; if(s<a-360) { s+=1440; f+=1440; } return s<=b&&f>=a; };
+    const L=[]; EVS.forEach(e=>{ if(e.d!==x.d) return; if((e.p==="造型"||e.p==="注湯")&&e.eq&&e.eq!==x.eq) return; if(inW(e.t,e.e)) L.push(Object.assign({},e,{m4:FIX[e.key]||e.m4a,moved:moved.has(e.key)})); });
+    H4.forEach(r=>{ if(r.date!==x.d||(r.src&&EVS.some(e=>e.key===r.src))||!inW(r.time,"")) return; L.push({src:"h4",p:r.proc||"",d:r.date,eq:"",t:r.time||"",e:"",c:r.content||"",a:r.result||"",w:r.checker||"",m4:r.m4||"その他"}); });
+    L.sort((p,q)=>String(p.t).localeCompare(String(q.t))); out.push({x,L}); }); return out; }
 function filtered(){ const h=norm($("hsHin").value), f=$("hsFrom").value, t=$("hsTo").value, lot=$("hsLot").value.trim().toUpperCase(), who=$("hsWho").value;
-  const ok=x=>h.length>=3&&norm(x.hin).includes(h)&&(!f||x.d>=f)&&(!t||x.d<=t), okW=(x,p)=>!who||p!==tab||x.eq===who;
+  const ok=x=>h.length>=3&&norm(x.hin).includes(h)&&(!f||x.d>=f)&&(!t||x.d<=t), okW=(x,p)=>!who||p!==(tab==="m"?"z":tab)||x.eq===who;
   const lz=x=>!lot||lotOf(x.d).toUpperCase().includes(lot), ll=x=>!lot||String(x.lot).toUpperCase().includes(lot);
   return {z:DATA.z.filter(x=>ok(x)&&okW(x,"z")&&lz(x)),c:DATA.c.filter(x=>ok(x)&&okW(x,"c")&&lz(x)),s:DATA.s.filter(x=>ok(x)&&okW(x,"s")&&ll(x)),k:DATA.k.filter(x=>ok(x)&&okW(x,"k")&&ll(x))}; }
-function whoList(){ const v=$("hsWho").value, h=norm($("hsHin").value), all=[...new Set(DATA[tab].filter(x=>!h||norm(x.hin).includes(h)).map(x=>x.eq))].sort();
+function whoList(){ const v=$("hsWho").value, h=norm($("hsHin").value), all=[...new Set(DATA[tab==="m"?"z":tab].filter(x=>!h||norm(x.hin).includes(h)).map(x=>x.eq))].sort();
   $("hsWho").innerHTML=`<option value="">すべて</option>`+all.map(x=>`<option${x===v?" selected":""}>${esc(x)}</option>`).join(""); if(!all.includes(v)) $("hsWho").value=""; }
 function sortL(L,p){ const [k,dir]=sortK[p]; return [...L].sort((a,b)=>{ const x=a[k],y=b[k]; const c=(typeof x==="number"||typeof y==="number")?((x??-1e9)-(y??-1e9)):String(x??"").localeCompare(String(y??""));
   return c*dir||(b.d+String(b.ts).padStart(5,"0")).localeCompare(a.d+String(a.ts).padStart(5,"0")); }); }
@@ -1611,8 +1664,9 @@ const th=(p,k,l)=>{ const s=sortK[p]; return `<th data-s="${k}">${l}${s[0]===k?(
 const hl=s=>{ const q=$("hsLot").value.trim(); if(!q) return esc(s); const i=String(s).toUpperCase().indexOf(q.toUpperCase()); return i<0?esc(s):esc(String(s).slice(0,i))+"<mark>"+esc(String(s).slice(i,i+q.length))+"</mark>"+esc(String(s).slice(i+q.length)); };
 const openBtn=(p,x)=>`<button type="button" class="open" data-j="${p}|${x.d}|${esc(x.eq)}|${x.no||""}">日報を開く</button>`;
 function render(){ const P0=$("hsPanel"); document.querySelectorAll("#hsTabs button").forEach(b=>b.classList.toggle("on",b.dataset.p===tab)); P0.className="panel "+tab;
-  if(busy) return; const R=filtered(); ["z","c","s","k"].forEach(p=>$("hsN"+p).textContent=R[p].length);
+  if(busy) return; const R=filtered(); ["z","c","s","k"].forEach(p=>$("hsN"+p).textContent=R[p].length); const RUNS=m4Runs(R.z); $("hsNm").textContent=RUNS.reduce((a,r)=>a+r.L.length,0);
   if(norm($("hsHin").value).length<3){ P0.innerHTML=`<div class="empty">品番を3文字以上入れて「検索」を押してください</div>`; return; }
+  if(tab==="m"){ P0.innerHTML=m4Html(RUNS); bindOpen(P0); return; }
   const L=sortL(R[tab],tab); if(!L.length){ P0.innerHTML=`<div class="empty">この条件の記録はありません（期間を広げると見つかることがあります）</div>`; return; }
   const ds=L.map(x=>x.d).sort(), days=new Set(ds).size, rng=`${md(ds[0])}〜${md(ds[ds.length-1])}`, dl=x=>`<b>${md(x.d)}</b>(${wd(x.d)})`; let h="";
   if(tab==="z"){ const fr=L.reduce((a,x)=>a+x.fr,0), q=L.reduce((a,x)=>a+x.q,0), sqH=L.filter(x=>x.sq==="高").length, sqL=L.filter(x=>x.sq==="低").length;
@@ -1621,7 +1675,7 @@ function render(){ const P0=$("hsPanel"); document.querySelectorAll("#hsTabs but
       L.map(x=>`<tr><td>${dl(x)} <span class="lot">${hl(lotOf(x.d))}</span></td><td>${esc(x.eq)}</td><td>${esc(x.hin)}${x.test?" <span class='sub'>(テスト)</span>":""}<div class="sub">${esc(x.name)}</div></td><td style="white-space:nowrap">${esc(x.t)}</td><td class="n">${f0(x.fr)}</td><td class="n"><b>${f0(x.q)}</b></td><td style="text-align:center">${esc(x.sq)}</td><td>${esc(x.w)}</td><td>${openBtn("z",x)}</td></tr>`).join("")+
       `<tr class="sum"><td colspan="4">合計（${L.length} 件）</td><td class="n">${f0(fr)}</td><td class="n">${f0(q)}</td><td colspan="3"></td></tr></tbody></table></div>`; }
   else if(tab==="c"){ const ts=L.map(x=>x.temp).filter(v=>v!=null), avg=ts.length?ts.reduce((a,v)=>a+v,0)/ts.length:null, ng=L.filter(x=>x.j==="×").length, ngR=L.filter(x=>x.j==="×"&&x.re==null).length;
-    h=`<div class="tiles"><div class="tile"><div class="l">注湯（温度の記録）</div><div class="v">${L.length} 回</div><div class="s">${days} 日（${rng}）</div></div><div class="tile"><div class="l">注湯温度</div><div class="v">${avg!=null?`平均 ${avg.toFixed(0)} ℃`:"－"}</div><div class="s">${ts.length?`最低 ${Math.min(...ts)} ℃ 〜 最高 ${Math.max(...ts)} ℃`:""}</div></div><div class="tile"><div class="l">規格外（×）</div><div class="v ${ng?"ng":""}">${ng} 回</div><div class="s">${ng?`うち再測定なし ${ngR} 回`:"すべて規格内"}</div></div></div>`+
+    h=`<div class="tiles"><div class="tile"><div class="l">注湯（温度の記録）</div><div class="v">${L.length} 回</div><div class="s">${days} 日（${rng}）</div></div><div class="tile wide"><div class="l">注湯温度（すべて・古い順）　${ts.length?`最低 ${Math.min(...ts)} ℃ 〜 最高 ${Math.max(...ts)} ℃`:""}</div><div class="temps">${[...L].filter(x=>x.temp!=null).sort((a,b)=>(a.d+String(a.ts).padStart(5,"0")).localeCompare(b.d+String(b.ts).padStart(5,"0"))).map(x=>`<span class="${x.j==="×"?"ng":""}"><small>${md(x.d)} ${esc(x.ts)}</small>${x.temp}${x.re!=null?`<small>再 ${x.re}</small>`:""}</span>`).join("")||"－"}</div></div><div class="tile"><div class="l">規格外（×）</div><div class="v ${ng?"ng":""}">${ng} 回</div><div class="s">${ng?`うち再測定なし ${ngR} 回`:"すべて規格内"}</div></div></div>`+
       `<div class="tw"><table><thead><tr>${th("c","d","日付・ロット")}${th("c","eq","号機")}${th("c","ch","チャージ")}${th("c","ts","時刻")}${th("c","hin","品番")}${th("c","temp","注湯温度（℃）")}<th>規格（℃）</th>${th("c","j","判定")}${th("c","re","再測定（℃）")}${th("c","w","作業者")}<th></th></tr></thead><tbody>`+
       L.map(x=>`<tr><td>${dl(x)} <span class="lot">${hl(lotOf(x.d))}</span></td><td>${esc(x.eq)}</td><td class="n">${x.ch}</td><td>${esc(x.t)}</td><td>${esc(x.hin)}</td><td class="n ${x.j==="×"?"ng":""}" style="font-size:17px"><b>${x.temp??""}</b></td><td class="sub" style="white-space:nowrap">${esc(x.spec)}</td><td style="text-align:center" class="${x.j==="×"?"ng":""}">${esc(x.j)}</td><td class="n">${x.re!=null?`${x.re}${x.fin&&x.fin!==x.j?`（${esc(x.fin)}）`:""}`:(x.j==="×"?'<span class="ng">なし</span>':"")}</td><td>${esc(x.w)}</td><td>${openBtn("c",x)}</td></tr>`).join("")+`</tbody></table></div>`; }
   else if(tab==="s"){ const tm=L.reduce((a,x)=>a+x.tm,0), re=L.filter(x=>x.t2).length, lots=new Set(L.map(x=>x.lot).filter(Boolean)).size;
@@ -1636,27 +1690,61 @@ function render(){ const P0=$("hsPanel"); document.querySelectorAll("#hsTabs but
       `<tr class="sum"><td colspan="5">合計（${L.length} 件）</td><td class="n">${f0(ok)}</td><td class="n">${f0(ng)}</td><td class="n">${ok+ng?(ng/(ok+ng)*100).toFixed(2):"0.00"}%</td><td colspan="2"></td></tr></tbody></table></div>`; }
   P0.innerHTML=h;
   P0.querySelectorAll("th[data-s]").forEach(e=>e.onclick=()=>{ const s=sortK[tab], k=e.dataset.s; sortK[tab]=[k,s[0]===k?-s[1]:(k==="d"||k==="ts"?-1:1)]; render(); });
-  P0.querySelectorAll("[data-j]").forEach(b=>b.onclick=()=>{ const [p,d,e,n]=b.dataset.j.split("|"); location.href=P[p].path+"?jump="+encodeURIComponent([d,e,n].join("|")); }); }
+  bindOpen(P0); }
+function bindOpen(P0){ P0.querySelectorAll("[data-j]").forEach(b=>b.onclick=()=>{ const [p,d,e,n]=b.dataset.j.split("|"); if(window.__hsJump){ window.__hsJump(p,d,e,n); return; } location.href=P[p].path+"?jump="+encodeURIComponent([d,e,n].join("|")); }); }
+function m4Html(RUNS){ const W=RUNS.filter(r=>r.L.length), all=W.flatMap(r=>r.L), cnt={}; all.forEach(e=>cnt[e.m4]=(cnt[e.m4]||0)+1);
+  let h=`<div class="tiles">`+M4K.map(k=>`<div class="tile"><div class="l"><span class="m4b m4-${k}">${k==="その他"?"その他・未分類":k}</span></div><div class="v">${cnt[k]||0} 件</div></div>`).join("")+`</div>`+
+    `<div class="sub" style="margin-bottom:8px">この品番を造型していた時間（開始〜終了）に、各工程の日報に入った「異常・変化点」と、異常・4M変化点管理表の記録です。造型・注湯は同じ号機のものだけ。溶解・砂処理はその時間のすべて。造型 ${RUNS.length} 件のうち、変化点があったのは ${W.length} 件。</div>`;
+  if(!W.length) return h+`<div class="empty">この期間・品番の造型時間中に、4M変化・異常変化点はありません</div>`;
+  h+=`<div class="tw"><table><thead><tr><th>時刻</th><th>工程</th><th>4M区分</th><th>異常・変化点の内容</th><th>処置</th><th></th></tr></thead><tbody>`+
+    W.sort((a,b)=>(b.x.d+String(b.x.ts).padStart(5,"0")).localeCompare(a.x.d+String(a.x.ts).padStart(5,"0"))).map(({x,L})=>
+      `<tr class="run"><td colspan="5"><b>${md(x.d)}</b>(${wd(x.d)}) <span class="lot">${lotOf(x.d)}</span>　${esc(x.eq)}　造型 ${esc(x.t)}${x.te?"":"（終了なし→60分）"}　${esc(x.hin)}　${f0(x.q)} 個</td><td>${openBtn("z",x)}</td></tr>`+
+      L.map(e=>`<tr><td style="white-space:nowrap">${esc(e.t)}${e.e?"〜"+esc(e.e):""}</td><td style="white-space:nowrap">${e.src==="h4"?`<span class="src">4M管理表</span> `:""}${e.p?`<span class="pz" style="background:${PCOL[e.p]||(e.p==="セキ"?PCOL["検査"]:"#455a64")}">${esc(e.p)}</span>`:""}${e.eq?`<div class="sub">${esc(e.eq)}</div>`:""}</td><td><span class="m4b m4-${e.m4||"その他"}">${e.m4||"その他"}</span></td><td>${esc(e.c).replace(/\n/g,"<br>")}${e.w?`<div class="sub">${esc(e.w)}</div>`:""}${e.moved?` <span class="src">管理表に移動済み</span>`:""}</td><td>${esc(e.a)}</td><td></td></tr>`).join("")).join("")+`</tbody></table></div>`;
+  return h; }
+// ---- 品番の候補（入力すると出る）----
+const HINS={}; let hinsBusy=false, suggI=-1;
+function addHins(R){ ["z","c","s","k"].forEach(p=>(R[p]||[]).forEach(x=>{ const k=norm(x.hin); if(!k) return; const o=HINS[k]||(HINS[k]={hin:x.hin,name:"",last:"",n:0}); o.n++; if(x.d>o.last){ o.last=x.d; o.hin=x.hin; } if(x.name&&!o.name) o.name=x.name; })); }
+async function loadHins(){ if(hinsBusy) return; hinsBusy=true; try{ const T=new Date(), M=months(ymd(new Date(T.getFullYear(),T.getMonth()-2,1)),ymd(T)), cm=ymd(T).slice(0,7);
+    await Promise.all(["z","c","s","k"].map(async p=>{ for(const m of M){ try{ const R={z:[],c:[],s:[],k:[]}; R[p]=parse(p,await month(p,m,m===cm)); addHins(R); }catch(e){} } }));
+    try{ (window.__hsMaster&&window.__hsMaster()||[]).forEach(o=>{ const k=norm(o.hin); if(k&&!HINS[k]) HINS[k]={hin:o.hin,name:o.name||"",last:"",n:0}; else if(k&&o.name&&!HINS[k].name) HINS[k].name=o.name; }); }catch(e){}
+  }finally{ hinsBusy=false; } if(document.activeElement===$("hsHin")) showSugg(); }
+function showSugg(){ const box=$("hsSugg"), q=norm($("hsHin").value); if(q.length<2){ box.hidden=true; return; }
+  const L=Object.values(HINS).filter(o=>norm(o.hin).includes(q)).sort((a,b)=>(norm(a.hin).startsWith(q)?0:1)-(norm(b.hin).startsWith(q)?0:1)||b.last.localeCompare(a.last)||a.hin.localeCompare(b.hin)).slice(0,15);
+  if(!L.length){ box.innerHTML=hinsBusy?`<div class="nm">候補を読みこみ中…</div>`:""; box.hidden=!hinsBusy; suggI=-1; return; }
+  const mk=h=>{ const n=norm(h), i=n.indexOf(q); return i<0?esc(h):esc(n.slice(0,i))+"<mark>"+esc(n.slice(i,i+q.length))+"</mark>"+esc(n.slice(i+q.length)); };
+  box.innerHTML=L.map((o,i)=>`<div data-h="${esc(o.hin)}" class="${i===suggI?"on":""}"><b>${mk(o.hin)}</b><span class="nm">${esc(o.name)}</span><span class="ls">${o.last?"最終 "+md(o.last)+"・"+o.n+"件":""}</span></div>`).join(""); box.hidden=false; }
+function pickSugg(h){ $("hsHin").value=h; $("hsSugg").hidden=true; suggI=-1; search(); }
 function setQuick(q){ document.querySelectorAll("#hsQuick button").forEach(b=>b.classList.toggle("on",b.dataset.q===q)); const T=new Date();
   if(q==="m0"){ $("hsFrom").value=ymd(new Date(T.getFullYear(),T.getMonth(),1)); $("hsTo").value=ymd(T); }
   else if(q==="m1"){ $("hsFrom").value=ymd(new Date(T.getFullYear(),T.getMonth()-1,1)); $("hsTo").value=ymd(new Date(T.getFullYear(),T.getMonth(),0)); }
   else { const d=new Date(T); d.setDate(d.getDate()-(+q)); $("hsFrom").value=ymd(d); $("hsTo").value=ymd(T); } }
 function openHs(){ $("hsOv").classList.add("on"); if(!$("hsFrom").value){ setQuick("m0"); }
   if(!$("hsHin").value){ try{ const h=window.__hsHin&&window.__hsHin(); if(h) $("hsHin").value=h; }catch(e){} }
-  tab=tab||ME; render(); if(norm($("hsHin").value).length>=3) search(); else setTimeout(()=>$("hsHin").focus(),100); }
+  tab=tab||ME; render(); loadHins(); if(norm($("hsHin").value).length>=3) search(); else setTimeout(()=>$("hsHin").focus(),100); }
 // ヘッダーに「🔍 品番履歴」ボタン
 { const bl=$("btnList"); if(bl){ const b=document.createElement("button"); b.className=(bl.className||"")+" hsbtn"; b.id="btnHs"; b.type="button"; b.textContent="🔍 品番履歴"; b.onclick=openHs; bl.parentNode.insertBefore(b,bl); } }
 $("hsClose").onclick=()=>$("hsOv").classList.remove("on");
-$("hsGo").onclick=search; $("hsHin").addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); search(); } });
+$("hsGo").onclick=()=>{ $("hsSugg").hidden=true; search(); };
+$("hsHin").addEventListener("keydown",e=>{ const box=$("hsSugg"), it=[...box.querySelectorAll("[data-h]")];
+  if(!box.hidden&&it.length&&(e.key==="ArrowDown"||e.key==="ArrowUp")){ e.preventDefault(); suggI=(suggI+(e.key==="ArrowDown"?1:-1)+it.length)%it.length; it.forEach((d,i)=>d.classList.toggle("on",i===suggI)); return; }
+  if(e.key==="Enter"){ e.preventDefault(); if(!box.hidden&&suggI>=0&&it[suggI]) pickSugg(it[suggI].dataset.h); else { box.hidden=true; search(); } } if(e.key==="Escape") box.hidden=true; });
+$("hsHin").addEventListener("input",()=>{ suggI=-1; showSugg(); }); $("hsHin").addEventListener("focus",showSugg);
+$("hsSugg").addEventListener("mousedown",e=>e.preventDefault());
+$("hsSugg").addEventListener("click",e=>{ const d=e.target.closest("[data-h]"); if(d) pickSugg(d.dataset.h); });
+$("hsHin").addEventListener("blur",()=>setTimeout(()=>$("hsSugg").hidden=true,150));
 ["hsFrom","hsTo"].forEach(id=>$(id).addEventListener("change",()=>{ document.querySelectorAll("#hsQuick button").forEach(b=>b.classList.remove("on")); search(); }));
 $("hsLot").addEventListener("input",render); $("hsWho").addEventListener("change",render);
 $("hsQuick").addEventListener("click",e=>{ const b=e.target.closest("[data-q]"); if(b){ setQuick(b.dataset.q); search(); } });
 $("hsTabs").addEventListener("click",e=>{ const b=e.target.closest("[data-p]"); if(b){ tab=b.dataset.p; whoList(); render(); } });
 $("hsClr").onclick=()=>{ $("hsLot").value=""; $("hsWho").value=""; setQuick("m0"); search(); };
-window.__hs={open:openHs,search,parse};
+window.__hs={open:openHs,search,parse,setHin:h=>{ $("hsHin").value=h; openHs(); }};
+if(IN_KANRI) $("hsOv").classList.add("inline");
 })();
 </script>
 
+<!-- ===== 後日の変更の通知：前の日の日報を、翌朝 7:30（毎朝の自動出力）より後に変えたら、変更前→変更後を管理者画面に知らせる ===== -->
+<!-- ===== 後日の変更の通知：前の日の日報を、翌朝 7:30（毎朝の自動出力）より後に変えたら、変更前→変更後を管理者画面に知らせる ===== -->
+<!-- ===== 後日の変更の通知：前の日の日報を、翌朝 7:30（毎朝の自動出力）より後に変えたら、変更前→変更後を管理者画面に知らせる ===== -->
 <!-- ===== 後日の変更の通知：前の日の日報を、翌朝 7:30（毎朝の自動出力）より後に変えたら、変更前→変更後を管理者画面に知らせる ===== -->
 <script>
 (function(){
